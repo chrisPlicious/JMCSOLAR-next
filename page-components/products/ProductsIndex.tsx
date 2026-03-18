@@ -14,14 +14,17 @@ import {
   Package,
 } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
-import {
-  products,
-  productCategories,
-  type Product,
-  type ProductCategory,
-} from '@/data/products';
+import type { Product, ProductCategory } from '@/types';
 
-// ── Category icon renderer ────────────────────────────────────────
+const productCategories: { id: ProductCategory | 'all'; label: string }[] = [
+  { id: 'all',         label: 'All Products'      },
+  { id: 'panels',      label: 'Solar Panels'       },
+  { id: 'batteries',   label: 'Batteries'          },
+  { id: 'inverters',   label: 'Inverters'          },
+  { id: 'controllers', label: 'Charge Controllers' },
+  { id: 'converters',  label: 'Converters'         },
+];
+
 const categoryIcon: Record<ProductCategory, (size: number) => React.ReactNode> = {
   panels:      (s) => <Sun size={s} strokeWidth={1.2} />,
   batteries:   (s) => <Battery size={s} strokeWidth={1.2} />,
@@ -30,7 +33,6 @@ const categoryIcon: Record<ProductCategory, (size: number) => React.ReactNode> =
   converters:  (s) => <Shuffle size={s} strokeWidth={1.2} />,
 };
 
-// ── Single product card ───────────────────────────────────────────
 function ProductCard({ product, index }: { product: Product; index: number }) {
   const number = String(index + 1).padStart(2, '0');
 
@@ -39,26 +41,20 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
       className="group"
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{
-        duration: 0.45,
-        delay: index * 0.07,
-        ease: [0.25, 0.46, 0.45, 0.94],
-      }}
+      transition={{ duration: 0.45, delay: index * 0.07, ease: [0.25, 0.46, 0.45, 0.94] }}
     >
-      {/* Number */}
       <span className="text-[13px] text-slate-400 font-medium mb-2.5 block tracking-wider">
         {number}
       </span>
 
-      {/* Card */}
       <div
         className="relative rounded-[1.4rem] overflow-hidden group-hover:-translate-y-1 transition-all duration-300"
         style={{ backgroundColor: '#e5e0d8' }}
       >
         <div className="aspect-[3/4] flex items-center justify-center p-8">
-          {product.image ? (
+          {product.image_path ? (
             <img
-              src={product.image}
+              src={product.image_path}
               alt={product.name}
               className="max-w-full max-h-full object-contain drop-shadow-lg group-hover:scale-105 transition-transform duration-500"
             />
@@ -69,16 +65,14 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
           )}
         </div>
 
-        {/* Badge */}
         {product.badge && (
           <span className="absolute top-4 left-4 text-[9px] font-bold uppercase tracking-[0.12em] bg-white/90 backdrop-blur-sm text-navy-900 px-3 py-1.5 rounded-full">
             {product.badge}
           </span>
         )}
 
-        {/* Arrow CTA */}
         <a
-          href={`/?product=${product.id}&service=${product.relatedService}#contact`}
+          href={`/?product=${product.id}&service=${product.related_service}#contact`}
           className="absolute bottom-4 right-4 w-11 h-11 bg-navy-900 hover:bg-solar-500 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg"
           aria-label={`Inquire about ${product.name}`}
         >
@@ -86,7 +80,6 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
         </a>
       </div>
 
-      {/* Info below card */}
       <div className="mt-4">
         <h3
           className="text-navy-900 font-bold text-[15px] leading-snug mb-1"
@@ -94,16 +87,17 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
         >
           {product.name}
         </h3>
-        <p className="text-slate-400 text-[12px] leading-relaxed">
-          {product.specs}
-        </p>
+        <p className="text-slate-400 text-[12px] leading-relaxed">{product.specs}</p>
       </div>
     </motion.div>
   );
 }
 
-// ── Main page ─────────────────────────────────────────────────────
-export default function ProductsPage() {
+interface Props {
+  products: Product[];
+}
+
+export default function ProductsPage({ products }: Props) {
   const [activeCategory, setActiveCategory] = useState<ProductCategory | 'all'>('all');
 
   const filtered =
@@ -113,13 +107,10 @@ export default function ProductsPage() {
 
   return (
     <Layout>
-      {/* ── Page header ── */}
       <div className="bg-gradient-to-br from-navy-900 via-navy-800 to-navy-700 pt-28 pb-14 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center gap-2 text-white/60 text-sm mb-8">
-            <Link href="/" className="hover:text-white transition-colors">
-              Home
-            </Link>
+            <Link href="/" className="hover:text-white transition-colors">Home</Link>
             <span>/</span>
             <span className="text-white">Products</span>
           </div>
@@ -144,11 +135,8 @@ export default function ProductsPage() {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
-        {/* ── Section intro (reference-style split layout) ── */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-12">
-          <p className="text-[13px] text-slate-400 uppercase tracking-[0.2em] font-medium">
-            Our Products
-          </p>
+          <p className="text-[13px] text-slate-400 uppercase tracking-[0.2em] font-medium">Our Products</p>
           <h2
             className="text-navy-900 font-bold text-2xl sm:text-[1.75rem] max-w-sm leading-snug"
             style={{ fontFamily: 'Poppins, sans-serif' }}
@@ -157,7 +145,6 @@ export default function ProductsPage() {
           </h2>
         </div>
 
-        {/* ── Category filter tabs ── */}
         <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 mb-12">
           <div className="flex gap-2 w-max sm:w-auto sm:flex-wrap">
             {productCategories.map((cat) => {
@@ -177,13 +164,7 @@ export default function ProductsPage() {
                   }`}
                 >
                   {cat.label}
-                  <span
-                    className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                      isActive
-                        ? 'bg-white/20 text-white'
-                        : 'bg-slate-100 text-slate-500'
-                    }`}
-                  >
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>
                     {count}
                   </span>
                 </button>
@@ -192,12 +173,8 @@ export default function ProductsPage() {
           </div>
         </div>
 
-        {/* ── Product grid (4-col like reference) ── */}
         {filtered.length > 0 ? (
-          <div
-            key={activeCategory}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12"
-          >
+          <div key={activeCategory} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
             {filtered.map((product, i) => (
               <ProductCard key={product.id} product={product} index={i} />
             ))}
@@ -205,35 +182,22 @@ export default function ProductsPage() {
         ) : (
           <div className="text-center py-20 text-slate-400">
             <Package size={40} className="mx-auto mb-3 opacity-40" />
-            <p className="text-lg font-medium">
-              No products in this category yet.
-            </p>
+            <p className="text-lg font-medium">No products in this category yet.</p>
           </div>
         )}
 
-        {/* ── CTA strip ── */}
         <div className="mt-24 bg-navy-900 rounded-3xl px-5 py-10 sm:px-10 sm:py-14 text-center">
-          <h2
-            className="text-white font-black text-2xl sm:text-3xl mb-3"
-            style={{ fontFamily: 'Poppins, sans-serif' }}
-          >
+          <h2 className="text-white font-black text-2xl sm:text-3xl mb-3" style={{ fontFamily: 'Poppins, sans-serif' }}>
             Not sure which product fits your system?
           </h2>
           <p className="text-white/70 text-base sm:text-lg mb-8 max-w-xl mx-auto">
-            Our team will assess your site and recommend the right equipment for
-            your budget and energy needs — free of charge.
+            Our team will assess your site and recommend the right equipment for your budget and energy needs — free of charge.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              href="/#contact"
-              className="inline-flex items-center gap-2 bg-solar-500 hover:bg-solar-400 text-white font-bold px-7 py-3.5 rounded-xl transition-colors duration-200"
-            >
+            <Link href="/#contact" className="inline-flex items-center gap-2 bg-solar-500 hover:bg-solar-400 text-white font-bold px-7 py-3.5 rounded-xl transition-colors duration-200">
               Get a Free Consultation <ArrowRight size={18} />
             </Link>
-            <Link
-              href="/services"
-              className="inline-flex items-center gap-2 text-white/70 hover:text-white font-semibold transition-colors duration-200 text-sm"
-            >
+            <Link href="/services" className="inline-flex items-center gap-2 text-white/70 hover:text-white font-semibold transition-colors duration-200 text-sm">
               View our services →
             </Link>
           </div>
