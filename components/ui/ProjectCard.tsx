@@ -36,9 +36,9 @@ export default function ProjectCard({ project }: ProjectCardProps) {
     <div className="relative flex-shrink-0 w-[88vw] h-[300px] sm:w-[560px] sm:h-[400px] md:w-[800px] md:h-[560px] lg:w-[1000px] lg:h-[680px] rounded-2xl overflow-hidden transition-transform hover:scale-101 duration-300 ease-in-out select-none">
 
       {/* Background: image if available, gradient fallback */}
-      {project.image ? (
+      {project.cover_image_path ? (
         <img
-          src={project.image}
+          src={project.cover_image_path}
           alt={project.title}
           className="absolute inset-0 w-full h-full object-cover"
           draggable={false}
@@ -57,10 +57,10 @@ export default function ProjectCard({ project }: ProjectCardProps) {
         </span>
       </div>
 
-      {/* External link icon button — top right, only if url exists */}
-      {project.url && (
+      {/* Facebook link — top right */}
+      {project.facebook_url && (
         <a
-          href={project.url}
+          href={project.facebook_url}
           target="_blank"
           rel="noopener noreferrer"
           className="absolute top-4 right-4 z-10 inline-flex items-center justify-center bg-white/20 backdrop-blur-sm text-white p-2 rounded-full hover:bg-white/40 transition-colors duration-200"
@@ -70,8 +70,8 @@ export default function ProjectCard({ project }: ProjectCardProps) {
         </a>
       )}
 
-      {/* Centered emoji — only shown when no image */}
-      {!project.image && (
+      {/* Centered emoji — only when no image */}
+      {!project.cover_image_path && (
         <div className="absolute inset-0 flex items-center justify-center">
           <span className="text-7xl opacity-20">{categoryIcons[project.category]}</span>
         </div>
@@ -86,10 +86,12 @@ export default function ProjectCard({ project }: ProjectCardProps) {
           {project.title}
         </h3>
         <div className="flex items-center gap-3 text-white/80 text-sm">
-          <span className="flex items-center gap-1">
-            <Zap size={15} className="text-solar-400" />
-            {project.systemSize}
-          </span>
+          {project.system_size && (
+            <span className="flex items-center gap-1">
+              <Zap size={15} className="text-solar-400" />
+              {project.system_size}
+            </span>
+          )}
           {project.location && (
             <span className="flex items-center gap-1">
               <MapPin size={15} />
