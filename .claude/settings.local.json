@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(update-config)",
+      "Bash(find C:UsersTRAINEE-MATUGUINADocumentsnextJMCJMCSOLAR-next -type d -not -path */node_modules/* -not -path */.next/*)",
+      "Bash(bash \"C:/Users/TRAINEE-MATUGUINA/.claude/plugins/cache/superpowers-marketplace/superpowers/5.0.4/skills/brainstorming/scripts/start-server.sh\" --project-dir \"C:/Users/TRAINEE-MATUGUINA/Documents/nextJMC/JMCSOLAR-next\")",
+      "mcp__plugin_supabase_supabase__get_project_url",
+      "mcp__plugin_supabase_supabase__get_publishable_keys",
+      "mcp__plugin_supabase_supabase__list_tables",
+      "Bash(npm install:*)",
+      "mcp__plugin_supabase_supabase__apply_migration",
+      "Bash(npx tsc:*)",
+      "Bash(npm run:*)",
+      "Bash(cd:*)"
+    ]
+  }
+}
