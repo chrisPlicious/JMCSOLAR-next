@@ -6,15 +6,30 @@ export interface Service {
   highlight?: string;
 }
 
+// Snake_case fields match the Supabase DB schema
 export interface Project {
   id: string;
   title: string;
   category: 'residential' | 'commercial' | 'industrial' | 'agricultural' | 'school';
-  systemSize: string;
-  description: string;
-  image?: string;
-  location?: string;
-  url?: string;
+  system_size: string | null;
+  description: string | null;
+  location: string | null;
+  facebook_url: string | null;
+  cover_image_path: string | null;
+  created_at: string;
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  brand: string | null;
+  category: 'panels' | 'batteries' | 'inverters' | 'controllers' | 'converters';
+  specs: string | null;
+  description: string | null;
+  badge: string | null;
+  image_path: string | null;
+  related_service: string | null;
+  created_at: string;
 }
 
 export interface Review {
@@ -37,7 +52,21 @@ export type NavItem = {
   href: string;
 };
 
-export type ProjectCategory = 'all' | 'residential' | 'commercial' | 'industrial' | 'agricultural';
+// 'school' added — was missing from previous type
+export type ProjectCategory =
+  | 'all'
+  | 'residential'
+  | 'commercial'
+  | 'industrial'
+  | 'agricultural'
+  | 'school';
+
+export type ProductCategory =
+  | 'panels'
+  | 'batteries'
+  | 'inverters'
+  | 'controllers'
+  | 'converters';
 
 export interface ClientType {
   id: string;
