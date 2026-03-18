@@ -11,7 +11,8 @@
       "mcp__plugin_supabase_supabase__apply_migration",
       "Bash(npx tsc:*)",
       "Bash(npm run:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(ls:*)"
     ]
   }
 }

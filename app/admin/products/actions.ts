@@ -1,20 +1,28 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
 import { createSupabaseAdminClient } from '@/lib/supabase/server';
 
-async function uploadProductImage(supabase: ReturnType<typeof createSupabaseAdminClient>, productId: string, file: File): Promise<string | null> {
+type ActionResult = { error?: string; success?: boolean };
+
+async function uploadProductImage(
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  productId: string,
+  file: File
+): Promise<string | null> {
   const ext = file.name.split('.').pop();
   const path = `${productId}/product-${Date.now()}.${ext}`;
   const { error } = await supabase.storage.from('product-images').upload(path, file);
   return error ? null : path;
 }
 
-export async function createProductAction(formData: FormData) {
+export async function createProductAction(
+  prevState: ActionResult,
+  formData: FormData
+): Promise<ActionResult> {
   const supabase = createSupabaseAdminClient();
 
-  const { data: product } = await supabase
+  const { data: product, error } = await supabase
     .from('products')
     .insert({
       name: formData.get('name') as string,
@@ -28,6 +36,8 @@ export async function createProductAction(formData: FormData) {
     .select('id')
     .single();
 
+  if (error) return { error: error.message };
+
   if (product) {
     const file = formData.get('image') as File | null;
     if (file && file.size > 0) {
@@ -40,10 +50,14 @@ export async function createProductAction(formData: FormData) {
 
   revalidatePath('/products');
   revalidatePath('/admin/products');
-  redirect('/admin/products');
+  return { success: true };
 }
 
-export async function updateProductAction(id: string, formData: FormData) {
+export async function updateProductAction(
+  id: string,
+  prevState: ActionResult,
+  formData: FormData
+): Promise<ActionResult> {
   const supabase = createSupabaseAdminClient();
 
   const update: Record<string, string | null> = {
@@ -62,20 +76,25 @@ export async function updateProductAction(id: string, formData: FormData) {
     if (path) update.image_path = path;
   }
 
-  await supabase.from('products').update(update).eq('id', id);
+  const { error } = await supabase.from('products').update(update).eq('id', id);
+  if (error) return { error: error.message };
+
   revalidatePath('/products');
   revalidatePath('/admin/products');
-  redirect('/admin/products');
+  return { success: true };
 }
 
-export async function deleteProductAction(id: string) {
+export async function deleteProductAction(id: string): Promise<void> {
   const supabase = createSupabaseAdminClient();
-  const { data: product } = await supabase.from('products').select('image_path').eq('id', id).single();
+  const { data: product } = await supabase
+    .from('products')
+    .select('image_path')
+    .eq('id', id)
+    .single();
   if (product?.image_path) {
     await supabase.storage.from('product-images').remove([product.image_path]);
   }
   await supabase.from('products').delete().eq('id', id);
   revalidatePath('/products');
   revalidatePath('/admin/products');
-  redirect('/admin/products');
 }

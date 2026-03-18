@@ -4,13 +4,15 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, X, ChevronDown, LayoutGrid, Package } from 'lucide-react';
-import { services } from '@/data/services';
+import { createClient } from '@supabase/supabase-js';
+import type { DbService } from '@/lib/supabase/types';
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileServicesOpen, setMobileServicesOpen] = useState(false);
+  const [services, setServices] = useState<DbService[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
 
@@ -18,6 +20,20 @@ export default function Navbar() {
     const handleScroll = () => setScrolled(window.scrollY > 80);
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const client = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+    client
+      .from('services')
+      .select('id, title')
+      .order('display_order', { ascending: true })
+      .then(({ data }) => {
+        if (data) setServices(data as DbService[]);
+      });
   }, []);
 
   // Close everything on navigation

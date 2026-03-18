@@ -31,3 +31,24 @@ export type DbProduct = {
   related_service: string | null;
   created_at: string;
 };
+
+export type DbService = {
+  id: string;
+  icon: string;
+  title: string;
+  description: string;
+  highlight: boolean;
+  display_order: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type DbReview = {
+  id: string;
+  reviewer_name: string;
+  quote: string;
+  source: string;
+  rating: number;
+  created_at: string;
+  updated_at: string;
+};

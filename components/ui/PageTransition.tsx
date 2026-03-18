@@ -63,6 +63,10 @@ export default function PageTransition({ children }: Props) {
     };
   }, []);
 
+  if (pathname.startsWith('/admin')) {
+    return <>{children}</>;
+  }
+
   return (
     <AnimatePresence mode="wait">
       <motion.div
