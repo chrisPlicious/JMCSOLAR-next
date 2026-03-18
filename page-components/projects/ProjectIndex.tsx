@@ -3,10 +3,14 @@
 import { useRef } from 'react';
 import type { MouseEvent } from 'react';
 import ProjectCard from '@/components/ui/ProjectCard';
-import { projects } from '@/data/projects';
 import Layout from '@/components/layout/Layout';
+import type { Project } from '@/types';
 
-export default function ProjectsPage() {
+interface Props {
+  projects: Project[];
+}
+
+export default function ProjectsPage({ projects }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const isDown = useRef(false);
   const startX = useRef(0);
@@ -41,7 +45,6 @@ export default function ProjectsPage() {
   return (
     <Layout>
       <section id="projects" className="bg-white mx-auto py-20 lg:py-28">
-        {/* Header */}
         <div className="text-center max-w-2xl mx-auto mb-10">
           <span className="text-solar-600 font-semibold text-sm uppercase tracking-widest mb-4 block">
             Our Work
@@ -60,7 +63,6 @@ export default function ProjectsPage() {
           <p className="text-slate-400 text-sm mt-3">Drag or swipe to explore →</p>
         </div>
 
-        {/* Horizontal scroll gallery */}
         <div
           ref={scrollRef}
           className="scrollbar-hide flex gap-5 overflow-x-auto py-2 pb-4 px-1"
