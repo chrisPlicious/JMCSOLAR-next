@@ -29,7 +29,7 @@ export default function Navbar() {
     );
     client
       .from('services')
-      .select('id, title')
+      .select('id, title, slug')
       .order('display_order', { ascending: true })
       .then(({ data }) => {
         if (data) setServices(data as DbService[]);
@@ -134,17 +134,17 @@ export default function Navbar() {
                     Service Types
                   </p>
                   <div className="flex flex-col gap-0.5">
-                    {services.map((s) => (
+                    {services.map((service) => (
                       <Link
-                        key={s.id}
-                        href={`/services/${s.id}`}
+                        key={service.slug}
+                        href={`/services/${service.slug}`}
                         className={`px-3 py-2 rounded-xl text-sm transition-all duration-200 ${
-                          pathname === `/services/${s.id}`
+                          pathname === `/services/${service.slug}`
                             ? 'text-solar-600 bg-solar-500/8 font-medium'
                             : 'text-slate-600 hover:text-solar-600 hover:bg-solar-500/5'
                         }`}
                       >
-                        {s.title}
+                        {service.title}
                       </Link>
                     ))}
                   </div>
@@ -249,10 +249,10 @@ export default function Navbar() {
                 {/* Individual services */}
                 {services.map((s) => (
                   <Link
-                    key={s.id}
-                    href={`/services/${s.id}`}
+                    key={s.slug}
+                    href={`/services/${s.slug}`}
                     className={`px-4 py-2.5 rounded-xl text-sm transition-colors ${
-                      pathname === `/services/${s.id}`
+                      pathname === `/services/${s.slug}`
                         ? 'text-solar-400 bg-white/5'
                         : 'text-white/70 hover:text-solar-400 hover:bg-white/5'
                     }`}

@@ -7,7 +7,7 @@ import type { DbReview } from '@/lib/supabase/types';
 const SOURCE_OPTIONS = ['google', 'facebook', 'instagram', 'direct', 'other'] as const;
 
 const inputCls =
-  'w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-navy-950 outline-none focus:ring-2 focus:ring-solar-500 focus:border-solar-500 transition-colors';
+  'w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-navy-950 outline-none focus:ring-2 focus:ring-solar-500/30 focus:border-solar-500 transition-colors';
 const labelCls = 'block text-sm font-medium text-slate-700 mb-1.5';
 
 type ReviewFormProps = {
@@ -42,8 +42,16 @@ export default function ReviewForm({ review, action }: ReviewFormProps) {
         </h1>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-[0_4px_24px_0_rgb(0_0_0/0.06)] p-8 max-w-2xl">
-        <form action={action} className="space-y-5">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-[0_4px_24px_0_rgb(0_0_0/0.06)] p-8 max-w-3xl mb-24">
+        <form id="main-form" action={action} className="space-y-5">
+          {/* Section: Review Info */}
+          <div className="flex items-center gap-3 my-6">
+            <span className="text-xs font-bold uppercase tracking-widest text-slate-400 whitespace-nowrap">
+              Review Info
+            </span>
+            <hr className="flex-1 border-slate-100" />
+          </div>
+
           <div>
             <label className={labelCls}>
               Reviewer Name <span className="text-red-400">*</span>
@@ -52,19 +60,6 @@ export default function ReviewForm({ review, action }: ReviewFormProps) {
               name="reviewer_name"
               required
               defaultValue={review?.reviewer_name ?? ''}
-              className={inputCls}
-            />
-          </div>
-
-          <div>
-            <label className={labelCls}>
-              Quote <span className="text-red-400">*</span>
-            </label>
-            <textarea
-              name="quote"
-              required
-              rows={4}
-              defaultValue={review?.quote ?? ''}
               className={inputCls}
             />
           </div>
@@ -127,21 +122,36 @@ export default function ReviewForm({ review, action }: ReviewFormProps) {
             <input type="hidden" name="rating" value={rating} />
           </div>
 
-          <div className="flex items-center gap-4 pt-2">
-            <button
-              type="submit"
-              className="bg-solar-500 hover:bg-solar-600 text-navy-950 font-bold px-6 py-3 rounded-xl text-sm transition-colors"
-            >
-              {isEdit ? 'Update Review' : 'Create Review'}
-            </button>
-            <Link
-              href="/admin/reviews"
-              className="text-slate-500 hover:text-slate-700 text-sm transition-colors"
-            >
-              Cancel
-            </Link>
+          <div>
+            <label className={labelCls}>
+              Quote <span className="text-red-400">*</span>
+            </label>
+            <textarea
+              name="quote"
+              required
+              rows={4}
+              defaultValue={review?.quote ?? ''}
+              className={inputCls}
+            />
           </div>
         </form>
+      </div>
+
+      {/* Sticky save bar */}
+      <div className="fixed bottom-0 left-64 right-0 bg-white border-t border-slate-200 shadow-[0_-4px_16px_0_rgb(0_0_0/0.06)] px-8 py-4 flex items-center justify-end gap-3 z-30">
+        <Link
+          href="/admin/reviews"
+          className="text-slate-500 hover:text-slate-700 text-sm transition-colors"
+        >
+          Cancel
+        </Link>
+        <button
+          type="submit"
+          form="main-form"
+          className="bg-solar-500 hover:bg-solar-400 text-navy-950 font-bold px-6 py-2.5 rounded-xl text-sm transition-colors"
+        >
+          {isEdit ? 'Update Review' : 'Create Review'}
+        </button>
       </div>
     </>
   );

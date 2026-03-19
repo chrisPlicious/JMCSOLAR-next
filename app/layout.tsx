@@ -1,15 +1,11 @@
 import type { Metadata } from 'next';
-import { Plus_Jakarta_Sans, Poppins, Montserrat } from 'next/font/google';
+import { Plus_Jakarta_Sans, Poppins, Montserrat, Geist } from 'next/font/google';
 import './globals.css';
 import LoaderScreen from '@/components/ui/LoaderScreen';
 import PageTransition from '@/components/ui/PageTransition';
+import { cn } from "@/lib/utils";
 
-const plusJakarta = Plus_Jakarta_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-sans',
-  display: 'swap',
-});
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -46,8 +42,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className={`${plusJakarta.variable} ${poppins.variable} ${montserrat.variable}`}>
+    <html lang="en" className={cn("font-sans", geist.variable)}>
+      <body className={`${geist.variable} ${poppins.variable} ${montserrat.variable}`}>
         <LoaderScreen />
         <PageTransition>{children}</PageTransition>
       </body>

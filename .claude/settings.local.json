@@ -12,7 +12,11 @@
       "Bash(npx tsc:*)",
       "Bash(npm run:*)",
       "Bash(cd:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "mcp__plugin_supabase_supabase__list_projects",
+      "mcp__plugin_supabase_supabase__execute_sql",
+      "Bash(grep:*)",
+      "Bash(npx shadcn@latest init --defaults)"
     ]
   }
 }

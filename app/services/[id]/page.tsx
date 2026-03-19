@@ -1,30 +1,54 @@
-import { use } from 'react';
 import { notFound } from 'next/navigation';
-import HybridPage from '@/page-components/services/HybridPage';
-import OnGridPage from '@/page-components/services/OnGridPage';
-import BessPage from '@/page-components/services/BessPage';
-import PumpPage from '@/page-components/services/PumpPage';
-import EvPage from '@/page-components/services/EvPage';
-import UpsPage from '@/page-components/services/UpsPage';
-import ControllerPage from '@/page-components/services/ControllerPage';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
+import ServicePageLayout from '@/components/ui/ServicePageLayout';
+import ServiceEmptyState from '@/components/ui/ServiceEmptyState';
+import type { DbService, DbServiceDetail } from '@/lib/supabase/types';
 
-const servicePages: Record<string, React.ComponentType> = {
-  hybrid: HybridPage,
-  ongrid: OnGridPage,
-  bess: BessPage,
-  pump: PumpPage,
-  ev: EvPage,
-  ups: UpsPage,
-  controller: ControllerPage,
-};
+export const revalidate = 60;
 
-export default function ServiceDetailPage({
+export default async function ServiceDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = use(params);
-  const Page = servicePages[id];
-  if (!Page) notFound();
-  return <Page />;
+  const { id: slug } = await params;
+
+  const supabase = createSupabaseServerClient();
+
+  const { data: service } = await supabase
+    .from('services')
+    .select('*')
+    .eq('slug', slug)
+    .single<DbService>();
+
+  if (!service) {
+    notFound();
+  }
+
+  const { data: detail } = await supabase
+    .from('service_details')
+    .select('*')
+    .eq('service_id', service.id)
+    .single<DbServiceDetail>();
+
+  if (!detail) {
+    return <ServiceEmptyState service={service} />;
+  }
+
+  return (
+    <ServicePageLayout
+      heroBgImage="/assets/bg-4.jpg"
+      title={service.title}
+      iconName={service.icon}
+      serviceId={service.slug}
+      tagline={detail.tagline}
+      overview={detail.overview}
+      whatIsIt={detail.what_is_it}
+      howItWorks={detail.how_it_works}
+      benefits={detail.benefits}
+      useCases={detail.use_cases.map((u) => u.item)}
+      specs={detail.specs}
+      sources={detail.sources}
+    />
+  );
 }

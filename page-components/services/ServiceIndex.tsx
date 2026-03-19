@@ -100,7 +100,7 @@ export default function ServicesPage() {
             return (
               <Link
                 key={service.id}
-                href={`/services/${service.id}`}
+                href={`/services/${service.slug}`}
                 className="flex flex-col items-center text-center gap-3 bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md hover:border-solar-300 transition-all duration-200"
               >
                 {service.highlight && (
@@ -199,7 +199,7 @@ export default function ServicesPage() {
                     {service.description}
                   </p>
                   <div className="flex items-center justify-between font-semibold text-md text-solar-400 hover:text-solar-300 transition-colors ">
-                    <a href={`/?service=${service.id}#contact`}>
+                    <a href={`/?service=${service.slug}#contact`}>
                       <button
                         onClick={(e) => e.stopPropagation()}
                         className="inline-flex items-center gap-2 "
@@ -208,7 +208,7 @@ export default function ServicesPage() {
                       </button>
                     </a>
                     <Link
-                      href={`/services/${service.id}`}
+                      href={`/services/${service.slug}`}
                       onClick={(e) => e.stopPropagation()}
                     >
                       Learn more
@@ -226,7 +226,7 @@ export default function ServicesPage() {
             size="lg"
             href={
               activeIndex !== null && services[activeIndex]
-                ? `/?service=${services[activeIndex].id}#contact`
+                ? `/?service=${services[activeIndex].slug}#contact`
                 : '/#contact'
             }
           >

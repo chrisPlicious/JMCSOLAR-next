@@ -34,6 +34,7 @@ export type DbProduct = {
 
 export type DbService = {
   id: string;
+  slug: string;
   icon: string;
   title: string;
   description: string;
@@ -49,6 +50,21 @@ export type DbReview = {
   quote: string;
   source: string;
   rating: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type DbServiceDetail = {
+  id: string;
+  service_id: string;
+  tagline: string;
+  overview: string;
+  what_is_it: string;
+  how_it_works: { step: string; description: string }[];
+  benefits: { iconName: string; title: string; description: string }[];
+  use_cases: { item: string }[];
+  specs: { label: string; value: string }[];
+  sources: { title: string; url: string; publisher: string }[];
   created_at: string;
   updated_at: string;
 };

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { updateProjectAction } from '../actions';
 import Link from 'next/link';
 
-const inputCls = 'w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-navy-950 outline-none focus:ring-2 focus:ring-solar-500 focus:border-solar-500 transition-colors';
+const inputCls = 'w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-navy-950 outline-none focus:ring-2 focus:ring-solar-500/30 focus:border-solar-500 transition-colors';
 const labelCls = 'block text-sm font-medium text-slate-700 mb-1.5';
 
 const categories = ['residential', 'commercial', 'industrial', 'agricultural', 'school'];
@@ -43,16 +43,21 @@ export default function EditProjectForm({ project }: { project: Project }) {
         <h1 className="font-display font-black text-navy-950 text-2xl">Edit Project</h1>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-[0_4px_24px_0_rgb(0_0_0/0.06)] p-8 max-w-2xl">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-[0_4px_24px_0_rgb(0_0_0/0.06)] p-8 max-w-3xl mb-24">
         {state?.error && (
           <div className="mb-6 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
             {state.error}
           </div>
         )}
 
-        <form action={formAction} className="space-y-5">
-          {/* Section 1 — Project Details */}
-          <p className={labelCls}>Project Details</p>
+        <form id="main-form" action={formAction} className="space-y-5">
+          {/* Section: Basic Information */}
+          <div className="flex items-center gap-3 my-6">
+            <span className="text-xs font-bold uppercase tracking-widest text-slate-400 whitespace-nowrap">
+              Basic Information
+            </span>
+            <hr className="flex-1 border-slate-100" />
+          </div>
 
           <div>
             <label htmlFor="title" className={labelCls}>Title</label>
@@ -72,18 +77,26 @@ export default function EditProjectForm({ project }: { project: Project }) {
           </div>
 
           <div>
+            <label htmlFor="location" className={labelCls}>Location</label>
+            <input id="location" name="location" placeholder="e.g. Ormoc City, Leyte" defaultValue={project.location ?? ''} className={inputCls} />
+          </div>
+
+          <div>
             <label htmlFor="system_size" className={labelCls}>System Size</label>
             <input id="system_size" name="system_size" placeholder="e.g. 10 kWp" defaultValue={project.system_size ?? ''} className={inputCls} />
           </div>
 
-          <hr className="border-slate-100 my-6" />
-
-          {/* Section 2 — Location & Links */}
-          <p className={labelCls}>Location &amp; Links</p>
+          {/* Section: Details */}
+          <div className="flex items-center gap-3 my-6">
+            <span className="text-xs font-bold uppercase tracking-widest text-slate-400 whitespace-nowrap">
+              Details
+            </span>
+            <hr className="flex-1 border-slate-100" />
+          </div>
 
           <div>
-            <label htmlFor="location" className={labelCls}>Location</label>
-            <input id="location" name="location" placeholder="e.g. Ormoc City, Leyte" defaultValue={project.location ?? ''} className={inputCls} />
+            <label htmlFor="description" className={labelCls}>Description</label>
+            <textarea id="description" name="description" rows={4} defaultValue={project.description ?? ''} className={inputCls} />
           </div>
 
           <div>
@@ -91,20 +104,13 @@ export default function EditProjectForm({ project }: { project: Project }) {
             <input id="facebook_url" name="facebook_url" type="url" placeholder="https://facebook.com/..." defaultValue={project.facebook_url ?? ''} className={inputCls} />
           </div>
 
-          <hr className="border-slate-100 my-6" />
-
-          {/* Section 3 — Description */}
-          <p className={labelCls}>Description</p>
-
-          <div>
-            <label htmlFor="description" className={labelCls}>Description</label>
-            <textarea id="description" name="description" rows={4} defaultValue={project.description ?? ''} className={inputCls} />
+          {/* Section: Media */}
+          <div className="flex items-center gap-3 my-6">
+            <span className="text-xs font-bold uppercase tracking-widest text-slate-400 whitespace-nowrap">
+              Media
+            </span>
+            <hr className="flex-1 border-slate-100" />
           </div>
-
-          <hr className="border-slate-100 my-6" />
-
-          {/* Section 4 — Add New Photo */}
-          <p className={labelCls}>Add New Photo</p>
 
           <div>
             <label htmlFor="new_image" className={labelCls}>Add New Photo</label>
@@ -120,23 +126,25 @@ export default function EditProjectForm({ project }: { project: Project }) {
               Set as cover image
             </label>
           </div>
-
-          <div className="flex items-center gap-3 pt-2">
-            <button
-              type="submit"
-              disabled={isPending}
-              className="bg-solar-500 hover:bg-solar-600 disabled:opacity-60 text-navy-950 font-bold px-6 py-3 rounded-xl text-sm transition-colors"
-            >
-              {isPending ? 'Saving…' : 'Save Changes'}
-            </button>
-            <Link
-              href="/admin/projects"
-              className="text-slate-500 hover:text-slate-700 text-sm transition-colors"
-            >
-              Cancel
-            </Link>
-          </div>
         </form>
+      </div>
+
+      {/* Sticky save bar */}
+      <div className="fixed bottom-0 left-64 right-0 bg-white border-t border-slate-200 shadow-[0_-4px_16px_0_rgb(0_0_0/0.06)] px-8 py-4 flex items-center justify-end gap-3 z-30">
+        <Link
+          href="/admin/projects"
+          className="text-slate-500 hover:text-slate-700 text-sm transition-colors"
+        >
+          Cancel
+        </Link>
+        <button
+          type="submit"
+          form="main-form"
+          disabled={isPending}
+          className="bg-solar-500 hover:bg-solar-400 disabled:opacity-60 text-navy-950 font-bold px-6 py-2.5 rounded-xl text-sm transition-colors"
+        >
+          {isPending ? 'Saving…' : 'Update Project'}
+        </button>
       </div>
     </div>
   );
