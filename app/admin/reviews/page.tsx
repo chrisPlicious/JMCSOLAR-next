@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import DeleteReviewButton from './_components/DeleteReviewButton';
+import NewReviewDialog from './_components/NewReviewDialog';
 
 function MiniStatCard({ number, label }: { number: string | number; label: string }) {
   return (
@@ -34,12 +35,7 @@ export default async function AdminReviewsPage() {
       {/* Page header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display font-black text-navy-950 text-2xl">Reviews</h1>
-        <Link
-          href="/admin/reviews/new"
-          className="bg-solar-500 hover:bg-solar-400 text-navy-950 font-bold text-sm px-4 py-2.5 rounded-xl transition-colors"
-        >
-          + New Review
-        </Link>
+        <NewReviewDialog />
       </div>
 
       {/* Stat strip */}

@@ -1,10 +1,11 @@
-'use client';
+"use client";
 
 import { useEffect, useState, useRef } from "react";
-const solarBg = '/assets/bg-1.jpg';
+const solarBg = "/assets/bg-1.jpg";
 import { ArrowRight, ChevronDown, Star, Users, Zap, Sun } from "lucide-react";
 import { motion } from "framer-motion";
-import Button from "@/components/ui/Button";
+import Link from "next/link";
+import { buttonVariants } from "@/components/ui/Button";
 
 const stats = [
   { value: "100%", label: "Recommend Rate", icon: <Star size={18} /> },
@@ -78,7 +79,7 @@ export default function Hero() {
 
       {/* Multi-layer gradient overlay */}
       {/* <div className="absolute inset-0 bg-gradient-to-r from-navy-950/95 via-navy-900/85 to-navy-900/60" /> */}
-      <div className="absolute inset-0 bg-gradient-to-t from-navy-950/50 via-transparent to-navy-950/30" />
+      <div className="absolute inset-0 bg-linear-to-t from-navy-950/50 via-transparent to-navy-950/30" />
 
       {/* Decorative organic blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -98,7 +99,10 @@ export default function Hero() {
         />
         {/* Decorative ring - mid right */}
         <div className="absolute top-1/3 right-[15%] w-64 h-64 rounded-full border border-white/5 animate-spin-slow hidden lg:block" />
-        <div className="absolute top-1/3 right-[15%] w-48 h-48 rounded-full border border-solar-500/10 animate-spin-slow hidden lg:block" style={{ animationDirection: 'reverse', animationDuration: '15s' }} />
+        <div
+          className="absolute top-1/3 right-[15%] w-48 h-48 rounded-full border border-solar-500/10 animate-spin-slow hidden lg:block"
+          style={{ animationDirection: "reverse", animationDuration: "15s" }}
+        />
 
         {/* Subtle dot pattern */}
         <div
@@ -127,7 +131,9 @@ export default function Hero() {
               className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/10 rounded-full px-4 py-2 mb-8"
             >
               <span className="w-2 h-2 rounded-full bg-solar-400 animate-pulse" />
-              <span className="text-white/80 text-sm font-medium">Renewable Energy Advocates</span>
+              <span className="text-white/80 text-sm font-medium">
+                Renewable Energy Advocates
+              </span>
             </motion.div>
 
             {/* Headline */}
@@ -148,29 +154,37 @@ export default function Hero() {
                   <span className="inline-block w-[3px] h-[0.85em] bg-solar-400 ml-1 rounded-sm animate-[blink_0.8s_step-end_infinite]" />
                 </span>
                 {/* Underline decoration */}
-                <span className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-solar-500 to-solar-300 rounded-full opacity-60" />
+                <span className="absolute -bottom-2 left-0 right-0 h-1 bg-linear-to-r from-solar-500 to-solar-300 rounded-full opacity-60" />
               </span>
             </h1>
 
             {/* Subtitle */}
             <p className="text-white/70 text-lg sm:text-xl lg:text-2xl max-w-2xl mb-4 leading-relaxed mx-auto lg:mx-0">
               Professional Solar Installation Services in{" "}
-              <span className="text-white font-semibold">Ormoc City, Leyte</span>
+              <span className="text-white font-semibold">
+                Ormoc City, Leyte
+              </span>
             </p>
             <p className="text-white/50 text-base max-w-xl mb-10 mx-auto lg:mx-0">
-              From residential rooftops to 100kW+ industrial solar farms — we make
-              clean, free energy accessible for every Filipino.
+              From residential rooftops to 100kW+ industrial solar farms — we
+              make clean, free energy accessible for every Filipino.
             </p>
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-4 mb-16">
-              <Button variant="primary" size="lg" href="/#contact">
+              <Link
+                href="/#contact"
+                className={buttonVariants({ variant: "default", size: "lg" })}
+              >
                 Get a Free Quote
                 <ArrowRight size={18} />
-              </Button>
-              <Button variant="outline" size="lg" href="/projects">
+              </Link>
+              <Link
+                href="/projects"
+                className={buttonVariants({ variant: "outline", size: "lg" })}
+              >
                 View Our Projects
-              </Button>
+              </Link>
             </div>
           </div>
 
@@ -178,10 +192,10 @@ export default function Hero() {
           <div className="lg:col-span-5 hidden lg:block relative h-[420px]">
             {stats.map((stat, i) => {
               const positions = [
-                { top: '0%', left: '10%', delay: 0.3 },
-                { top: '5%', left: '55%', delay: 0.45 },
-                { top: '48%', left: '0%', delay: 0.6 },
-                { top: '52%', left: '50%', delay: 0.75 },
+                { top: "0%", left: "10%", delay: 0.3 },
+                { top: "5%", left: "55%", delay: 0.45 },
+                { top: "48%", left: "0%", delay: 0.6 },
+                { top: "52%", left: "50%", delay: 0.75 },
               ];
               const pos = positions[i];
 
@@ -192,18 +206,22 @@ export default function Hero() {
                   style={{ top: pos.top, left: pos.left }}
                   initial={{ opacity: 0, y: 30, scale: 0.9 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ delay: pos.delay, duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
+                  transition={{
+                    delay: pos.delay,
+                    duration: 0.6,
+                    ease: [0.4, 0, 0.2, 1],
+                  }}
                 >
-                  <div className="text-solar-400 mb-2">
-                    {stat.icon}
-                  </div>
+                  <div className="text-solar-400 mb-2">{stat.icon}</div>
                   <div
                     className="text-white font-black text-3xl mb-1"
                     style={{ fontFamily: "Poppins, sans-serif" }}
                   >
                     {stat.value}
                   </div>
-                  <div className="text-white/50 text-xs font-medium">{stat.label}</div>
+                  <div className="text-white/50 text-xs font-medium">
+                    {stat.label}
+                  </div>
                 </motion.div>
               );
             })}

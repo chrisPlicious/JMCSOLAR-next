@@ -57,7 +57,7 @@ export default async function AdminProductsPage() {
 
       {!products?.length ? (
         /* Empty state */
-        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-[0_4px_24px_0_rgb(0_0_0/0.06)]">
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-card">
           <div className="text-center py-16 px-4">
             <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-3">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-slate-300">
@@ -71,7 +71,7 @@ export default async function AdminProductsPage() {
         </div>
       ) : (
         /* Product table */
-        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-[0_4px_24px_0_rgb(0_0_0/0.06)]">
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-card">
           <table className="w-full text-sm">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
@@ -94,10 +94,10 @@ export default async function AdminProductsPage() {
                       <img
                         src={getPublicUrl('product-images', p.image_path)!}
                         alt={p.name}
-                        className="w-10 h-10 rounded-lg object-cover border border-slate-100 flex-shrink-0"
+                        className="w-10 h-10 rounded-lg object-cover border border-slate-100 shrink-0"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+                      <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
                         <svg
                           className="w-5 h-5 text-slate-300"
                           fill="none"

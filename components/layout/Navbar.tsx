@@ -55,22 +55,25 @@ export default function Navbar() {
   }, []);
 
   const isServicesActive = pathname.startsWith('/services') || pathname.startsWith('/products');
+  const isHomePage = pathname === '/';
+  // Use transparent/white-text style only on home page before scrolling
+  const isTransparent = isHomePage && !scrolled;
 
   const linkClass = (active: boolean) =>
     `text-sm font-semibold px-4 py-2 rounded-full transition-all duration-300 ${
       active
         ? 'text-solar-500 bg-solar-500/10'
-        : scrolled
-          ? 'text-navy-900 hover:text-solar-600 hover:bg-navy-50'
-          : 'text-white/90 hover:text-white hover:bg-white/10'
+        : isTransparent
+          ? 'text-white/90 hover:text-white hover:bg-white/10'
+          : 'text-navy-900 hover:text-solar-600 hover:bg-navy-50'
     }`;
 
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        scrolled
-          ? 'bg-white/80 backdrop-blur-xl shadow-[0_1px_20px_rgba(15,31,64,0.08)] py-3'
-          : 'bg-transparent py-5'
+        isTransparent
+          ? 'bg-transparent py-5'
+          : 'bg-white/80 backdrop-blur-xl shadow-[0_1px_20px_rgba(15,31,64,0.08)] py-3'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
@@ -81,8 +84,8 @@ export default function Navbar() {
           </div>
           <div className="leading-tight">
             <span className="font-montserrat text-base tracking-tight flex gap-1">
-              <span className={`font-black text-2xl transition-colors duration-300 ${scrolled ? 'text-navy-900' : 'text-white'}`}>JMC</span>
-              <span className={`text-2xl font-medium transition-colors duration-300 ${scrolled ? 'text-navy-500' : 'text-white/70'}`}>SOLAR</span>
+              <span className={`font-black text-2xl transition-colors duration-300 ${isTransparent ? 'text-white' : 'text-navy-900'}`}>JMC</span>
+              <span className={`text-2xl font-medium transition-colors duration-300 ${isTransparent ? 'text-white/70' : 'text-navy-500'}`}>SOLAR</span>
             </span>
           </div>
         </Link>
@@ -178,9 +181,9 @@ export default function Navbar() {
         <div className="hidden lg:flex items-center gap-3">
           <a href="/#contact">
             <button className={`font-bold text-sm px-6 py-2.5 rounded-full transition-all duration-300 shadow-sm hover:shadow-md ${
-              scrolled
-                ? 'bg-navy-900 text-white hover:bg-navy-800'
-                : 'bg-white text-navy-900 hover:bg-white/90'
+              isTransparent
+                ? 'bg-white text-navy-900 hover:bg-white/90'
+                : 'bg-navy-900 text-white hover:bg-navy-800'
             }`}>
               Get a Quote
             </button>
@@ -190,9 +193,9 @@ export default function Navbar() {
         {/* Mobile Hamburger */}
         <button
           className={`lg:hidden p-2.5 rounded-xl transition-colors ${
-            scrolled
-              ? 'text-navy-900 hover:bg-navy-50'
-              : 'text-white hover:bg-white/10'
+            isTransparent
+              ? 'text-white hover:bg-white/10'
+              : 'text-navy-900 hover:bg-navy-50'
           }`}
           onClick={() => setMenuOpen(!menuOpen)}
           aria-label="Toggle menu"

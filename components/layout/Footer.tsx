@@ -13,7 +13,7 @@ export default function Footer() {
   return (
     <footer className="relative bg-navy-950 text-white overflow-hidden">
       {/* Decorative top line */}
-      <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-solar-500/20 to-transparent" />
+      <div className="absolute top-0 left-0 w-full h-px bg-linear-to-r from-transparent via-solar-500/20 to-transparent" />
 
       {/* Subtle blob decoration */}
       <div className="absolute top-10 -right-20 w-60 h-60 bg-solar-500/3 blob-shape pointer-events-none" />
@@ -78,19 +78,19 @@ export default function Footer() {
             </h4>
             <ul className="flex flex-col gap-4">
               <li className="flex items-start gap-3">
-                <Phone size={15} className="text-solar-500/60 mt-0.5 flex-shrink-0" />
+                <Phone size={15} className="text-solar-500/60 mt-0.5 shrink-0" />
                 <a href="tel:+639175088220" className="text-white/40 hover:text-white transition-colors text-sm">
                   0917 508 8220
                 </a>
               </li>
               <li className="flex items-start gap-3">
-                <Mail size={15} className="text-solar-500/60 mt-0.5 flex-shrink-0" />
+                <Mail size={15} className="text-solar-500/60 mt-0.5 shrink-0" />
                 <a href="mailto:jmcsolarph@gmail.com" className="text-white/40 hover:text-white transition-colors text-sm break-all">
                   jmcsolarph@gmail.com
                 </a>
               </li>
               <li className="flex items-start gap-3">
-                <MapPin size={15} className="text-solar-500/60 mt-0.5 flex-shrink-0" />
+                <MapPin size={15} className="text-solar-500/60 mt-0.5 shrink-0" />
                 <span className="text-white/40 text-sm">
                   Lilia Avenue, Cogon,<br />
                   Ormoc City, Leyte 6541<br />
@@ -102,7 +102,7 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-14 pt-8 border-t border-white/[0.06] flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="mt-14 pt-8 border-t border-white/6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-white/30 text-sm text-center sm:text-left">
             © {new Date().getFullYear()} JMC Solar PH. All rights reserved.
           </p>

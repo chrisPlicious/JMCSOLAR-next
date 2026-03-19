@@ -33,7 +33,7 @@ const categoryLabels: Record<Project['category'], string> = {
 
 export default function ProjectCard({ project }: ProjectCardProps) {
   return (
-    <div className="relative flex-shrink-0 w-[88vw] h-[300px] sm:w-[560px] sm:h-[400px] md:w-[800px] md:h-[560px] lg:w-[1000px] lg:h-[680px] rounded-2xl overflow-hidden transition-transform hover:scale-101 duration-300 ease-in-out select-none">
+    <div className="relative shrink-0 w-[88vw] h-[300px] sm:w-[560px] sm:h-[400px] md:w-[800px] md:h-[560px] lg:w-[1000px] lg:h-[680px] rounded-2xl overflow-hidden transition-transform hover:scale-101 duration-300 ease-in-out select-none">
 
       {/* Background: image if available, gradient fallback */}
       {project.cover_image_path ? (
@@ -44,7 +44,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
           draggable={false}
         />
       ) : (
-        <div className={`absolute inset-0 bg-gradient-to-br ${categoryGradients[project.category]}`} />
+        <div className={`absolute inset-0 bg-linear-to-br ${categoryGradients[project.category]}`} />
       )}
 
       {/* Dark overlay for readability */}
@@ -78,7 +78,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
       )}
 
       {/* Bottom info overlay */}
-      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/75 via-black/40 to-transparent p-5 pt-10 z-10">
+      <div className="absolute bottom-0 inset-x-0 bg-linear-to-t from-black/75 via-black/40 to-transparent p-5 pt-10 z-10">
         <h3
           className="text-white font-bold text-base md:text-xl leading-snug mb-2"
           style={{ fontFamily: 'Poppins, sans-serif' }}

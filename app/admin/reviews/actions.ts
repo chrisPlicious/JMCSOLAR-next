@@ -16,6 +16,22 @@ export async function createReview(fd: FormData): Promise<void> {
   redirect('/admin/reviews');
 }
 
+export async function createReviewFromDialog(
+  _prev: { error: string } | null,
+  fd: FormData
+): Promise<{ error: string } | null> {
+  const supabase = createSupabaseAdminClient();
+  const { error } = await supabase.from('reviews').insert({
+    reviewer_name: fd.get('reviewer_name') as string,
+    quote: fd.get('quote') as string,
+    source: fd.get('source') as string,
+    rating: Number(fd.get('rating') ?? 5),
+  });
+  if (error) return { error: error.message };
+  revalidatePath('/admin/reviews');
+  return null;
+}
+
 export async function updateReview(id: string, fd: FormData): Promise<void> {
   const supabase = createSupabaseAdminClient();
   await supabase

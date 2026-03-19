@@ -110,7 +110,7 @@ export default function ServicePageLayout({
           <div className="space-y-6 mt-8">
             {howItWorks.map((item, i) => (
               <div key={i} className="flex gap-5">
-                <div className="flex-shrink-0 w-10 h-10 bg-solar-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                <div className="shrink-0 w-10 h-10 bg-solar-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
                   {i + 1}
                 </div>
                 <div>
@@ -154,7 +154,7 @@ export default function ServicePageLayout({
           <ul className="mt-6 space-y-3">
             {useCases.map((uc, i) => (
               <li key={i} className="flex items-start gap-3 text-slate-700">
-                <CheckCircle size={18} className="text-green-eco mt-0.5 flex-shrink-0" />
+                <CheckCircle size={18} className="text-green-eco mt-0.5 shrink-0" />
                 <span>{uc}</span>
               </li>
             ))}
@@ -218,7 +218,7 @@ export default function ServicePageLayout({
           <ul className="space-y-2">
             {sources.map((src, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-slate-500">
-                <ExternalLink size={14} className="mt-0.5 flex-shrink-0 text-slate-400" />
+                <ExternalLink size={14} className="mt-0.5 shrink-0 text-slate-400" />
                 <span>
                   <span className="font-medium text-slate-700">{src.publisher}</span>
                   {' — '}

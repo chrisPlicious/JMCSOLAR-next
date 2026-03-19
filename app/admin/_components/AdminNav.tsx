@@ -145,7 +145,7 @@ export default function AdminNav() {
       {/* Site Identity Block */}
       <div className="px-5 py-6 border-b border-white/8">
         <div className="flex items-center gap-3 mb-3">
-          <div className="bg-solar-500 w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-navy-950">
+          <div className="bg-solar-500 w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-navy-950">
             <SunIcon />
           </div>
           <div>
@@ -187,7 +187,7 @@ export default function AdminNav() {
               {isActive && (
                 <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-solar-500 rounded-r-full" />
               )}
-              <span className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${
+              <span className={`shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${
                 isActive ? 'bg-white/15' : ''
               }`}>
                 {item.icon}
@@ -202,7 +202,7 @@ export default function AdminNav() {
       <div className="px-3 pb-6 border-t border-white/8 pt-4 mt-auto space-y-0.5">
         <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 px-3 mb-2">Account</p>
         <div className="flex items-center gap-3 px-3 py-2">
-          <span className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
+          <span className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
               <circle cx="7" cy="4.5" r="2.5" fill="currentColor" className="text-white/60"/>
               <path d="M1 12.5C1 10.015 3.686 8 7 8s6 2.015 6 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="text-white/60"/>
@@ -215,7 +215,7 @@ export default function AdminNav() {
             type="submit"
             className="relative flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-white/50 hover:text-white/80 hover:bg-white/8 transition-colors duration-150"
           >
-            <span className="flex-shrink-0 w-7 h-7 flex items-center justify-center">
+            <span className="shrink-0 w-7 h-7 flex items-center justify-center">
               <SignOutIcon />
             </span>
             Sign out

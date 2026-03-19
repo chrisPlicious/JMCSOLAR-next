@@ -16,7 +16,12 @@
       "mcp__plugin_supabase_supabase__list_projects",
       "mcp__plugin_supabase_supabase__execute_sql",
       "Bash(grep:*)",
-      "Bash(npx shadcn@latest init --defaults)"
+      "Bash(npx shadcn@latest init --defaults)",
+      "Bash(npx shadcn@latest add dialog --yes)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(node -e \"const d = require\\(''@base-ui/react/dialog''\\); console.log\\(Object.keys\\(d\\)\\)\")",
+      "Bash(node -e \"const d = require\\(''@base-ui/react/dialog''\\); console.log\\(Object.keys\\(d.Dialog\\)\\)\")",
+      "Bash(find C:/Users/TRAINEE-MATUGUINA/Documents/nextJMC/JMCSOLAR-next/node_modules/@base-ui/react -name *.d.ts)"
     ]
   }
 }

@@ -154,7 +154,7 @@ export default function Contact() {
             </div>
 
             {/* Service Areas Box */}
-            <div className="bg-gradient-to-br from-navy-900 to-navy-800 rounded-3xl p-6 text-white shadow-elevated">
+            <div className="bg-linear-to-br from-navy-900 to-navy-800 rounded-3xl p-6 text-white shadow-elevated">
               <h4
                 className="font-semibold mb-4"
                 style={{ fontFamily: "Poppins, sans-serif" }}
@@ -170,7 +170,7 @@ export default function Contact() {
                   "All of Leyte",
                 ].map((area) => (
                   <li key={area} className="flex items-center gap-2.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-solar-400 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-solar-400 shrink-0" />
                     {area}
                   </li>
                 ))}
@@ -403,7 +403,7 @@ function ContactItem({
 }) {
   const content = (
     <div className="flex items-start gap-3">
-      <div className="w-9 h-9 bg-solar-500/8 rounded-xl flex items-center justify-center flex-shrink-0 text-solar-600 mt-0.5">
+      <div className="w-9 h-9 bg-solar-500/8 rounded-xl flex items-center justify-center shrink-0 text-solar-600 mt-0.5">
         {icon}
       </div>
       <span className="text-slate-600 text-sm leading-relaxed">{children}</span>

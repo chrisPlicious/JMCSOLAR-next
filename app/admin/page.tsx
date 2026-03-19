@@ -23,7 +23,7 @@ function StatCard({
   secondary: string;
 }) {
   return (
-    <div className="col-span-1 bg-white rounded-2xl border border-slate-100 shadow-[0_4px_24px_0_rgb(0_0_0/0.06)] overflow-hidden">
+    <div className="col-span-1 bg-white rounded-2xl border border-slate-100 shadow-card overflow-hidden">
       <div className={`h-1 w-full ${accent}`} />
       <div className="p-5">
         <p className="text-5xl font-black text-navy-950 leading-none">{count}</p>
@@ -145,7 +145,7 @@ export default async function AdminDashboard() {
           secondary={avgRating ? `★ ${avgRating} avg rating` : 'no ratings yet'}
         />
         {/* Quick actions: col-span-2 */}
-        <div className="col-span-4 bg-white rounded-2xl border border-slate-100 shadow-[0_4px_24px_0_rgb(0_0_0/0.06)] p-5">
+        <div className="col-span-4 bg-white rounded-2xl border border-slate-100 shadow-card p-5">
           <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Quick Actions</p>
           <div className="space-y-1">
             {[
@@ -183,7 +183,7 @@ export default async function AdminDashboard() {
           </div>
         </div>
         {/* Recent activity: col-span-4 */}
-        <div className="col-span-6 bg-white rounded-2xl border border-slate-100 shadow-[0_4px_24px_0_rgb(0_0_0/0.06)] p-5">
+        <div className="col-span-6 bg-white rounded-2xl border border-slate-100 shadow-card p-5">
           <div className="flex items-center justify-between mb-4">
             <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Recent Activity</p>
             <Link href="/admin/projects" className="text-xs text-solar-600 hover:text-solar-500 transition-colors">
@@ -197,7 +197,7 @@ export default async function AdminDashboard() {
               {recentActivity.map((item, i) => (
                 <div key={i} className="flex items-center gap-3 py-1.5">
                   <div
-                    className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                    className={`w-2 h-2 rounded-full shrink-0 ${
                       item.type === 'project' ? 'bg-navy-950' : 'bg-solar-500'
                     }`}
                   />
