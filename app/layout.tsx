@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Plus_Jakarta_Sans, Poppins, Montserrat, Geist } from 'next/font/google';
+import { Poppins, Montserrat, Geist } from 'next/font/google';
 import './globals.css';
 import LoaderScreen from '@/components/ui/LoaderScreen';
 import PageTransition from '@/components/ui/PageTransition';

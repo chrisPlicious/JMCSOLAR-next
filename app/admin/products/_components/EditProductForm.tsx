@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { updateProductAction } from '../actions';
 import Link from 'next/link';
 
@@ -36,7 +37,12 @@ export default function EditProductForm({
   const [state, formAction, isPending] = useActionState(updateWithId, {});
 
   useEffect(() => {
-    if (state?.success) router.push('/admin/products');
+    if (state?.success) {
+      toast.success('Product updated successfully');
+      router.push('/admin/products');
+    } else if (state?.error) {
+      toast.error(state.error);
+    }
   }, [state, router]);
 
   return (
@@ -60,7 +66,7 @@ export default function EditProductForm({
         <h1 className="font-display font-black text-navy-950 text-2xl">Edit Product</h1>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-[0_4px_24px_0_rgb(0_0_0/0.06)] p-8 max-w-3xl mb-24">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-card p-8 max-w-3xl mb-24">
         {state?.error && (
           <div className="mb-6 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
             {state.error}

@@ -14,13 +14,15 @@ function MiniStatCard({ number, label }: { number: string | number; label: strin
 
 export default async function AdminReviewsPage() {
   const supabase = createSupabaseServerClient();
-  const [{ data: reviews }, { data: statsData }] = await Promise.all([
+  const [{ data: reviews, error: reviewsError }, { data: statsData, error: statsError }] = await Promise.all([
     supabase
       .from('reviews')
       .select('id, reviewer_name, source, rating, quote, created_at')
       .order('created_at', { ascending: false }),
     supabase.from('reviews').select('source, rating'),
   ]);
+  if (reviewsError) throw new Error(reviewsError.message);
+  if (statsError) throw new Error(statsError.message);
 
   const totalReviews = reviews?.length ?? 0;
   const avgRating =

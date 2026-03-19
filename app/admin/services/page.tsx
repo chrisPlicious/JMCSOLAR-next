@@ -13,10 +13,11 @@ function MiniStatCard({ number, label }: { number: string | number; label: strin
 
 export default async function AdminServicesPage() {
   const supabase = createSupabaseServerClient();
-  const { data: services } = await supabase
+  const { data: services, error: servicesError } = await supabase
     .from('services')
     .select('id, icon, title, highlight, display_order')
     .order('display_order', { ascending: true });
+  if (servicesError) throw new Error(servicesError.message);
 
   const totalServices = services?.length ?? 0;
   const featuredCount = services?.filter((s) => s.highlight === true).length ?? 0;

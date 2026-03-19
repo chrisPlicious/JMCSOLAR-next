@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -27,12 +28,17 @@ export default function NewReviewDialog() {
   const submitted = useRef(false);
 
   useEffect(() => {
-    if (submitted.current && state === null && !isPending) {
-      submitted.current = false;
-      setOpen(false);
-      setRating(5);
-      formRef.current?.reset();
-      router.refresh();
+    if (submitted.current && !isPending) {
+      if (state === null) {
+        submitted.current = false;
+        toast.success('Review added successfully');
+        setOpen(false);
+        setRating(5);
+        formRef.current?.reset();
+        router.refresh();
+      } else if (state?.error) {
+        toast.error(state.error);
+      }
     }
   }, [state, isPending, router]);
 

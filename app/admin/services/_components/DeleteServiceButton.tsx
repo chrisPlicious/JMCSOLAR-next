@@ -2,6 +2,7 @@
 
 import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { deleteService } from '../actions';
 
 export default function DeleteServiceButton({ id }: { id: string }) {
@@ -11,8 +12,13 @@ export default function DeleteServiceButton({ id }: { id: string }) {
   function handleDelete() {
     if (!confirm('Delete this service? This cannot be undone.')) return;
     startTransition(async () => {
-      await deleteService(id);
-      router.refresh();
+      try {
+        await deleteService(id);
+        toast.success('Service deleted');
+        router.refresh();
+      } catch {
+        toast.error('Failed to delete service');
+      }
     });
   }
 

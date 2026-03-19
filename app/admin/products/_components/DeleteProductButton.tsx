@@ -2,6 +2,7 @@
 
 import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { deleteProductAction } from '../actions';
 
 export default function DeleteProductButton({ id }: { id: string }) {
@@ -11,8 +12,13 @@ export default function DeleteProductButton({ id }: { id: string }) {
   function handleDelete() {
     if (!confirm('Delete this product? This cannot be undone.')) return;
     startTransition(async () => {
-      await deleteProductAction(id);
-      router.refresh();
+      try {
+        await deleteProductAction(id);
+        toast.success('Product deleted');
+        router.refresh();
+      } catch {
+        toast.error('Failed to delete product');
+      }
     });
   }
 

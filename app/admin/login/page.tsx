@@ -24,12 +24,6 @@ export default async function LoginPage({
   return (
     <div
       className="min-h-screen flex items-center justify-center p-4"
-      style={{
-        backgroundColor: '#0a1428',
-        backgroundImage:
-          'linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)',
-        backgroundSize: '32px 32px',
-      }}
     >
       <div className="bg-white rounded-2xl p-10 w-full max-w-sm shadow-2xl">
         {/* Icon badge */}

@@ -1,6 +1,8 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import Link from 'next/link';
 import type { DbService, DbServiceDetail } from '@/lib/supabase/types';
 import type { ServiceFormState } from '../actions';
@@ -35,7 +37,18 @@ function toSlug(title: string) {
 
 export default function ServiceForm({ action, service, detail }: ServiceFormProps) {
   const isEdit = Boolean(service);
+  const router = useRouter();
   const [state, dispatch, isPending] = useActionState(action, null);
+
+  useEffect(() => {
+    if (!state) return;
+    if ('success' in state) {
+      toast.success(isEdit ? 'Service updated successfully' : 'Service created successfully');
+      router.push('/admin/services');
+    } else if ('error' in state) {
+      toast.error(state.error);
+    }
+  }, [state, isEdit, router]);
 
   // Basic fields
   const [title, setTitle] = useState(service?.title ?? '');
@@ -94,7 +107,7 @@ export default function ServiceForm({ action, service, detail }: ServiceFormProp
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-200 shadow-[0_4px_24px_0_rgb(0_0_0/0.06)] p-8 max-w-3xl mb-24">
-        {state?.error && (
+        {state && 'error' in state && (
           <div className="mb-6 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
             {state.error}
           </div>

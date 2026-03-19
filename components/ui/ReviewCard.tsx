@@ -29,7 +29,7 @@ export default function ReviewCard({ review }: ReviewCardProps) {
           <span className="text-white/90 font-medium text-sm">{review.name}</span>
         </div>
         <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${
-          review.source === 'Google'
+          review.source?.toLowerCase() === 'google'
             ? 'bg-white/6 text-white/50'
             : 'bg-blue-500/15 text-blue-300/80'
         }`}>

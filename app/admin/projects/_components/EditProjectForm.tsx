@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { updateProjectAction } from '../actions';
 import Link from 'next/link';
 
@@ -28,9 +29,12 @@ export default function EditProjectForm({ project }: { project: Project }) {
 
   useEffect(() => {
     if (state?.success) {
+      toast.success('Project updated successfully');
       router.push('/admin/projects');
+    } else if (state?.error) {
+      toast.error(state.error);
     }
-  }, [state?.success, router]);
+  }, [state, router]);
 
   return (
     <div>

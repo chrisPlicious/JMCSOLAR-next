@@ -38,14 +38,14 @@ export default async function AdminDashboard() {
   const supabase = createSupabaseServerClient();
 
   const [
-    { count: projectCount },
-    { count: productCount },
-    { count: serviceCount },
-    { count: reviewCount },
-    { data: featuredServices },
-    { data: recentProjects },
-    { data: recentProducts },
-    { data: reviewStats },
+    { count: projectCount, error: e1 },
+    { count: productCount, error: e2 },
+    { count: serviceCount, error: e3 },
+    { count: reviewCount, error: e4 },
+    { data: featuredServices, error: e5 },
+    { data: recentProjects, error: e6 },
+    { data: recentProducts, error: e7 },
+    { data: reviewStats, error: e8 },
   ] = await Promise.all([
     supabase.from('projects').select('*', { count: 'exact', head: true }),
     supabase.from('products').select('*', { count: 'exact', head: true }),
@@ -56,6 +56,9 @@ export default async function AdminDashboard() {
     supabase.from('products').select('id, name, created_at').order('created_at', { ascending: false }).limit(5),
     supabase.from('reviews').select('rating'),
   ]);
+
+  const criticalError = e1 || e2 || e3 || e4 || e5 || e6 || e7 || e8;
+  if (criticalError) throw new Error(criticalError.message);
 
   const recentActivity = [
     ...(recentProjects ?? []).map((p) => ({ title: p.title, created_at: p.created_at, type: 'project' as const })),

@@ -189,7 +189,7 @@ export default function Hero() {
           </div>
 
           {/* Right Column - Floating Stat Cards */}
-          <div className="lg:col-span-5 hidden lg:block relative h-[420px]">
+          <div className="lg:col-span-5 hidden lg:block relative h-[420px]" >
             {stats.map((stat, i) => {
               const positions = [
                 { top: "0%", left: "10%", delay: 0.3 },
@@ -202,7 +202,7 @@ export default function Hero() {
               return (
                 <motion.div
                   key={stat.label}
-                  className="absolute glass rounded-2xl p-5 min-w-[180px] hover:bg-white/12 transition-colors duration-300"
+                  className="absolute glass rounded-2xl p-5 min-w-[180px] hover:bg-white/12 hover:scale-102 hover:translate-y-[-5px] transition-all duration-300"
                   style={{ top: pos.top, left: pos.left }}
                   initial={{ opacity: 0, y: 30, scale: 0.9 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}

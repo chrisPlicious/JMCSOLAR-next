@@ -60,7 +60,7 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
             />
           ) : (
             <div className="text-navy-800/25 group-hover:text-navy-800/40 group-hover:scale-110 transition-all duration-500">
-              {categoryIcon[product.category](72)}
+              {categoryIcon[product.category as keyof typeof categoryIcon]?.(72)}
             </div>
           )}
         </div>

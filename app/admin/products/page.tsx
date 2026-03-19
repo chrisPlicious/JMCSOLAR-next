@@ -13,13 +13,15 @@ function MiniStatCard({ number, label }: { number: string | number; label: strin
 
 export default async function AdminProductsPage() {
   const supabase = createSupabaseServerClient();
-  const [{ data: products }, { data: categoryData }] = await Promise.all([
+  const [{ data: products, error: productsError }, { data: categoryData, error: catError }] = await Promise.all([
     supabase
       .from('products')
       .select('id, name, brand, category, image_path')
       .order('created_at', { ascending: false }),
     supabase.from('products').select('category'),
   ]);
+  if (productsError) throw new Error(productsError.message);
+  if (catError) throw new Error(catError.message);
 
   const totalProducts = products?.length ?? 0;
   const distinctCategories = new Set(categoryData?.map((p) => p.category)).size;

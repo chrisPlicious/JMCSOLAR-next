@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { createProductAction } from '../actions';
 import Link from 'next/link';
 
@@ -17,7 +18,12 @@ export default function NewProductForm() {
   const [state, formAction, isPending] = useActionState(createProductAction, {});
 
   useEffect(() => {
-    if (state?.success) router.push('/admin/products');
+    if (state?.success) {
+      toast.success('Product created successfully');
+      router.push('/admin/products');
+    } else if (state?.error) {
+      toast.error(state.error);
+    }
   }, [state, router]);
 
   return (

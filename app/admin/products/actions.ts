@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { requireAdminAuth } from '@/lib/auth';
 import { createSupabaseAdminClient } from '@/lib/supabase/server';
 
 type ActionResult = { error?: string; success?: boolean };
@@ -20,6 +21,7 @@ export async function createProductAction(
   prevState: ActionResult,
   formData: FormData
 ): Promise<ActionResult> {
+  await requireAdminAuth();
   const supabase = createSupabaseAdminClient();
 
   const { data: product, error } = await supabase
@@ -58,6 +60,7 @@ export async function updateProductAction(
   prevState: ActionResult,
   formData: FormData
 ): Promise<ActionResult> {
+  await requireAdminAuth();
   const supabase = createSupabaseAdminClient();
 
   const update: Record<string, string | null> = {
@@ -85,6 +88,7 @@ export async function updateProductAction(
 }
 
 export async function deleteProductAction(id: string): Promise<void> {
+  await requireAdminAuth();
   const supabase = createSupabaseAdminClient();
   const { data: product } = await supabase
     .from('products')

@@ -2,9 +2,11 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { requireAdminAuth } from '@/lib/auth';
 import { createSupabaseAdminClient } from '@/lib/supabase/server';
 
 export async function createReview(fd: FormData): Promise<void> {
+  await requireAdminAuth();
   const supabase = createSupabaseAdminClient();
   await supabase.from('reviews').insert({
     reviewer_name: fd.get('reviewer_name') as string,
@@ -20,6 +22,7 @@ export async function createReviewFromDialog(
   _prev: { error: string } | null,
   fd: FormData
 ): Promise<{ error: string } | null> {
+  await requireAdminAuth();
   const supabase = createSupabaseAdminClient();
   const { error } = await supabase.from('reviews').insert({
     reviewer_name: fd.get('reviewer_name') as string,
@@ -33,6 +36,7 @@ export async function createReviewFromDialog(
 }
 
 export async function updateReview(id: string, fd: FormData): Promise<void> {
+  await requireAdminAuth();
   const supabase = createSupabaseAdminClient();
   await supabase
     .from('reviews')
@@ -48,6 +52,7 @@ export async function updateReview(id: string, fd: FormData): Promise<void> {
 }
 
 export async function deleteReview(id: string): Promise<void> {
+  await requireAdminAuth();
   const supabase = createSupabaseAdminClient();
   await supabase.from('reviews').delete().eq('id', id);
   revalidatePath('/admin/reviews');

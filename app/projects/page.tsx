@@ -9,6 +9,8 @@ export default async function Projects() {
     .select('*')
     .order('created_at', { ascending: false });
 
+  if (error) throw new Error(error.message);
+
   const projects: Project[] = (data ?? []).map((p) => ({
     ...p,
     cover_image_path: getPublicUrl('project-images', p.cover_image_path),

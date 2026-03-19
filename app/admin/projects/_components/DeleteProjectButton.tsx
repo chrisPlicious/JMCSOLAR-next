@@ -2,6 +2,7 @@
 
 import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { deleteProjectAction } from '../actions';
 
 export default function DeleteProjectButton({ id }: { id: string }) {
@@ -11,8 +12,13 @@ export default function DeleteProjectButton({ id }: { id: string }) {
   function handleDelete() {
     if (!confirm('Delete this project and all its photos? This cannot be undone.')) return;
     startTransition(async () => {
-      await deleteProjectAction(id);
-      router.refresh();
+      try {
+        await deleteProjectAction(id);
+        toast.success('Project deleted');
+        router.refresh();
+      } catch {
+        toast.error('Failed to delete project');
+      }
     });
   }
 

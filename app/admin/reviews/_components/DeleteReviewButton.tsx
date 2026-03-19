@@ -2,6 +2,7 @@
 
 import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { deleteReview } from '../actions';
 
 export default function DeleteReviewButton({ id }: { id: string }) {
@@ -11,8 +12,13 @@ export default function DeleteReviewButton({ id }: { id: string }) {
   function handleDelete() {
     if (!confirm('Delete this review? This cannot be undone.')) return;
     startTransition(async () => {
-      await deleteReview(id);
-      router.refresh();
+      try {
+        await deleteReview(id);
+        toast.success('Review deleted');
+        router.refresh();
+      } catch {
+        toast.error('Failed to delete review');
+      }
     });
   }
 

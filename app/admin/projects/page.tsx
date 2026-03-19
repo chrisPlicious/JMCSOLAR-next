@@ -13,13 +13,15 @@ function MiniStatCard({ number, label }: { number: string | number; label: strin
 
 export default async function AdminProjectsPage() {
   const supabase = createSupabaseServerClient();
-  const [{ data: projects }, { data: categoryData }] = await Promise.all([
+  const [{ data: projects, error: projectsError }, { data: categoryData, error: catError }] = await Promise.all([
     supabase
       .from('projects')
       .select('id, title, category, location, created_at')
       .order('created_at', { ascending: false }),
     supabase.from('projects').select('category'),
   ]);
+  if (projectsError) throw new Error(projectsError.message);
+  if (catError) throw new Error(catError.message);
 
   const totalProjects = projects?.length ?? 0;
   const residentialCount = categoryData?.filter((p) => p.category?.toLowerCase() === 'residential').length ?? 0;

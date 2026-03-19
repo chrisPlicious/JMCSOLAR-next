@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { requireAdminAuth } from '@/lib/auth';
 import { createSupabaseAdminClient } from '@/lib/supabase/server';
 
 type ActionResult = { error?: string; success?: boolean };
@@ -9,6 +10,7 @@ export async function createProjectAction(
   prevState: ActionResult,
   formData: FormData
 ): Promise<ActionResult> {
+  await requireAdminAuth();
   const supabase = createSupabaseAdminClient();
   const file = formData.get('cover_image') as File | null;
 
@@ -66,6 +68,7 @@ export async function updateProjectAction(
   prevState: ActionResult,
   formData: FormData
 ): Promise<ActionResult> {
+  await requireAdminAuth();
   const supabase = createSupabaseAdminClient();
 
   const { error } = await supabase
@@ -106,6 +109,7 @@ export async function updateProjectAction(
 }
 
 export async function deleteProjectAction(id: string): Promise<void> {
+  await requireAdminAuth();
   const supabase = createSupabaseAdminClient();
   const { data: images } = await supabase
     .from('project_images')
@@ -126,6 +130,7 @@ export async function deleteImageAction(
   storagePath: string,
   projectId: string
 ): Promise<void> {
+  await requireAdminAuth();
   const supabase = createSupabaseAdminClient();
   await supabase.storage.from('project-images').remove([storagePath]);
   await supabase.from('project_images').delete().eq('id', imageId);
@@ -144,6 +149,7 @@ export async function setCoverAction(
   projectId: string,
   storagePath: string
 ): Promise<void> {
+  await requireAdminAuth();
   const supabase = createSupabaseAdminClient();
   await supabase.from('projects').update({ cover_image_path: storagePath }).eq('id', projectId);
   revalidatePath('/projects');

@@ -1,15 +1,16 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
+import { requireAdminAuth } from '@/lib/auth';
 import { createSupabaseAdminClient } from '@/lib/supabase/server';
 
-export type ServiceFormState = { error: string } | null;
+export type ServiceFormState = { error: string } | { success: true } | null;
 
 export async function createService(
   prevState: ServiceFormState,
   fd: FormData
 ): Promise<ServiceFormState> {
+  await requireAdminAuth();
   const supabase = createSupabaseAdminClient();
 
   const icon = fd.get('icon') as string;
@@ -118,7 +119,8 @@ export async function createService(
 
   revalidatePath('/services');
   revalidatePath('/services/' + (fd.get('slug') as string));
-  redirect('/admin/services');
+  revalidatePath('/admin/services');
+  return { success: true } as ServiceFormState;
 }
 
 export async function updateService(
@@ -126,6 +128,7 @@ export async function updateService(
   prevState: ServiceFormState,
   fd: FormData
 ): Promise<ServiceFormState> {
+  await requireAdminAuth();
   const supabase = createSupabaseAdminClient();
 
   const icon = fd.get('icon') as string;
@@ -227,11 +230,14 @@ export async function updateService(
 
   revalidatePath('/services');
   revalidatePath('/services/' + (fd.get('slug') as string));
-  redirect('/admin/services');
+  revalidatePath('/admin/services');
+  return { success: true } as ServiceFormState;
 }
 
 export async function deleteService(id: string): Promise<void> {
+  await requireAdminAuth();
   const supabase = createSupabaseAdminClient();
+  await supabase.from('service_details').delete().eq('service_id', id);
   await supabase.from('services').delete().eq('id', id);
   revalidatePath('/admin/services');
 }

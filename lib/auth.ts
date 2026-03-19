@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from 'crypto';
+import { cookies } from 'next/headers';
 
 export const SESSION_COOKIE = 'admin_session';
 export const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
@@ -19,5 +20,14 @@ export function verifySessionToken(token: string): boolean {
     return timingSafeEqual(a, b) && token.length === expected.length;
   } catch {
     return false;
+  }
+}
+
+/** Throws if the request is not authenticated — call at top of every server action */
+export async function requireAdminAuth(): Promise<void> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(SESSION_COOKIE)?.value;
+  if (!token || !verifySessionToken(token)) {
+    throw new Error('Unauthorized');
   }
 }

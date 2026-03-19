@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 // ── Tile configuration ────────────────────────────────────────────────────────
 const SVG_CX       = 200;
@@ -34,8 +34,8 @@ function pick(band: Band, index: number): string {
 interface TileData {
   transform:    string;
   fill:         string;
-  appearDelay:  number; // seconds
-  waveDelay:    number; // seconds (negative = pre-started in cycle)
+  appearDelay:  number;
+  waveDelay:    number;
 }
 
 const r = (n: number) => Math.round(n * 1e4) / 1e4;
@@ -71,23 +71,92 @@ export default function LoaderScreen() {
   const [fading, setFading] = useState(false);
   const [gone,   setGone]   = useState(false);
 
-  // Tiles are computed once on mount; useMemo stabilises random colours
   const tiles = useMemo(buildOuterTiles, []);
 
+  // Refs so closures always see latest values without re-running the effect
+  const targetRef    = useRef(5);
+  const currentRef   = useRef(0);
+  const dismissedRef = useRef(false);
+  const rafRef       = useRef<number>(0);
+
   useEffect(() => {
-    // Animated percentage counter
-    let val = 0;
-    const ticker = setInterval(() => {
-      val += Math.random() * 4 + 1;
-      if (val >= 100) { val = 100; clearInterval(ticker); }
-      setPct(Math.floor(val));
-    }, 100);
+    // ── Smooth rAF loop: creep currentRef toward targetRef ──────────────────
+    const animate = () => {
+      if (dismissedRef.current) return;
+      const cur = currentRef.current;
+      const tgt = targetRef.current;
+      if (cur < tgt) {
+        // Speed scales with gap — faster when far behind, slows near target
+        const step = Math.max(0.3, (tgt - cur) * 0.04);
+        currentRef.current = Math.min(cur + step, tgt);
+        setPct(Math.floor(currentRef.current));
+      }
+      rafRef.current = requestAnimationFrame(animate);
+    };
+    rafRef.current = requestAnimationFrame(animate);
 
-    // Fade out then unmount
-    const t1 = setTimeout(() => setFading(true),  4000);
-    const t2 = setTimeout(() => setGone(true),    4800);
+    const advance = (v: number) => {
+      targetRef.current = Math.max(targetRef.current, v);
+    };
 
-    return () => { clearInterval(ticker); clearTimeout(t1); clearTimeout(t2); };
+    // ── Real signal 1: document readyState ──────────────────────────────────
+    const applyReadyState = () => {
+      if (document.readyState === 'interactive') advance(50);
+      if (document.readyState === 'complete')    advance(88);
+    };
+    applyReadyState();
+    document.addEventListener('readystatechange', applyReadyState);
+
+    // ── Real signal 2: PerformanceObserver — each resource nudges forward ───
+    // Range 50-85% is filled by counting network resources as they arrive
+    const seenResources = new Set<string>();
+
+    const onResourceEntries = (entries: PerformanceEntry[]) => {
+      entries.forEach(e => seenResources.add(e.name));
+      // Each resource is worth ~2%, capped at 85%
+      advance(Math.min(50 + seenResources.size * 2, 85));
+    };
+
+    let observer: PerformanceObserver | null = null;
+    try {
+      // Seed with already-finished resources (buffered)
+      performance.getEntriesByType('resource').forEach(e => seenResources.add(e.name));
+      observer = new PerformanceObserver(list => onResourceEntries(list.getEntries()));
+      observer.observe({ type: 'resource', buffered: true });
+    } catch {
+      // PerformanceObserver not supported — no-op
+    }
+
+    // ── Real signal 3: window load — page is fully ready ────────────────────
+    const onLoad = () => {
+      advance(100);
+      // Wait until the rAF loop visually reaches 100, then dismiss
+      const waitForFull = () => {
+        if (currentRef.current >= 99.5) {
+          dismissedRef.current = true;
+          cancelAnimationFrame(rafRef.current);
+          setFading(true);
+          setTimeout(() => setGone(true), 700);
+        } else {
+          requestAnimationFrame(waitForFull);
+        }
+      };
+      requestAnimationFrame(waitForFull);
+    };
+
+    if (document.readyState === 'complete') {
+      onLoad();
+    } else {
+      window.addEventListener('load', onLoad);
+    }
+
+    return () => {
+      dismissedRef.current = true;
+      cancelAnimationFrame(rafRef.current);
+      observer?.disconnect();
+      document.removeEventListener('readystatechange', applyReadyState);
+      window.removeEventListener('load', onLoad);
+    };
   }, []);
 
   if (gone) return null;
@@ -144,9 +213,7 @@ export default function LoaderScreen() {
         {/* Brand text — centred over the SVG */}
         <div className="loader-v2-brand absolute inset-0 flex items-center justify-center">
           <div className="flex items-baseline gap-1.5">
-            <span
-              className="font-montserrat font-extrabold text-[22px] tracking-[3px] text-white"
-            >
+            <span className="font-montserrat font-extrabold text-[22px] tracking-[3px] text-white">
               JMC
             </span>
             <span
@@ -165,7 +232,14 @@ export default function LoaderScreen() {
           className="w-[160px] h-[2px] rounded-full overflow-hidden"
           style={{ background: 'rgba(255,255,255,0.06)' }}
         >
-          <div className="loader-v2-progress-fill h-full rounded-full" />
+          <div
+            className="h-full rounded-full"
+            style={{
+              width: `${pct}%`,
+              background: 'linear-gradient(90deg, #3d6a9e, #7ec8f0)',
+              transition: 'width 0.15s ease-out',
+            }}
+          />
         </div>
         <span
           className="font-montserrat text-[11px] font-medium tracking-[1px] tabular-nums min-w-[32px]"
