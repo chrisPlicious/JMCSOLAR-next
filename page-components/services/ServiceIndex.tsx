@@ -73,7 +73,7 @@ export default function ServicesPage() {
   return (
     <Layout>
     <section id="services" className="py-20 transition-all duration-700 ">
-      <div className="max-w-10/13 mx-auto px-4 sm:px-6 lg:px-8">
+      <div className=" mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto mb-14">
           <span className="text-solar-600 font-semibold text-sm uppercase tracking-widest mb-4 block">
@@ -235,7 +235,7 @@ export default function ServicesPage() {
           </Button>
         </div>
         {/* Who We Serve */}
-        <div className="mt-24">
+        <div className="max-w-10/13 mx-auto mt-24">
           {/* Header */}
           <div className="text-center max-w-2xl mx-auto mb-14">
             <span className="text-solar-600 font-semibold text-sm uppercase tracking-widest mb-4 block">

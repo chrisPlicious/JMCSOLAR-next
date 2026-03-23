@@ -22,6 +22,10 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
+  icons: {
+    icon: '/Logos/JMC SOLAR.png',
+    apple: '/Logos/JMC SOLAR.png',
+  },
   title: 'JMC Solar PH | Solar Installation in Ormoc City, Leyte',
   description:
     'JMC Solar PH provides professional solar installation services in Ormoc City, Leyte. Hybrid solar, on-grid, battery storage, EV chargers, and more. Future is Electric.',

@@ -9,7 +9,7 @@ import { useForm } from "@formspree/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import { products } from "@/data/products";
-import { Phone, Mail, MapPin, Facebook, Send, Clock } from "lucide-react";
+import { Phone, Mail, MapPin, Facebook, Send, Clock, CreditCard } from "lucide-react";
 import Button from "@/components/ui/Button";
 
 const systemTypes = [
@@ -83,9 +83,6 @@ export default function Contact() {
 
   return (
     <section id="contact" className="relative py-24 bg-warm overflow-hidden">
-      {/* Decorative blobs */}
-      <div className="absolute top-20 -right-20 w-72 h-72 bg-solar-400/5 blob-shape pointer-events-none" />
-      <div className="absolute bottom-40 -left-16 w-56 h-56 bg-navy-200/8 blob-shape-2 pointer-events-none" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
@@ -149,6 +146,9 @@ export default function Contact() {
                 </ContactItem>
                 <ContactItem icon={<Clock size={18} />}>
                   Monday - Friday: 8:00 AM - 5:00 PM
+                </ContactItem>
+                <ContactItem icon={<CreditCard size={18} />}>
+                  We accept credit card payments and installment options
                 </ContactItem>
               </ul>
             </div>

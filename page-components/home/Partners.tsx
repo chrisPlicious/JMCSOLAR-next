@@ -35,8 +35,8 @@ export default function Partners() {
       <div className="absolute inset-0 opacity-40 bg-dots-light pointer-events-none" />
 
       {/* Decorative blobs */}
-      <div className="absolute top-10 -left-20 w-60 h-60 bg-solar-400/5 blob-shape pointer-events-none" />
-      <div className="absolute bottom-10 -right-16 w-48 h-48 bg-navy-200/8 blob-shape-2 pointer-events-none" />
+      {/* <div className="absolute top-10 -left-20 w-60 h-60 bg-solar-400/5 blob-shape pointer-events-none" />
+      <div className="absolute bottom-10 -right-16 w-48 h-48 bg-navy-200/8 blob-shape-2 pointer-events-none" /> */}
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
@@ -68,23 +68,30 @@ export default function Partners() {
         {/* Desktop: Logo Grid */}
         <div className="hidden lg:grid grid-cols-3 gap-8">
           <div className="flex flex-col items-center gap-8">
-            <img src="/Logos/SOFARSOLAR.png" alt="Sofar Solar" className="h-25 object-contain opacity-80 hover:opacity-100 transition-opacity duration-300" />
-            <img src="/Logos/SOLAX.png" alt="Solax Power" className="h-25 object-contain opacity-80 hover:opacity-100 transition-opacity duration-300" />
-            <img src="/Logos/JINKOSOLAR.png" alt="JinKO Solar" className="h-25 object-contain opacity-80 hover:opacity-100 transition-opacity duration-300" />
-            <img src="/Logos/TRINASOLAR.png" alt="Trina Solar" className="h-25 object-contain opacity-80 hover:opacity-100 transition-opacity duration-300" />
-            <img src="/Logos/SUNRI.png" alt="Sunri" className="h-25 object-contain opacity-80 hover:opacity-100 transition-opacity duration-300" />
+            <img src="/Logos/SOFARSOLAR.png" alt="Sofar Solar" className="h-25 object-contain opacity-80 hover:opacity-100 hover:scale-102 ease-in-out transition-all duration-800" />
+            <img src="/Logos/SOLAX.png" alt="Solax Power" className="h-25 object-contain opacity-80 hover:opacity-100 hover:scale-102 ease-in-out transition-all duration-800" />
+            <img src="/Logos/JINKOSOLAR.png" alt="JinKO Solar" className="h-25 object-contain opacity-80 hover:opacity-100 hover:scale-102 ease-in-out transition-all duration-800" />
+            <img src="/Logos/TRINASOLAR.png" alt="Trina Solar" className="h-25 object-contain opacity-80 hover:opacity-100 hover:scale-102 ease-in-out transition-all duration-800" />
+            <img src="/Logos/SUNRI.png" alt="Sunri" className="h-25 object-contain opacity-80 hover:opacity-100 hover:scale-102 ease-in-out transition-all duration-800" />
+            <img src="/Logos/GOODWE.png" alt="goodwe" className="h-25 object-contain opacity-80 hover:opacity-100 hover:scale-102 ease-in-out transition-all duration-800" />
           </div>
           <div className="flex flex-col items-center gap-11">
-            <img src="/Logos/REC.png" alt="REC Group" className="h-25 object-contain opacity-80 hover:opacity-100 transition-opacity duration-300" />
-            <img src="/Logos/DEYE.png" alt="Deye" className="h-25 object-contain opacity-80 hover:opacity-100 transition-opacity duration-300" />
-            <img src="/Logos/LIVOLTEK.png" alt="Livoltek" className="h-25 object-contain opacity-80 hover:opacity-100 transition-opacity duration-300" />
-            <img src="/Logos/LVTOPSUN.webp" alt="LVTOPSUN" className="h-25 object-contain opacity-80 hover:opacity-100 transition-opacity duration-300" />
+            <img src="/Logos/REC.png" alt="REC Group" className="h-25 object-contain opacity-80 hover:opacity-100 hover:scale-102 ease-in-out transition-all duration-800" />
+            <img src="/Logos/DEYE.png" alt="Deye" className="h-25 object-contain opacity-80 hover:opacity-100 hover:scale-102 ease-in-out transition-all duration-800" />
+            <img src="/Logos/LIVOLTEK.png" alt="Livoltek" className="h-25 object-contain opacity-80 hover:opacity-100 hover:scale-102 ease-in-out transition-all duration-800" />
+            <img src="/Logos/SOLIS.png" alt="Solis" className="h-25 object-contain opacity-80 hover:opacity-100 hover:scale-102 ease-in-out transition-all duration-800" />
+            <img src="/Logos/AIKO.png" alt="aiko" className="h-25 object-contain opacity-80 hover:opacity-100 hover:scale-102 ease-in-out transition-all duration-800" />
+            <img src="/Logos/LVTOPSUN.png" alt="LVTOPSUN" className="h-35 object-contain opacity-80 hover:opacity-100 hover:scale-102 ease-in-out transition-all duration-800" />
+            
+            
+            
           </div>
           <div className="flex flex-col items-center gap-2">
-            <img src="/Logos/VOLTRONICPOWER.png" alt="Voltronic Power" className="h-35 object-contain opacity-80 hover:opacity-100 transition-opacity duration-300" />
-            <img src="/Logos/SRNE.png" alt="SRNE Solar" className="h-30 object-contain opacity-80 hover:opacity-100 transition-opacity duration-300" />
-            <img src="/Logos/JAPAN%20SOLAR.png" alt="Japan Solar" className="h-50 object-contain opacity-80 hover:opacity-100 transition-opacity duration-300" />
-            <img src="/Logos/THINK POWER.png" alt="Phono Solar" className="h-40 object-contain opacity-80 hover:opacity-100 transition-opacity duration-300" />
+            <img src="/Logos/VOLTRONICPOWER.png" alt="Voltronic Power" className="h-35 object-contain opacity-80 hover:opacity-100 hover:scale-102 ease-in-out transition-all duration-800" />
+            <img src="/Logos/SRNE.png" alt="SRNE Solar" className="h-30 object-contain opacity-80 hover:opacity-100 hover:scale-102 ease-in-out transition-all duration-800" />
+            <img src="/Logos/JAPAN%20SOLAR.png" alt="Japan Solar" className="h-50 object-contain opacity-80 hover:opacity-100 hover:scale-102 ease-in-out transition-all duration-800" />
+            <img src="/Logos/THINK POWER.png" alt="Phono Solar" className="h-40 object-contain opacity-80 hover:opacity-100 hover:scale-102 ease-in-out transition-all duration-800" />
+            <img src="/Logos/HYXIPOWER.png" alt="HYXIPOWER" className="h-25 object-contain opacity-80 hover:opacity-100 hover:scale-102 ease-in-out transition-all duration-800" />
           </div>
         </div>
 

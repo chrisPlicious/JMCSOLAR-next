@@ -8,6 +8,10 @@
   --font-montserrat: "Montserrat", ui-sans-serif, system-ui, sans-serif;
 }
 
+html{
+  scroll-behavior: smooth;
+}
+
 html.lenis, html.lenis body {
   height: auto;
 }

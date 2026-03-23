@@ -40,9 +40,6 @@ export default function About() {
 
   return (
     <section id="about" className="relative bg-warm overflow-hidden">
-      {/* Decorative organic blobs */}
-      <div className="absolute -top-40 -right-40 w-80 h-80 bg-solar-400/5 blob-shape pointer-events-none" />
-      <div className="absolute bottom-20 -left-20 w-60 h-60 bg-navy-200/10 blob-shape-2 pointer-events-none" />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-20 lg:py-28">
         {/* ── Split header (Ref 3 style) ────────────────────── */}

@@ -2,11 +2,11 @@ import Link from 'next/link';
 import { Phone, Mail, MapPin, Facebook, Zap, ArrowRight } from 'lucide-react';
 
 const quickLinks = [
-  { label: 'Home',     href: '/' },
+  { label: 'Home', href: '/' },
   { label: 'Services', href: '/services' },
   { label: 'Projects', href: '/projects' },
   { label: 'Products', href: '/products' },
-  { label: 'Contact',  href: '/#contact' },
+  { label: 'Contact', href: '/#contact' },
 ];
 
 export default function Footer() {
@@ -23,18 +23,24 @@ export default function Footer() {
 
           {/* Brand Column */}
           <div className="flex flex-col gap-5">
-            <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 bg-solar-500 rounded-xl flex items-center justify-center">
-                <Zap size={20} className="text-navy-900" fill="currentColor" />
+            <div className="flex gap-2.5">
+              <div className="flex gap-2.5 group">
+                <div className="leading-tight">
+                  <span className="font-montserrat text-base tracking-tight flex gap-1">
+                    <span className="font-black text-2xl transition-colors duration-300">JMC</span>
+                    <span className="text-2xl font-medium transition-colors duration-300">SOLAR</span>
+                  </span>
+                </div>
               </div>
-              <div>
+
+              {/* <div>
                 <span className="text-white font-black text-base block" style={{ fontFamily: 'Poppins, sans-serif' }}>
                   JMC Solar PH
                 </span>
                 <span className="block text-solar-400 text-[10px] font-semibold tracking-widest uppercase">
                   Future is Electric
                 </span>
-              </div>
+              </div> */}
             </div>
             <p className="text-white/40 text-sm leading-relaxed">
               Renewable energy advocates serving Ormoc City and Eastern Visayas. Providing free and clean energy for every Filipino home, farm, and business.

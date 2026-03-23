@@ -119,9 +119,8 @@ export default function Hero() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center ">
           {/* Left Column - Text */}
           <div
-            className={`lg:col-span-7 text-center lg:text-left transition-all duration-1000 ${
-              visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-            }`}
+            className={`lg:col-span-7 text-center lg:text-left transition-all duration-1000 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+              }`}
           >
             {/* Badge */}
             <motion.div
@@ -159,15 +158,14 @@ export default function Hero() {
             </h1>
 
             {/* Subtitle */}
-            <p className="text-white/70 text-lg sm:text-xl lg:text-2xl max-w-2xl mb-4 leading-relaxed mx-auto lg:mx-0">
+            <p className="text-white text-lg sm:text-xl lg:text-2xl max-w-2xl mb-4 leading-relaxed mx-auto lg:mx-0">
               Professional Solar Installation Services in{" "}
               <span className="text-white font-semibold">
                 Ormoc City, Leyte
               </span>
             </p>
-            <p className="text-white/50 text-base max-w-xl mb-10 mx-auto lg:mx-0">
-              From residential rooftops to 100kW+ industrial solar farms — we
-              make clean, free energy accessible for every Filipino.
+            <p className="text-white text-lg max-w-xl mb-10 mx-auto lg:mx-0">
+              Every installation is carried out by a duly licensed electrical engineer, backed by a professionally trained team — ensuring safety, compliance, and precision from start to finish.
             </p>
 
             {/* CTA Buttons */}
@@ -237,9 +235,8 @@ export default function Hero() {
 
         {/* Mobile Stats Strip */}
         <div
-          className={`lg:hidden grid grid-cols-2 gap-3 max-w-md mx-auto transition-all duration-1000 delay-300 ${
-            visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-          }`}
+          className={`lg:hidden grid grid-cols-2 gap-3 max-w-md mx-auto transition-all duration-1000 delay-300 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+            }`}
         >
           {stats.map((stat) => (
             <div key={stat.label} className="glass rounded-2xl p-4 text-center">

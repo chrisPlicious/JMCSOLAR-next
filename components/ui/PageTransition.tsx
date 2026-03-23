@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { usePathname } from 'next/navigation';
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import Lenis from 'lenis';
 
 interface Props {
@@ -13,6 +13,7 @@ import { FrozenRouter } from './FrozenRouter';
 
 export default function PageTransition({ children }: Props) {
   const pathname = usePathname();
+  const lenisRef = useRef<Lenis | null>(null);
 
   useEffect(() => {
     const lenis = new Lenis({
@@ -30,6 +31,8 @@ export default function PageTransition({ children }: Props) {
     }
 
     requestAnimationFrame(raf);
+
+    lenisRef.current = lenis;
 
     const handleAnchorClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -59,9 +62,17 @@ export default function PageTransition({ children }: Props) {
 
     return () => {
       document.documentElement.removeEventListener('click', handleAnchorClick);
+      lenisRef.current = null;
       lenis.destroy();
     };
   }, []);
+
+  // Smoothly scroll to top on route change
+  useEffect(() => {
+    if (lenisRef.current) {
+      lenisRef.current.scrollTo(0, { duration: 1.5 });
+    }
+  }, [pathname]);
 
   if (pathname.startsWith('/admin')) {
     return <>{children}</>;
