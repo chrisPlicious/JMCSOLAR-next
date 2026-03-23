@@ -33,7 +33,7 @@ const categoryLabels: Record<Project['category'], string> = {
 
 export default function ProjectCard({ project }: ProjectCardProps) {
   return (
-    <div className="relative shrink-0 w-[88vw] h-[300px] sm:w-[560px] sm:h-[400px] md:w-[800px] md:h-[560px] lg:w-[1000px] lg:h-[680px] rounded-2xl overflow-hidden transition-transform hover:scale-101 duration-300 ease-in-out select-none">
+    <div className="relative shrink-0 w-[75vw] h-[250px] sm:w-[560px] sm:h-[400px] md:w-[800px] md:h-[560px] lg:w-[1000px] lg:h-[680px] rounded-2xl overflow-hidden transition-transform hover:scale-101 duration-300 ease-in-out select-none">
 
       {/* Background: image if available, gradient fallback */}
       {project.cover_image_path ? (
@@ -52,7 +52,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
 
       {/* Category label — top left */}
       <div className="absolute top-4 left-4 z-10">
-        <span className="inline-block bg-white/20 backdrop-blur-sm text-white text-sm md:text-xl font-semibold px-3 py-1 rounded-full">
+        <span className="inline-block bg-white/20 backdrop-blur-sm text-white text-xs md:text-xl font-semibold px-3 py-1 rounded-full">
           {categoryLabels[project.category]}
         </span>
       </div>
@@ -80,12 +80,12 @@ export default function ProjectCard({ project }: ProjectCardProps) {
       {/* Bottom info overlay */}
       <div className="absolute bottom-0 inset-x-0 bg-linear-to-t from-black/75 via-black/40 to-transparent p-5 pt-10 z-10">
         <h3
-          className="text-white font-bold text-base md:text-xl leading-snug mb-2"
+          className="text-white font-bold text-sm md:text-xl leading-snug mb-2"
           style={{ fontFamily: 'Poppins, sans-serif' }}
         >
           {project.title}
         </h3>
-        <div className="flex items-center gap-3 text-white/80 text-sm">
+        <div className="flex items-center gap-3 text-white/80 text-xs">
           {project.system_size && (
             <span className="flex items-center gap-1">
               <Zap size={15} className="text-solar-400" />

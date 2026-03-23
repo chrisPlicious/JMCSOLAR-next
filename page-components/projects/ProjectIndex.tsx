@@ -40,7 +40,7 @@ export default function ProjectsPage({ projects }: Props) {
 
   return (
     <Layout>
-      <section id="projects" className="bg-white mx-auto py-20 lg:py-28">
+      <section id="projects" className="bg-white mx-auto py-20 px-4 lg:py-28">
         {/* Header — kept as-is */}
         <div className="text-center max-w-2xl mx-auto mb-10">
           <span className="text-solar-600 font-semibold text-sm uppercase tracking-widest mb-4 block">
