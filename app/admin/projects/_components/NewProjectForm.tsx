@@ -1,24 +1,34 @@
-'use client';
+"use client";
 
-import { useActionState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
-import { createProjectAction } from '../actions';
-import Link from 'next/link';
+import { useActionState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { createProjectAction } from "../actions";
+import Link from "next/link";
 
-const inputCls = 'w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-navy-950 outline-none focus:ring-2 focus:ring-solar-500/30 focus:border-solar-500 transition-colors';
-const labelCls = 'block text-sm font-medium text-slate-700 mb-1.5';
+const inputCls =
+  "w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-navy-950 outline-none focus:ring-2 focus:ring-solar-500/30 focus:border-solar-500 transition-colors";
+const labelCls = "block text-sm font-medium text-slate-700 mb-1.5";
 
-const categories = ['residential', 'commercial', 'industrial', 'agricultural', 'school'];
+const categories = [
+  "residential",
+  "commercial",
+  "industrial",
+  "agricultural",
+  "school",
+];
 
 export default function NewProjectForm() {
-  const [state, formAction, isPending] = useActionState(createProjectAction, {});
+  const [state, formAction, isPending] = useActionState(
+    createProjectAction,
+    {},
+  );
   const router = useRouter();
 
   useEffect(() => {
     if (state?.success) {
-      toast.success('Project created successfully');
-      router.push('/admin/projects');
+      toast.success("Project created successfully");
+      router.push("/admin/projects");
     } else if (state?.error) {
       toast.error(state.error);
     }
@@ -27,15 +37,26 @@ export default function NewProjectForm() {
   return (
     <div>
       <div className="flex items-center gap-3 mb-6">
-        <Link href="/admin/projects" className="text-slate-400 hover:text-slate-600 transition-colors">
+        <Link
+          href="/admin/projects"
+          className="text-slate-400 hover:text-slate-600 transition-colors"
+        >
           <svg width="20" height="20" fill="none" viewBox="0 0 20 20">
-            <path d="M12 15l-5-5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+              d="M12 15l-5-5 5-5"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </Link>
-        <h1 className="font-display font-black text-navy-950 text-2xl">New Project</h1>
+        <h1 className="font-display font-black text-navy-950 text-2xl">
+          New Project
+        </h1>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-[0_4px_24px_0_rgb(0_0_0/0.06)] p-8 max-w-3xl mb-24">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-card p-8 max-w-3xl mb-24">
         {state?.error && (
           <div className="mb-6 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
             {state.error}
@@ -52,12 +73,16 @@ export default function NewProjectForm() {
           </div>
 
           <div>
-            <label htmlFor="title" className={labelCls}>Title</label>
+            <label htmlFor="title" className={labelCls}>
+              Title
+            </label>
             <input id="title" name="title" required className={inputCls} />
           </div>
 
           <div>
-            <label htmlFor="category" className={labelCls}>Category</label>
+            <label htmlFor="category" className={labelCls}>
+              Category
+            </label>
             <select id="category" name="category" required className={inputCls}>
               <option value="">Select a category</option>
               {categories.map((cat) => (
@@ -69,13 +94,42 @@ export default function NewProjectForm() {
           </div>
 
           <div>
-            <label htmlFor="location" className={labelCls}>Location</label>
-            <input id="location" name="location" placeholder="e.g. Ormoc City, Leyte" className={inputCls} />
+            <label htmlFor="location" className={labelCls}>
+              Location
+            </label>
+            <input
+              id="location"
+              name="location"
+              placeholder="e.g. Ormoc City, Leyte"
+              className={inputCls}
+            />
           </div>
 
           <div>
-            <label htmlFor="system_size" className={labelCls}>System Size</label>
-            <input id="system_size" name="system_size" placeholder="e.g. 10 kWp" className={inputCls} />
+            <label htmlFor="system_size" className={labelCls}>
+              System Size
+            </label>
+            <input
+              id="system_size"
+              name="system_size"
+              placeholder="e.g. 10 kWp"
+              className={inputCls}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="completed_at" className={labelCls}>
+              Completed At
+            </label>
+            <input
+              id="completed_at"
+              name="completed_at"
+              type="month"
+              className={inputCls}
+            />
+            <p className="text-xs text-slate-400 mt-1">
+              Month and year the project was completed
+            </p>
           </div>
 
           {/* Section: Details */}
@@ -87,13 +141,28 @@ export default function NewProjectForm() {
           </div>
 
           <div>
-            <label htmlFor="description" className={labelCls}>Description</label>
-            <textarea id="description" name="description" rows={4} className={inputCls} />
+            <label htmlFor="description" className={labelCls}>
+              Description
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              rows={4}
+              className={inputCls}
+            />
           </div>
 
           <div>
-            <label htmlFor="facebook_url" className={labelCls}>Facebook Post URL</label>
-            <input id="facebook_url" name="facebook_url" type="url" placeholder="https://facebook.com/..." className={inputCls} />
+            <label htmlFor="facebook_url" className={labelCls}>
+              Facebook Post URL
+            </label>
+            <input
+              id="facebook_url"
+              name="facebook_url"
+              type="url"
+              placeholder="https://facebook.com/..."
+              className={inputCls}
+            />
           </div>
 
           {/* Section: Media */}
@@ -105,7 +174,9 @@ export default function NewProjectForm() {
           </div>
 
           <div>
-            <label htmlFor="cover_image" className={labelCls}>Cover Photo</label>
+            <label htmlFor="cover_image" className={labelCls}>
+              Cover Photo
+            </label>
             <input
               id="cover_image"
               name="cover_image"
@@ -131,7 +202,7 @@ export default function NewProjectForm() {
           disabled={isPending}
           className="bg-solar-500 hover:bg-solar-400 disabled:opacity-60 text-navy-950 font-bold px-6 py-2.5 rounded-xl text-sm transition-colors"
         >
-          {isPending ? 'Saving…' : 'Create Project'}
+          {isPending ? "Saving…" : "Create Project"}
         </button>
       </div>
     </div>

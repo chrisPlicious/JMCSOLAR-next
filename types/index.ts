@@ -17,6 +17,7 @@ export interface Project {
   facebook_url: string | null;
   cover_image_path: string | null;
   created_at: string;
+  completed_at: string | null;
 }
 
 export interface Product {

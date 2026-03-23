@@ -12,14 +12,18 @@ export default async function EditProjectPage({ params }: { params: Promise<{ id
   ]);
   if (!project) notFound();
 
+  const imagesWithUrls = (images ?? []).map((img) => ({
+    ...img,
+    url: getPublicUrl('project-images', img.storage_path),
+  }));
+
   return (
     <div>
       <EditProjectForm project={project} />
       <PhotoGrid
-        images={images ?? []}
+        images={imagesWithUrls}
         projectId={id}
         coverPath={project.cover_image_path}
-        getUrl={(path) => getPublicUrl('project-images', path)}
       />
     </div>
   );

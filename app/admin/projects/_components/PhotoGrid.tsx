@@ -4,15 +4,14 @@ import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { deleteImageAction, setCoverAction } from '../actions';
 
-type ProjectImage = { id: string; storage_path: string };
+type ProjectImage = { id: string; storage_path: string; url: string | null };
 type Props = {
   images: ProjectImage[];
   projectId: string;
   coverPath: string | null;
-  getUrl: (path: string) => string | null;
 };
 
-export default function PhotoGrid({ images, projectId, coverPath, getUrl }: Props) {
+export default function PhotoGrid({ images, projectId, coverPath }: Props) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -39,7 +38,7 @@ export default function PhotoGrid({ images, projectId, coverPath, getUrl }: Prop
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {images.map((img) => {
-            const url = getUrl(img.storage_path);
+            const url = img.url;
             const isCover = img.storage_path === coverPath;
             return (
               <div key={img.id} className="bg-white rounded-xl overflow-hidden border border-slate-200 shadow-sm group">
