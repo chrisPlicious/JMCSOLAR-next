@@ -41,7 +41,18 @@ export default function About() {
   return (
     <section id="about" className="relative bg-warm overflow-hidden">
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-20 lg:py-28">
+      {/* Dotted background that fades out at the bottom */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: 'radial-gradient(circle, rgba(148,163,184,0.25) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+          maskImage: 'linear-gradient(to bottom, black 0%, black 40%, transparent 85%)',
+          WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 40%, transparent 85%)',
+        }}
+      />
+
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-20 lg:py-28">
         {/* ── Split header (Ref 3 style) ────────────────────── */}
         <motion.div
           className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-14"
