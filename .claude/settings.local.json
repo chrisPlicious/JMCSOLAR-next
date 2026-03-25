@@ -22,7 +22,8 @@
       "Bash(node -e \"const d = require\\(''@base-ui/react/dialog''\\); console.log\\(Object.keys\\(d\\)\\)\")",
       "Bash(node -e \"const d = require\\(''@base-ui/react/dialog''\\); console.log\\(Object.keys\\(d.Dialog\\)\\)\")",
       "Bash(find C:/Users/TRAINEE-MATUGUINA/Documents/nextJMC/JMCSOLAR-next/node_modules/@base-ui/react -name *.d.ts)",
-      "Bash(npx next:*)"
+      "Bash(npx next:*)",
+      "Bash(find /c/Users/TRAINEE-MATUGUINA/Documents/nextJMC/JMCSOLAR-next -type f -name *service* -o -name *admin*)"
     ]
   }
 }
