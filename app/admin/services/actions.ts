@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { requireAdminAuth } from '@/lib/auth';
-import { createSupabaseAdminClient } from '@/lib/supabase/server';
+import { adminDb } from '@/lib/firebase/admin';
 
 export type ServiceFormState = { error: string } | { success: true } | null;
 
@@ -11,7 +11,6 @@ export async function createService(
   fd: FormData
 ): Promise<ServiceFormState> {
   await requireAdminAuth();
-  const supabase = createSupabaseAdminClient();
 
   const icon = fd.get('icon') as string;
   const title = fd.get('title') as string;
@@ -20,20 +19,19 @@ export async function createService(
   const highlight = fd.get('highlight') === 'on';
   const display_order = Number(fd.get('display_order') ?? 0);
 
-  let serviceId: string;
+  const id = crypto.randomUUID();
 
   try {
-    const { data, error } = await supabase
-      .from('services')
-      .upsert(
-        { icon, title, slug, description, highlight, display_order },
-        { onConflict: 'slug' }
-      )
-      .select('id')
-      .single();
-
-    if (error) return { error: error.message };
-    serviceId = data.id;
+    await adminDb.collection('services').doc(id).set({
+      icon,
+      title,
+      slug,
+      description,
+      highlight,
+      display_order,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
 
     // Detail fields
     const tagline = (fd.get('tagline') as string) ?? '';
@@ -97,21 +95,19 @@ export async function createService(
       sources.length > 0;
 
     if (hasDetail) {
-      const { error: detailError } = await supabase.from('service_details').upsert(
-        {
-          service_id: serviceId,
-          tagline,
-          overview,
-          what_is_it,
-          how_it_works,
-          benefits,
-          specs,
-          use_cases,
-          sources,
-        },
-        { onConflict: 'service_id' }
-      );
-      if (detailError) return { error: detailError.message };
+      await adminDb.collection('serviceDetails').doc(id).set({
+        service_id: id,
+        tagline,
+        overview,
+        what_is_it,
+        how_it_works,
+        benefits,
+        specs,
+        use_cases,
+        sources,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
     }
   } catch (e) {
     return { error: (e as Error).message };
@@ -129,7 +125,6 @@ export async function updateService(
   fd: FormData
 ): Promise<ServiceFormState> {
   await requireAdminAuth();
-  const supabase = createSupabaseAdminClient();
 
   const icon = fd.get('icon') as string;
   const title = fd.get('title') as string;
@@ -139,12 +134,15 @@ export async function updateService(
   const display_order = Number(fd.get('display_order') ?? 0);
 
   try {
-    const { error } = await supabase
-      .from('services')
-      .update({ icon, title, slug, description, highlight, display_order })
-      .eq('id', id);
-
-    if (error) return { error: error.message };
+    await adminDb.collection('services').doc(id).update({
+      icon,
+      title,
+      slug,
+      description,
+      highlight,
+      display_order,
+      updated_at: new Date().toISOString(),
+    });
 
     // Detail fields
     const tagline = (fd.get('tagline') as string) ?? '';
@@ -208,7 +206,7 @@ export async function updateService(
       sources.length > 0;
 
     if (hasDetail) {
-      const { error: detailError } = await supabase.from('service_details').upsert(
+      await adminDb.collection('serviceDetails').doc(id).set(
         {
           service_id: id,
           tagline,
@@ -219,10 +217,10 @@ export async function updateService(
           specs,
           use_cases,
           sources,
+          updated_at: new Date().toISOString(),
         },
-        { onConflict: 'service_id' }
+        { merge: true }
       );
-      if (detailError) return { error: detailError.message };
     }
   } catch (e) {
     return { error: (e as Error).message };
@@ -236,8 +234,7 @@ export async function updateService(
 
 export async function deleteService(id: string): Promise<void> {
   await requireAdminAuth();
-  const supabase = createSupabaseAdminClient();
-  await supabase.from('service_details').delete().eq('service_id', id);
-  await supabase.from('services').delete().eq('id', id);
+  await adminDb.collection('serviceDetails').doc(id).delete();
+  await adminDb.collection('services').doc(id).delete();
   revalidatePath('/admin/services');
 }

@@ -4,7 +4,7 @@ import { useActionState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { createProductAction } from '../actions';
-import Link from 'next/link';
+import Link from 'next/link';  
 
 const categories = ['panels', 'batteries', 'inverters', 'controllers', 'converters'];
 const services = ['hybrid', 'ongrid', 'bess', 'pump', 'ev', 'ups', 'controller'];

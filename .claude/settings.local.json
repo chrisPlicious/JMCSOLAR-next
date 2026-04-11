@@ -23,7 +23,13 @@
       "Bash(node -e \"const d = require\\(''@base-ui/react/dialog''\\); console.log\\(Object.keys\\(d.Dialog\\)\\)\")",
       "Bash(find C:/Users/TRAINEE-MATUGUINA/Documents/nextJMC/JMCSOLAR-next/node_modules/@base-ui/react -name *.d.ts)",
       "Bash(npx next:*)",
-      "Bash(find /c/Users/TRAINEE-MATUGUINA/Documents/nextJMC/JMCSOLAR-next -type f -name *service* -o -name *admin*)"
+      "Bash(find /c/Users/TRAINEE-MATUGUINA/Documents/nextJMC/JMCSOLAR-next -type f -name *service* -o -name *admin*)",
+      "Bash(npx tsx:*)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(node -e \"require\\('dotenv'\\).config\\({path:'.env.local'}\\); const v=process.env.FIREBASE_SERVICE_ACCOUNT_JSON; console.log\\('value:', JSON.stringify\\(v\\)\\)\")",
+      "Bash(node -e \"require\\('dotenv'\\).config\\({path:'.env.local'}\\); const v=process.env.FIREBASE_SERVICE_ACCOUNT_JSON; try { const p=JSON.parse\\(v\\); console.log\\('OK - project_id:', p.project_id\\); } catch\\(e\\) { console.log\\('FAIL:', e.message, '| value starts with:', JSON.stringify\\(v?.slice\\(0,50\\)\\)\\); }\")",
+      "mcp__plugin_firebase_firebase__firestore_query_collection",
+      "mcp__plugin_firebase_firebase__firestore_update_document"
     ]
   }
 }

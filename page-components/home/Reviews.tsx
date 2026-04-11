@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Star, ThumbsUp } from 'lucide-react';
+import { Star, ThumbsUp, MessageSquarePlus } from 'lucide-react';
 import ReviewCard from '@/components/ui/ReviewCard';
 import { motion } from 'framer-motion';
-import { createClient } from '@supabase/supabase-js';
-import type { DbReview } from '@/lib/supabase/types';
+import { db } from '@/lib/firebase/client';
+import { collection, getDocs, orderBy, query, where } from 'firebase/firestore';
+import type { DbReview } from '@/lib/firebase/types';
 import type { Review } from '@/types';
+import ReviewSubmitDialog from './ReviewSubmitDialog';
 
 function toReviewCardData(r: DbReview): Review {
   return {
@@ -20,19 +22,14 @@ function toReviewCardData(r: DbReview): Review {
 
 export default function Reviews() {
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
-    const client = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-    client
-      .from('reviews')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .then(({ data }) => {
-        if (data) setReviews((data as DbReview[]).map(toReviewCardData));
-      });
+    const q = query(collection(db, 'reviews'), where('status', '==', 'approved'), orderBy('created_at', 'desc'));
+    getDocs(q).then((snap) => {
+      const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as DbReview[];
+      setReviews(data.map(toReviewCardData));
+    });
   }, []);
 
   const mid = Math.ceil(reviews.length / 2);
@@ -164,7 +161,14 @@ export default function Reviews() {
         )}
 
         {/* CTA Section */}
-        <div className="text-center">
+        <div className="text-center flex flex-col items-center gap-4">
+          <button
+            onClick={() => setDialogOpen(true)}
+            className="inline-flex items-center gap-2 bg-solar-500 hover:bg-solar-400 text-navy-950 font-bold px-6 py-3 rounded-xl text-sm transition-colors"
+          >
+            <MessageSquarePlus size={16} />
+            Share Your Experience
+          </button>
           <a
             href="https://www.facebook.com/jmcsolar/reviews/?id=100063736463795&sk=reviews"
             target="_blank"
@@ -180,6 +184,8 @@ export default function Reviews() {
 
       {/* Bottom gradient line */}
       <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-solar-500/20 to-transparent" />
+
+      <ReviewSubmitDialog open={dialogOpen} onOpenChange={setDialogOpen} />
     </section>
   );
 }

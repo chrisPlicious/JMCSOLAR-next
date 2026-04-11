@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     scrollRestoration: false,
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
   },
   transpilePackages: ['framer-motion'],
   images: {
@@ -14,6 +17,16 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: '**.supabase.co',
         pathname: '/storage/v1/object/public/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'storage.googleapis.com',
+        pathname: '/**',
       },
     ],
   },

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Poppins, Montserrat, Geist } from 'next/font/google';
 import './globals.css';
 import LoaderScreen from '@/components/ui/LoaderScreen';
-import PageTransition from '@/components/ui/PageTransition';
+import ScrollToTop from '@/components/ui/ScrollToTop';
 import { cn } from "@/lib/utils";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
@@ -48,8 +48,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={cn("font-sans", geist.variable)}>
       <body className={`${geist.variable} ${poppins.variable} ${montserrat.variable}`}>
+        <ScrollToTop />
         <LoaderScreen />
-        <PageTransition>{children}</PageTransition>
+        {children}
       </body>
     </html>
   );

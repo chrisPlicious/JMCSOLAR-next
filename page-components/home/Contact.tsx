@@ -2,10 +2,11 @@
 
 import {
   useState,
+  useEffect,
   type ChangeEvent,
+  type FormEvent,
   type ReactNode,
 } from "react";
-import { useForm } from "@formspree/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import { products } from "@/data/products";
@@ -53,6 +54,12 @@ const serviceToMessage: Record<string, string> = {
 export default function Contact() {
   const searchParams = useSearchParams();
 
+  useEffect(() => {
+    if (window.location.hash === '#contact') {
+      document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, []);
+
   const [formData, setFormData] = useState(() => {
     const productId = searchParams.get("product") ?? "";
     const foundProduct = products.find((p) => p.id === productId);
@@ -73,7 +80,23 @@ export default function Contact() {
       message,
     };
   });
-  const [state, handleSubmit] = useForm("mjgaoear");
+  const [submitting, setSubmitting] = useState(false);
+  const [succeeded, setSucceeded] = useState(false);
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      if (res.ok) setSucceeded(true);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
@@ -180,7 +203,7 @@ export default function Contact() {
 
           {/* Inquiry Form (right) */}
           <div className="lg:col-span-3">
-            {state.succeeded ? (
+            {succeeded ? (
               <div className="bg-green-eco/8 border border-green-eco/20 rounded-3xl p-6 sm:p-10 text-center">
                 <div className="w-16 h-16 bg-green-eco/15 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Send size={28} className="text-green-eco" />
@@ -287,10 +310,10 @@ export default function Contact() {
                   variant="primary"
                   size="lg"
                   className="w-full overflow-hidden send-btn"
-                  disabled={state.submitting}
+                  disabled={submitting}
                 >
                   <AnimatePresence mode="wait" initial={false}>
-                    {state.submitting ? (
+                    {submitting ? (
                       <motion.span
                         key="loading"
                         className="inline-flex items-center justify-center gap-2"

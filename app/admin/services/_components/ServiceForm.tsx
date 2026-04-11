@@ -7,7 +7,7 @@ import Link from 'next/link';
 import * as Icons from 'lucide-react';
 import { ArrowRight, CheckCircle, ExternalLink } from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
-import type { DbService, DbServiceDetail } from '@/lib/supabase/types';
+import type { DbService, DbServiceDetail } from '@/lib/firebase/types';
 import type { ServiceFormState } from '../actions';
 
 type IconName = keyof typeof Icons;

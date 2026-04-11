@@ -67,9 +67,25 @@ export default function PageTransition({ children }: Props) {
     };
   }, []);
 
-  // Smoothly scroll to top on route change
+  // On route change: scroll to hash if present, otherwise scroll to top
   useEffect(() => {
-    if (lenisRef.current) {
+    if (!lenisRef.current) return;
+    const hash = window.location.hash;
+    if (hash) {
+      // AnimatePresence mode="wait" holds the new page unmounted for ~400ms
+      // while the old page exits. Wait 500ms so the new page is in the DOM,
+      // then snap instantly (page is still near opacity:0 so user never sees hero).
+      const t = setTimeout(() => {
+        const el = document.querySelector(hash);
+        if (el && lenisRef.current) {
+          lenisRef.current.scrollTo(el as HTMLElement, {
+            immediate: true,
+            offset: -80, // clear the fixed navbar
+          });
+        }
+      }, 500);
+      return () => clearTimeout(t);
+    } else {
       lenisRef.current.scrollTo(0, { duration: 1.5 });
     }
   }, [pathname]);

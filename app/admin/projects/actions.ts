@@ -1,8 +1,9 @@
-"use server";
+'use server';
 
-import { revalidatePath } from "next/cache";
-import { requireAdminAuth } from "@/lib/auth";
-import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { revalidatePath } from 'next/cache';
+import { requireAdminAuth } from '@/lib/auth';
+import { adminDb } from '@/lib/firebase/admin';
+import { uploadFile, deleteFile, deleteFiles } from '@/lib/firebase/storage';
 
 type ActionResult = { error?: string; success?: boolean };
 
@@ -11,66 +12,56 @@ export async function createProjectAction(
   formData: FormData,
 ): Promise<ActionResult> {
   await requireAdminAuth();
-  const supabase = createSupabaseAdminClient();
-  const file = formData.get("cover_image") as File | null;
-  const completedRaw = (formData.get("completed_at") as string)?.trim() || null;
+  const file = formData.get('cover_image') as File | null;
+  const completedRaw = (formData.get('completed_at') as string)?.trim() || null;
   const completed_at = completedRaw
     ? completedRaw.length <= 7
       ? `${completedRaw}-01`
       : completedRaw
     : null;
 
-  if (file && file.size > 0) {
-    const { data: project, error } = await supabase
-      .from("projects")
-      .insert({
-        title: formData.get("title") as string,
-        category: formData.get("category") as string,
-        system_size: (formData.get("system_size") as string) || null,
-        description: (formData.get("description") as string) || null,
-        location: (formData.get("location") as string) || null,
-        facebook_url: (formData.get("facebook_url") as string) || null,
-        completed_at,
-      })
-      .select("id")
-      .single();
+  const projectId = crypto.randomUUID();
+  const projectData = {
+    id: projectId,
+    title: formData.get('title') as string,
+    category: formData.get('category') as string,
+    system_size: (formData.get('system_size') as string) || null,
+    description: (formData.get('description') as string) || null,
+    location: (formData.get('location') as string) || null,
+    facebook_url: (formData.get('facebook_url') as string) || null,
+    cover_image_path: null as string | null,
+    completed_at,
+    created_at: new Date().toISOString(),
+  };
 
-    if (error) return { error: error.message };
+  try {
+    await adminDb.collection('projects').doc(projectId).set(projectData);
 
-    if (project) {
-      const ext = file.name.split(".").pop();
-      const path = `${project.id}/cover-${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage
-        .from("project-images")
-        .upload(path, file);
-      if (!uploadError) {
-        await supabase
-          .from("projects")
-          .update({ cover_image_path: path })
-          .eq("id", project.id);
-        await supabase.from("project_images").insert({
-          project_id: project.id,
-          storage_path: path,
-          display_order: 0,
-        });
-      }
+    if (file && file.size > 0) {
+      const ext = file.name.split('.').pop();
+      const path = `project-images/${projectId}/cover-${Date.now()}.${ext}`;
+      const buffer = Buffer.from(await file.arrayBuffer());
+      await uploadFile(path, buffer, file.type);
+
+      await adminDb.collection('projects').doc(projectId).update({ cover_image_path: path });
+
+      const imgId = crypto.randomUUID();
+      await adminDb.collection('projectImages').doc(imgId).set({
+        id: imgId,
+        project_id: projectId,
+        storage_path: path,
+        caption: null,
+        display_order: 0,
+        created_at: new Date().toISOString(),
+      });
     }
-  } else {
-    const { error } = await supabase.from("projects").insert({
-      title: formData.get("title") as string,
-      category: formData.get("category") as string,
-      system_size: (formData.get("system_size") as string) || null,
-      description: (formData.get("description") as string) || null,
-      location: (formData.get("location") as string) || null,
-      facebook_url: (formData.get("facebook_url") as string) || null,
-      cover_image_path: null,
-      completed_at,
-    });
-    if (error) return { error: error.message };
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return { error: message };
   }
 
-  revalidatePath("/projects");
-  revalidatePath("/admin/projects");
+  revalidatePath('/projects');
+  revalidatePath('/admin/projects');
   return { success: true };
 }
 
@@ -80,70 +71,82 @@ export async function updateProjectAction(
   formData: FormData,
 ): Promise<ActionResult> {
   await requireAdminAuth();
-  const supabase = createSupabaseAdminClient();
-  const completedRaw = (formData.get("completed_at") as string)?.trim() || null;
+  const completedRaw = (formData.get('completed_at') as string)?.trim() || null;
   const completed_at = completedRaw
     ? completedRaw.length <= 7
       ? `${completedRaw}-01`
       : completedRaw
     : null;
 
-  const { error } = await supabase
-    .from("projects")
-    .update({
-      title: formData.get("title") as string,
-      category: formData.get("category") as string,
-      system_size: (formData.get("system_size") as string) || null,
-      description: (formData.get("description") as string) || null,
-      location: (formData.get("location") as string) || null,
-      facebook_url: (formData.get("facebook_url") as string) || null,
+  try {
+    await adminDb.collection('projects').doc(id).update({
+      title: formData.get('title') as string,
+      category: formData.get('category') as string,
+      system_size: (formData.get('system_size') as string) || null,
+      description: (formData.get('description') as string) || null,
+      location: (formData.get('location') as string) || null,
+      facebook_url: (formData.get('facebook_url') as string) || null,
       completed_at,
-    })
-    .eq("id", id);
+    });
 
-  if (error) return { error: error.message };
+    const file = formData.get('new_image') as File | null;
+    if (file && file.size > 0) {
+      const ext = file.name.split('.').pop();
+      const path = `project-images/${id}/img-${Date.now()}.${ext}`;
+      const buffer = Buffer.from(await file.arrayBuffer());
+      await uploadFile(path, buffer, file.type);
 
-  const file = formData.get("new_image") as File | null;
-  if (file && file.size > 0) {
-    const ext = file.name.split(".").pop();
-    const path = `${id}/img-${Date.now()}.${ext}`;
-    const { error: uploadError } = await supabase.storage
-      .from("project-images")
-      .upload(path, file);
-    if (!uploadError) {
-      const setCover = formData.get("set_as_cover") === "true";
-      await supabase
-        .from("project_images")
-        .insert({ project_id: id, storage_path: path, display_order: 0 });
+      const imgId = crypto.randomUUID();
+      await adminDb.collection('projectImages').doc(imgId).set({
+        id: imgId,
+        project_id: id,
+        storage_path: path,
+        caption: null,
+        display_order: 0,
+        created_at: new Date().toISOString(),
+      });
+
+      const setCover = formData.get('set_as_cover') === 'true';
       if (setCover) {
-        await supabase
-          .from("projects")
-          .update({ cover_image_path: path })
-          .eq("id", id);
+        await adminDb.collection('projects').doc(id).update({ cover_image_path: path });
       }
     }
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return { error: message };
   }
 
-  revalidatePath("/projects");
-  revalidatePath("/admin/projects");
+  revalidatePath('/projects');
+  revalidatePath('/admin/projects');
   return { success: true };
 }
 
 export async function deleteProjectAction(id: string): Promise<void> {
   await requireAdminAuth();
-  const supabase = createSupabaseAdminClient();
-  const { data: images } = await supabase
-    .from("project_images")
-    .select("storage_path")
-    .eq("project_id", id);
-  if (images?.length) {
-    await supabase.storage
-      .from("project-images")
-      .remove(images.map((i) => i.storage_path));
+
+  const imagesSnap = await adminDb
+    .collection('projectImages')
+    .where('project_id', '==', id)
+    .get();
+
+  const storagePaths = imagesSnap.docs.map((doc) => doc.data().storage_path as string);
+  if (storagePaths.length > 0) {
+    await deleteFiles(storagePaths);
   }
-  await supabase.from("projects").delete().eq("id", id);
-  revalidatePath("/projects");
-  revalidatePath("/admin/projects");
+
+  // Batch delete all projectImages docs
+  if (imagesSnap.docs.length > 0) {
+    const batch = adminDb.batch();
+    for (const doc of imagesSnap.docs) {
+      batch.delete(doc.ref);
+    }
+    await batch.commit();
+  }
+
+  await adminDb.collection('projects').doc(id).delete();
+
+  revalidatePath('/projects');
+  revalidatePath('/admin/projects');
 }
 
 export async function deleteImageAction(
@@ -152,21 +155,17 @@ export async function deleteImageAction(
   projectId: string,
 ): Promise<void> {
   await requireAdminAuth();
-  const supabase = createSupabaseAdminClient();
-  await supabase.storage.from("project-images").remove([storagePath]);
-  await supabase.from("project_images").delete().eq("id", imageId);
-  const { data: project } = await supabase
-    .from("projects")
-    .select("cover_image_path")
-    .eq("id", projectId)
-    .single();
+
+  await deleteFile(storagePath);
+  await adminDb.collection('projectImages').doc(imageId).delete();
+
+  const projectSnap = await adminDb.collection('projects').doc(projectId).get();
+  const project = projectSnap.data();
   if (project?.cover_image_path === storagePath) {
-    await supabase
-      .from("projects")
-      .update({ cover_image_path: null })
-      .eq("id", projectId);
+    await adminDb.collection('projects').doc(projectId).update({ cover_image_path: null });
   }
-  revalidatePath("/admin/projects");
+
+  revalidatePath('/admin/projects');
 }
 
 export async function setCoverAction(
@@ -174,11 +173,7 @@ export async function setCoverAction(
   storagePath: string,
 ): Promise<void> {
   await requireAdminAuth();
-  const supabase = createSupabaseAdminClient();
-  await supabase
-    .from("projects")
-    .update({ cover_image_path: storagePath })
-    .eq("id", projectId);
-  revalidatePath("/projects");
-  revalidatePath("/admin/projects");
+  await adminDb.collection('projects').doc(projectId).update({ cover_image_path: storagePath });
+  revalidatePath('/projects');
+  revalidatePath('/admin/projects');
 }

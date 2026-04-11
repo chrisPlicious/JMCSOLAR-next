@@ -1,5 +1,7 @@
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { adminDb } from '@/lib/firebase/admin';
 import Link from 'next/link';
+
+export const dynamic = 'force-dynamic';
 
 function getRelativeTime(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -35,34 +37,51 @@ function StatCard({
 }
 
 export default async function AdminDashboard() {
-  const supabase = createSupabaseServerClient();
-
   const [
-    { count: projectCount, error: e1 },
-    { count: productCount, error: e2 },
-    { count: serviceCount, error: e3 },
-    { count: reviewCount, error: e4 },
-    { data: featuredServices, error: e5 },
-    { data: recentProjects, error: e6 },
-    { data: recentProducts, error: e7 },
-    { data: reviewStats, error: e8 },
+    projectCountAgg,
+    productCountAgg,
+    serviceCountAgg,
+    reviewCountAgg,
+    featuredServicesSnap,
+    recentProjectsSnap,
+    recentProductsSnap,
+    reviewStatsSnap,
   ] = await Promise.all([
-    supabase.from('projects').select('*', { count: 'exact', head: true }),
-    supabase.from('products').select('*', { count: 'exact', head: true }),
-    supabase.from('services').select('*', { count: 'exact', head: true }),
-    supabase.from('reviews').select('*', { count: 'exact', head: true }),
-    supabase.from('services').select('id').eq('highlight', true),
-    supabase.from('projects').select('id, title, created_at').order('created_at', { ascending: false }).limit(5),
-    supabase.from('products').select('id, name, created_at').order('created_at', { ascending: false }).limit(5),
-    supabase.from('reviews').select('rating'),
+    adminDb.collection('projects').count().get(),
+    adminDb.collection('products').count().get(),
+    adminDb.collection('services').count().get(),
+    adminDb.collection('reviews').count().get(),
+    adminDb.collection('services').where('highlight', '==', true).get(),
+    adminDb.collection('projects').orderBy('created_at', 'desc').limit(5).get(),
+    adminDb.collection('products').orderBy('created_at', 'desc').limit(5).get(),
+    adminDb.collection('reviews').get(),
   ]);
 
-  const criticalError = e1 || e2 || e3 || e4 || e5 || e6 || e7 || e8;
-  if (criticalError) throw new Error(criticalError.message);
+  const projectCount = projectCountAgg.data().count;
+  const productCount = productCountAgg.data().count;
+  const serviceCount = serviceCountAgg.data().count;
+  const reviewCount = reviewCountAgg.data().count;
+
+  const featuredServices = featuredServicesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+  const recentProjects = recentProjectsSnap.docs.map(doc => {
+    const d = doc.data() as { title: string; created_at: string };
+    return { id: doc.id, title: d.title, created_at: d.created_at };
+  });
+
+  const recentProducts = recentProductsSnap.docs.map(doc => {
+    const d = doc.data() as { name: string; created_at: string };
+    return { id: doc.id, name: d.name, created_at: d.created_at };
+  });
+
+  const reviewStats = reviewStatsSnap.docs.map(doc => {
+    const d = doc.data() as { rating: number };
+    return { rating: d.rating };
+  });
 
   const recentActivity = [
-    ...(recentProjects ?? []).map((p) => ({ title: p.title, created_at: p.created_at, type: 'project' as const })),
-    ...(recentProducts ?? []).map((p) => ({ title: p.name, created_at: p.created_at, type: 'product' as const })),
+    ...recentProjects.map((p) => ({ title: p.title, created_at: p.created_at, type: 'project' as const })),
+    ...recentProducts.map((p) => ({ title: p.name, created_at: p.created_at, type: 'product' as const })),
   ]
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 5);

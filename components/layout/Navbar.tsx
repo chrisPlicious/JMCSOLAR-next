@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, X, ChevronDown, LayoutGrid, Package } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
-import type { DbService } from '@/lib/supabase/types';
+import { db } from '@/lib/firebase/client';
+import { collection, getDocs, orderBy, query } from 'firebase/firestore';
+import type { DbService } from '@/lib/firebase/types';
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -23,17 +24,11 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    const client = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-    client
-      .from('services')
-      .select('id, title, slug')
-      .order('display_order', { ascending: true })
-      .then(({ data }) => {
-        if (data) setServices(data as DbService[]);
-      });
+    const q = query(collection(db, 'services'), orderBy('display_order', 'asc'));
+    getDocs(q).then((snap) => {
+      const data = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as DbService[];
+      setServices(data);
+    });
   }, []);
 
   // Close everything on navigation
@@ -56,7 +51,6 @@ export default function Navbar() {
 
   const isServicesActive = pathname.startsWith('/services') || pathname.startsWith('/products');
   const isHomePage = pathname === '/';
-  // Use transparent/white-text style only on home page before scrolling
   const isTransparent = isHomePage && !scrolled;
 
   const linkClass = (active: boolean) =>
@@ -92,7 +86,6 @@ export default function Navbar() {
 
         {/* Desktop Nav */}
         <div className="hidden lg:flex items-center gap-1">
-          {/* Home */}
           <Link href="/" className={linkClass(pathname === '/')}>
             Home
           </Link>
@@ -110,10 +103,8 @@ export default function Navbar() {
               />
             </button>
 
-            {/* Dropdown Panel */}
             {dropdownOpen && (
               <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-72 bg-white/95 backdrop-blur-xl rounded-2xl shadow-elevated border border-slate-100/80 overflow-hidden z-50">
-                {/* Services overview */}
                 <div className="px-4 pt-4 pb-2">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
                     Overview
@@ -131,7 +122,6 @@ export default function Navbar() {
 
                 <div className="h-px bg-slate-100 mx-4" />
 
-                {/* Individual service pages */}
                 <div className="px-4 py-2">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
                     Service Types
@@ -155,7 +145,6 @@ export default function Navbar() {
 
                 <div className="h-px bg-slate-100 mx-4" />
 
-                {/* Products */}
                 <div className="px-4 py-3">
                   <Link
                     href="/products"
@@ -171,7 +160,6 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Projects */}
           <Link href="/projects" className={linkClass(pathname === '/projects')}>
             Projects
           </Link>
@@ -179,14 +167,15 @@ export default function Navbar() {
 
         {/* Desktop CTA */}
         <div className="hidden lg:flex items-center gap-3">
-          <a href="/#contact">
-            <button className={`font-bold text-sm px-6 py-2.5 rounded-full transition-all duration-300 shadow-sm hover:shadow-md ${
+          <a
+            href="/#contact"
+            className={`font-bold text-sm px-6 py-2.5 rounded-full transition-all duration-300 shadow-sm hover:shadow-md ${
               isTransparent
                 ? 'bg-white text-navy-900 hover:bg-white/90'
                 : 'bg-navy-900 text-white hover:bg-navy-800'
-            }`}>
-              Get a Quote
-            </button>
+            }`}
+          >
+            Get a Quote
           </a>
         </div>
 
@@ -211,7 +200,6 @@ export default function Navbar() {
         } bg-navy-950/98 backdrop-blur-xl border-t border-white/5`}
       >
         <div className="px-4 py-5 flex flex-col gap-1">
-          {/* Home */}
           <Link
             href="/"
             className={`text-base font-medium px-4 py-3.5 rounded-xl transition-colors ${
@@ -238,7 +226,6 @@ export default function Navbar() {
 
             {mobileServicesOpen && (
               <div className="pl-3 pb-3 flex flex-col gap-0.5 mt-1">
-                {/* All Services link */}
                 <Link
                   href="/services"
                   className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-solar-400 hover:bg-white/5 transition-colors"
@@ -249,7 +236,6 @@ export default function Navbar() {
 
                 <div className="h-px bg-white/10 my-1.5 mx-3" />
 
-                {/* Individual services */}
                 {services.map((s) => (
                   <Link
                     key={s.slug}
@@ -266,7 +252,6 @@ export default function Navbar() {
 
                 <div className="h-px bg-white/10 my-1.5 mx-3" />
 
-                {/* Products */}
                 <Link
                   href="/products"
                   className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white/80 hover:text-solar-400 hover:bg-white/5 transition-colors"
@@ -278,7 +263,6 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Projects */}
           <Link
             href="/projects"
             className={`text-base font-medium px-4 py-3.5 rounded-xl transition-colors ${
@@ -288,10 +272,11 @@ export default function Navbar() {
             Projects
           </Link>
 
-          <a href="/#contact" className="mt-3">
-            <button className="w-full bg-solar-500 hover:bg-solar-400 text-navy-900 font-bold text-base px-5 py-3.5 rounded-xl transition-all duration-200 text-center">
-              Get a Free Quote
-            </button>
+          <a
+            href="/#contact"
+            className="mt-3 w-full block bg-solar-500 hover:bg-solar-400 text-navy-900 font-bold text-base px-5 py-3.5 rounded-xl transition-all duration-200 text-center"
+          >
+            Get a Free Quote
           </a>
         </div>
       </div>

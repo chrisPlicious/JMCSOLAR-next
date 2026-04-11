@@ -1,7 +1,10 @@
 import Link from 'next/link';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { adminDb } from '@/lib/firebase/admin';
 import DeleteReviewButton from './_components/DeleteReviewButton';
 import NewReviewDialog from './_components/NewReviewDialog';
+import ReviewStatusActions from './_components/ReviewStatusActions';
+
+export const dynamic = 'force-dynamic';
 
 function MiniStatCard({ number, label }: { number: string | number; label: string }) {
   return (
@@ -13,16 +16,24 @@ function MiniStatCard({ number, label }: { number: string | number; label: strin
 }
 
 export default async function AdminReviewsPage() {
-  const supabase = createSupabaseServerClient();
-  const [{ data: reviews, error: reviewsError }, { data: statsData, error: statsError }] = await Promise.all([
-    supabase
-      .from('reviews')
-      .select('id, reviewer_name, source, rating, quote, created_at')
-      .order('created_at', { ascending: false }),
-    supabase.from('reviews').select('source, rating'),
-  ]);
-  if (reviewsError) throw new Error(reviewsError.message);
-  if (statsError) throw new Error(statsError.message);
+  const snap = await adminDb.collection('reviews').orderBy('created_at', 'desc').get();
+  const rawReviews = snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as {
+    id: string;
+    reviewer_name: string;
+    source: string;
+    rating: number;
+    quote: string;
+    created_at: string;
+    status?: string;
+  }[];
+
+  // Sort: pending first, then by created_at desc
+  const reviews = [...rawReviews].sort((a, b) => {
+    const order = (s?: string) => s === 'pending' ? 0 : 1;
+    return order(a.status) - order(b.status);
+  });
+
+  const statsData = reviews;
 
   const totalReviews = reviews?.length ?? 0;
   const avgRating =
@@ -31,6 +42,7 @@ export default async function AdminReviewsPage() {
       : '—';
   const googleCount = statsData?.filter((r) => r.source?.toLowerCase() === 'google').length ?? 0;
   const facebookCount = statsData?.filter((r) => r.source?.toLowerCase() === 'facebook').length ?? 0;
+  const pendingCount = statsData?.filter((r) => r.status === 'pending').length ?? 0;
 
   return (
     <div>
@@ -41,11 +53,12 @@ export default async function AdminReviewsPage() {
       </div>
 
       {/* Stat strip */}
-      <div className="grid grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-5 gap-3 mb-6">
         <MiniStatCard number={totalReviews} label="Total Reviews" />
         <MiniStatCard number={avgRating !== '—' ? `★ ${avgRating}` : '—'} label="Avg Rating" />
         <MiniStatCard number={googleCount} label="Google" />
         <MiniStatCard number={facebookCount} label="Facebook" />
+        <MiniStatCard number={pendingCount} label="Pending" />
       </div>
 
       {!reviews?.length ? (
@@ -70,6 +83,7 @@ export default async function AdminReviewsPage() {
               <tr>
                 <th className="text-xs font-bold uppercase tracking-widest text-slate-400 px-4 py-3 text-left">Name</th>
                 <th className="text-xs font-bold uppercase tracking-widest text-slate-400 px-4 py-3 text-left">Source</th>
+                <th className="text-xs font-bold uppercase tracking-widest text-slate-400 px-4 py-3 text-left">Status</th>
                 <th className="text-xs font-bold uppercase tracking-widest text-slate-400 px-4 py-3 text-left">Rating</th>
                 <th className="text-xs font-bold uppercase tracking-widest text-slate-400 px-4 py-3 text-left">Quote</th>
                 <th className="text-xs font-bold uppercase tracking-widest text-slate-400 px-4 py-3 text-left">Date</th>
@@ -88,6 +102,22 @@ export default async function AdminReviewsPage() {
                       {r.source}
                     </span>
                   </td>
+                  <td className="px-4 py-3">
+                    {(() => {
+                      const s = r.status ?? 'approved';
+                      const cls =
+                        s === 'pending'
+                          ? 'bg-amber-100 text-amber-700'
+                          : s === 'rejected'
+                          ? 'bg-red-100 text-red-700'
+                          : 'bg-green-100 text-green-700';
+                      return (
+                        <span className={`text-xs font-semibold px-2.5 py-1 rounded-full capitalize ${cls}`}>
+                          {s}
+                        </span>
+                      );
+                    })()}
+                  </td>
                   <td className="px-4 py-3 text-solar-500 font-semibold">
                     {'★'.repeat(r.rating)}
                   </td>
@@ -99,6 +129,7 @@ export default async function AdminReviewsPage() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">
+                      <ReviewStatusActions id={r.id} status={r.status} />
                       <Link
                         href={`/admin/reviews/${r.id}`}
                         className="p-2 rounded-lg text-slate-400 hover:text-navy-900 hover:bg-slate-100 transition-colors"

@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 const solarBg = "/assets/bg-1.jpg";
 import { ArrowRight, ChevronDown, Star, Users, Zap, Sun } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/Button";
 
@@ -19,39 +19,13 @@ const words = ["Electric", "Renewable", "Sustainable", "Now"];
 export default function Hero() {
   const [visible, setVisible] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [phase, setPhase] = useState<"typing" | "pause" | "erasing">("typing");
-  const [displayText, setDisplayText] = useState("");
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    const word = words[currentIndex];
-
-    if (phase === "typing") {
-      if (displayText.length < word.length) {
-        timeoutRef.current = setTimeout(() => {
-          setDisplayText(word.slice(0, displayText.length + 1));
-        }, 100);
-      } else {
-        timeoutRef.current = setTimeout(() => setPhase("pause"), 80);
-      }
-    } else if (phase === "pause") {
-      timeoutRef.current = setTimeout(() => setPhase("erasing"), 2000);
-    } else if (phase === "erasing") {
-      if (displayText.length > 0) {
-        timeoutRef.current = setTimeout(() => {
-          setDisplayText(displayText.slice(0, -1));
-        }, 60);
-      } else {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setCurrentIndex((prev) => (prev + 1) % words.length);
-        setPhase("typing");
-      }
-    }
-
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
-  }, [displayText, phase, currentIndex]);
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % words.length);
+    }, 3500);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 100);
@@ -141,17 +115,24 @@ export default function Hero() {
               style={{ fontFamily: "Poppins, sans-serif" }}
             >
               Future is{" "}
-              <span className="relative inline-block text-solar-400">
-                {/* The Ghost Word */}
+              <span className="relative inline-block text-solar-400 overflow-hidden">
+                {/* Ghost word to hold width */}
                 <span className="invisible pointer-events-none">
                   Sustainable
                 </span>
-                {/* The Typing Overlay */}
-                <span className="absolute inset-0 flex items-center justify-center lg:justify-start">
-                  {displayText}
-                  {/* Blinking cursor */}
-                  <span className="inline-block w-[3px] h-[0.85em] bg-solar-400 ml-1 rounded-sm animate-[blink_0.8s_step-end_infinite]" />
-                </span>
+                {/* Rotating word */}
+                <AnimatePresence mode="wait">
+                  <motion.span
+                    key={currentIndex}
+                    className="absolute inset-0 flex items-center justify-center lg:justify-start"
+                    initial={{ opacity: 0, y: 40 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -40 }}
+                    transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+                  >
+                    {words[currentIndex]}
+                  </motion.span>
+                </AnimatePresence>
                 {/* Underline decoration */}
                 <span className="absolute -bottom-2 left-0 right-0 h-1 bg-linear-to-r from-solar-500 to-solar-300 rounded-full opacity-60" />
               </span>

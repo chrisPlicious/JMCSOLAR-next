@@ -1,17 +1,15 @@
 import ProductsPage from '@/page-components/products/ProductsIndex';
-import { createSupabaseServerClient, getPublicUrl } from '@/lib/supabase/server';
+import { adminDb } from '@/lib/firebase/admin';
+import { getPublicUrl } from '@/lib/firebase/storage';
 import type { Product } from '@/types';
 
 export default async function Products() {
-  const supabase = createSupabaseServerClient();
-  const { data } = await supabase
-    .from('products')
-    .select('*')
-    .order('created_at', { ascending: false });
+  const snap = await adminDb.collection('products').orderBy('created_at', 'desc').get();
+  const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
   const products: Product[] = (data ?? []).map((p) => ({
-    ...p,
-    image_path: getPublicUrl('product-images', p.image_path),
+    ...(p as Product),
+    image_path: getPublicUrl((p as { image_path?: string | null }).image_path ?? null),
   }));
 
   return <ProductsPage products={products} />;

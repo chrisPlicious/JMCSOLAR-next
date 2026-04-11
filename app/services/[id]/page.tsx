@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { adminDb } from '@/lib/firebase/admin';
 import ServicePageLayout from '@/components/ui/ServicePageLayout';
 import ServiceEmptyState from '@/components/ui/ServiceEmptyState';
-import type { DbService, DbServiceDetail } from '@/lib/supabase/types';
+import type { DbService, DbServiceDetail } from '@/lib/firebase/types';
 
 export const revalidate = 60;
 
@@ -13,23 +13,17 @@ export default async function ServiceDetailPage({
 }) {
   const { id: slug } = await params;
 
-  const supabase = createSupabaseServerClient();
+  const snap = await adminDb.collection('services').where('slug', '==', slug).limit(1).get();
 
-  const { data: service } = await supabase
-    .from('services')
-    .select('*')
-    .eq('slug', slug)
-    .single<DbService>();
-
-  if (!service) {
+  if (snap.empty) {
     notFound();
   }
 
-  const { data: detail } = await supabase
-    .from('service_details')
-    .select('*')
-    .eq('service_id', service.id)
-    .single<DbServiceDetail>();
+  const serviceDoc = snap.docs[0];
+  const service = { id: serviceDoc.id, ...serviceDoc.data() } as DbService;
+
+  const detailQuery = await adminDb.collection('serviceDetails').where('service_id', '==', service.id).limit(1).get();
+  const detail = !detailQuery.empty ? (detailQuery.docs[0].data() as DbServiceDetail) : null;
 
   if (!detail) {
     return <ServiceEmptyState service={service} />;

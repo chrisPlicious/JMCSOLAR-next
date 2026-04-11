@@ -1,4 +1,7 @@
+'use client';
+
 import { type ComponentType, type ReactNode } from 'react';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
 import * as Icons from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
@@ -58,7 +61,12 @@ export default function ServicePageLayout({
         style={heroBgImage ? { backgroundImage: `url(${heroBgImage})` } : undefined}
       >
         {heroBgImage && <div className="absolute inset-0" />}
-        <div className="relative z-10 max-w-5xl mx-auto">
+        <motion.div
+          className="relative z-10 max-w-5xl mx-auto"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
           <div className="flex items-center gap-2 text-white/60 text-sm mb-8">
             <Link href="/" className="hover:text-white transition-colors">Home</Link>
             <span>/</span>
@@ -86,30 +94,47 @@ export default function ServicePageLayout({
           >
             Get a Free Quote <Icon name="ArrowRight" size={18} />
           </Button>
-        </div>
+        </motion.div>
       </div>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-16 space-y-20">
 
         {/* ── Overview ── */}
-        <section>
+        <motion.section
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.5 }}
+        >
           <Label>Overview</Label>
           <h2 className="text-navy-900 font-black text-2xl sm:text-3xl leading-tight mt-2 mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
             What Is {title}?
           </h2>
           <p className="text-slate-600 text-lg leading-relaxed mb-6">{overview}</p>
           <p className="text-slate-600 text-lg leading-relaxed">{whatIsIt}</p>
-        </section>
+        </motion.section>
 
         {/* ── How It Works ── */}
-        <section>
+        <motion.section
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.5 }}
+        >
           <Label>Process</Label>
           <h2 className="text-navy-900 font-black text-2xl sm:text-3xl leading-tight mt-2 mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
             How It Works
           </h2>
           <div className="space-y-6 mt-8">
             {howItWorks.map((item, i) => (
-              <div key={i} className="flex gap-5">
+              <motion.div
+                key={i}
+                className="flex gap-5"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 0.4, delay: i * 0.07 }}
+              >
                 <div className="shrink-0 w-10 h-10 bg-solar-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
                   {i + 1}
                 </div>
@@ -119,20 +144,32 @@ export default function ServicePageLayout({
                   </h3>
                   <p className="text-slate-600 leading-relaxed">{item.description}</p>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
-        </section>
+        </motion.section>
 
         {/* ── Benefits ── */}
-        <section>
+        <motion.section
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.5 }}
+        >
           <Label>Why It Matters</Label>
           <h2 className="text-navy-900 font-black text-2xl sm:text-3xl leading-tight mt-2 mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
             Key Benefits
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
             {benefits.map((b, i) => (
-              <div key={i} className="bg-slate-50 rounded-2xl p-6 border border-slate-100">
+              <motion.div
+                key={i}
+                className="bg-slate-50 rounded-2xl p-6 border border-slate-100"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 0.4, delay: i * 0.07 }}
+              >
                 <div className="w-11 h-11 bg-solar-500/10 rounded-xl flex items-center justify-center mb-4">
                   <Icon name={b.iconName} size={22} className="text-solar-600" />
                 </div>
@@ -140,29 +177,46 @@ export default function ServicePageLayout({
                   {b.title}
                 </h3>
                 <p className="text-slate-600 text-sm leading-relaxed">{b.description}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
-        </section>
+        </motion.section>
 
         {/* ── Use Cases ── */}
-        <section>
+        <motion.section
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.5 }}
+        >
           <Label>Applications</Label>
           <h2 className="text-navy-900 font-black text-2xl sm:text-3xl leading-tight mt-2 mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
             Common Use Cases
           </h2>
           <ul className="mt-6 space-y-3">
             {useCases.map((uc, i) => (
-              <li key={i} className="flex items-start gap-3 text-slate-700">
+              <motion.li
+                key={i}
+                className="flex items-start gap-3 text-slate-700"
+                initial={{ opacity: 0, x: -10 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 0.35, delay: i * 0.05 }}
+              >
                 <CheckCircle size={18} className="text-green-eco mt-0.5 shrink-0" />
                 <span>{uc}</span>
-              </li>
+              </motion.li>
             ))}
           </ul>
-        </section>
+        </motion.section>
 
         {/* ── Specs ── */}
-        <section>
+        <motion.section
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.5 }}
+        >
           <Label>Technical Details</Label>
           <h2 className="text-navy-900 font-black text-2xl sm:text-3xl leading-tight mt-2 mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
             Typical Specifications
@@ -181,10 +235,16 @@ export default function ServicePageLayout({
               </tbody>
             </table>
           </div>
-        </section>
+        </motion.section>
 
         {/* ── CTA Strip ── */}
-        <section className="bg-navy-900 rounded-3xl px-5 py-8 sm:px-8 sm:py-12 text-center">
+        <motion.section
+          className="bg-navy-900 rounded-3xl px-5 py-8 sm:px-8 sm:py-12 text-center"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.5 }}
+        >
           <h2
             className="text-white font-black text-2xl sm:text-3xl mb-3"
             style={{ fontFamily: 'Poppins, sans-serif' }}
@@ -208,10 +268,16 @@ export default function ServicePageLayout({
               <ArrowLeft size={16} /> View all services
             </Link>
           </div>
-        </section>
+        </motion.section>
 
         {/* ── Sources ── */}
-        <section className="border-t border-slate-100 pt-10">
+        <motion.section
+          className="border-t border-slate-100 pt-10"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.5 }}
+        >
           <h3 className="text-slate-500 font-semibold text-sm uppercase tracking-widest mb-5">
             References & Sources
           </h3>
@@ -234,7 +300,7 @@ export default function ServicePageLayout({
               </li>
             ))}
           </ul>
-        </section>
+        </motion.section>
 
       </div>
     </Layout>
