@@ -1,14 +1,50 @@
 import { NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase/admin';
+import { rateLimit } from '@/lib/rate-limit';
 import nodemailer from 'nodemailer';
 
+// 5 submissions per IP per 15 minutes
+const RATE_LIMIT = 5;
+const RATE_WINDOW = 15 * 60 * 1000;
+
 export async function POST(request: Request) {
-  const body = await request.json();
-  const { name, phone, email, city, systemType, message } = body;
+  const ip =
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
+  const { allowed, retryAfterMs } = rateLimit(ip, RATE_LIMIT, RATE_WINDOW);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again later.' },
+      {
+        status: 429,
+        headers: { 'Retry-After': String(Math.ceil(retryAfterMs / 1000)) },
+      },
+    );
+  }
+
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 });
+  }
+
+  const name = typeof body.name === 'string' ? body.name.trim().slice(0, 200) : '';
+  const phone = typeof body.phone === 'string' ? body.phone.trim().slice(0, 30) : '';
+  const email = typeof body.email === 'string' ? body.email.trim().slice(0, 254) : '';
+  const city = typeof body.city === 'string' ? body.city.trim().slice(0, 200) : '';
+  const systemType = typeof body.systemType === 'string' ? body.systemType.trim().slice(0, 200) : '';
+  const message = typeof body.message === 'string' ? body.message.trim().slice(0, 2000) : '';
 
   if (!name || !phone) {
     return NextResponse.json(
       { error: 'Name and phone are required.' },
+      { status: 400 }
+    );
+  }
+
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return NextResponse.json(
+      { error: 'Invalid email address.' },
       { status: 400 }
     );
   }

@@ -8,16 +8,18 @@
   --font-montserrat: "Montserrat", ui-sans-serif, system-ui, sans-serif;
 }
 
-html{
+html {
   scroll-behavior: smooth;
+  scroll-padding-top: 80px;
 }
+
 
 
 ::-webkit-scrollbar {
-  width: 10px;
+  display: none;
 }
 
-::-webkit-scrollbar-track {
+/* ::-webkit-scrollbar-track {
   background: transparent;
 }
 
@@ -28,7 +30,7 @@ html{
 
 ::-webkit-scrollbar-thumb:hover {
   background: #2563eb;
-}
+} */
 
 @keyframes blink {
   0%,

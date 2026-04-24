@@ -4,11 +4,15 @@ import { revalidatePath } from 'next/cache';
 import { requireAdminAuth } from '@/lib/auth';
 import { adminDb } from '@/lib/firebase/admin';
 import { uploadFile, deleteFile } from '@/lib/firebase/storage';
+import { validateImageUpload, safeExtension } from '@/lib/upload-validation';
 
 type ActionResult = { error?: string; success?: boolean };
 
 async function uploadProductImage(productId: string, file: File): Promise<string | null> {
-  const ext = file.name.split('.').pop();
+  const validationError = validateImageUpload(file);
+  if (validationError) return null;
+
+  const ext = safeExtension(file);
   const path = `product-images/${productId}/product-${Date.now()}.${ext}`;
   const buffer = Buffer.from(await file.arrayBuffer());
   try {

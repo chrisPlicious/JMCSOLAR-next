@@ -71,7 +71,7 @@ export default function ServicesPage() {
   return (
     <Layout>
     <section id="services" className="py-20 transition-all duration-700 ">
-      <div className=" mx-auto px-4 sm:px-6 lg:px-8">
+      <div className=" px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div
           className="text-center max-w-2xl mx-auto mb-14"
@@ -96,7 +96,7 @@ export default function ServicesPage() {
           </p>
         </motion.div>
         {/* Mobile: 2-col card grid (hidden on desktop) */}
-        <div className="lg:hidden grid grid-cols-2 gap-4 mb-12">
+        <div className="lg:hidden grid grid-cols-2 sm:grid-cols-3 gap-4 mb-12">
           {loading
             ? Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="animate-pulse flex flex-col items-center gap-3 bg-white rounded-2xl p-5 border border-slate-100">
@@ -250,18 +250,7 @@ export default function ServicesPage() {
         </div>
         {/* CTA */}
         <div className="text-center">
-          <Button
-            variant="primary"
-            size="lg"
-            href={
-              activeIndex !== null && services[activeIndex]
-                ? `/?service=${services[activeIndex].slug}#contact`
-                : '/#contact'
-            }
-          >
-            Inquire About a Service
-            <ArrowRight size={18} />
-          </Button>
+          
         </div>
         {/* Who We Serve */}
         <div className="max-w-10/13 mx-auto mt-24">

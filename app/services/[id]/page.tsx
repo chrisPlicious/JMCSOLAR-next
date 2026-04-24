@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { adminDb } from '@/lib/firebase/admin';
 import ServicePageLayout from '@/components/ui/ServicePageLayout';
@@ -5,6 +6,30 @@ import ServiceEmptyState from '@/components/ui/ServiceEmptyState';
 import type { DbService, DbServiceDetail } from '@/lib/firebase/types';
 
 export const revalidate = 60;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id: slug } = await params;
+  const snap = await adminDb
+    .collection('services')
+    .where('slug', '==', slug)
+    .limit(1)
+    .get();
+  if (snap.empty) return {};
+  const service = snap.docs[0].data() as DbService;
+  return {
+    title: service.title,
+    description: service.description,
+    alternates: { canonical: `/services/${slug}` },
+    openGraph: {
+      title: `${service.title} | JMC Solar PH`,
+      description: service.description,
+    },
+  };
+}
 
 export default async function ServiceDetailPage({
   params,

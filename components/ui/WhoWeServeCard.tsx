@@ -48,7 +48,7 @@ export default function WhoWeServeCard({
         <img
           src={client.image}
           alt={client.title}
-          className="w-full h-64 sm:h-180 object-cover"
+          className="w-full h-64 sm:h-80 lg:h-[850px] object-cover"
         />
       </motion.div>
 

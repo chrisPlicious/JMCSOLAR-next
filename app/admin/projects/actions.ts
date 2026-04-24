@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { requireAdminAuth } from '@/lib/auth';
 import { adminDb } from '@/lib/firebase/admin';
 import { uploadFile, deleteFile, deleteFiles } from '@/lib/firebase/storage';
+import { validateImageUpload, safeExtension } from '@/lib/upload-validation';
 
 type ActionResult = { error?: string; success?: boolean };
 
@@ -38,7 +39,10 @@ export async function createProjectAction(
     await adminDb.collection('projects').doc(projectId).set(projectData);
 
     if (file && file.size > 0) {
-      const ext = file.name.split('.').pop();
+      const uploadError = validateImageUpload(file);
+      if (uploadError) return { error: uploadError };
+
+      const ext = safeExtension(file);
       const path = `project-images/${projectId}/cover-${Date.now()}.${ext}`;
       const buffer = Buffer.from(await file.arrayBuffer());
       await uploadFile(path, buffer, file.type);
@@ -91,7 +95,10 @@ export async function updateProjectAction(
 
     const file = formData.get('new_image') as File | null;
     if (file && file.size > 0) {
-      const ext = file.name.split('.').pop();
+      const uploadError = validateImageUpload(file);
+      if (uploadError) return { error: uploadError };
+
+      const ext = safeExtension(file);
       const path = `project-images/${id}/img-${Date.now()}.${ext}`;
       const buffer = Buffer.from(await file.arrayBuffer());
       await uploadFile(path, buffer, file.type);

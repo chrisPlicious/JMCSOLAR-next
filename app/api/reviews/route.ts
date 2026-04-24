@@ -1,26 +1,58 @@
 import { NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase/admin';
+import { rateLimit } from '@/lib/rate-limit';
 import nodemailer from 'nodemailer';
 
+// 3 review submissions per IP per 30 minutes
+const RATE_LIMIT = 3;
+const RATE_WINDOW = 30 * 60 * 1000;
+
 export async function POST(request: Request) {
-  const body = await request.json();
-  const { name, company_name, contact_type, contact_value, rating, quote } = body;
+  const ip =
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
+  const { allowed, retryAfterMs } = rateLimit(ip, RATE_LIMIT, RATE_WINDOW);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again later.' },
+      {
+        status: 429,
+        headers: { 'Retry-After': String(Math.ceil(retryAfterMs / 1000)) },
+      },
+    );
+  }
+
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 });
+  }
+
+  const name = typeof body.name === 'string' ? body.name.trim().slice(0, 200) : '';
+  const company_name = typeof body.company_name === 'string' ? body.company_name.trim().slice(0, 200) : '';
+  const contact_type = body.contact_type;
+  const contact_value = typeof body.contact_value === 'string' ? body.contact_value.trim().slice(0, 254) : '';
+  const rating = body.rating;
+  const quote = typeof body.quote === 'string' ? body.quote.trim().slice(0, 2000) : '';
 
   // Validation
-  if (!name || typeof name !== 'string' || name.trim() === '') {
+  if (!name) {
     return NextResponse.json({ error: 'Name is required.' }, { status: 400 });
   }
-  if (!quote || typeof quote !== 'string' || quote.trim() === '') {
+  if (!quote) {
     return NextResponse.json({ error: 'Review quote is required.' }, { status: 400 });
   }
-  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+  if (!Number.isInteger(rating) || (rating as number) < 1 || (rating as number) > 5) {
     return NextResponse.json({ error: 'Rating must be an integer between 1 and 5.' }, { status: 400 });
   }
-  if (!contact_value || typeof contact_value !== 'string' || contact_value.trim() === '') {
+  if (!contact_value) {
     return NextResponse.json({ error: 'Contact value is required.' }, { status: 400 });
   }
   if (contact_type !== 'email' && contact_type !== 'phone') {
     return NextResponse.json({ error: 'Contact type must be "email" or "phone".' }, { status: 400 });
+  }
+  if (contact_type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact_value)) {
+    return NextResponse.json({ error: 'Invalid email address.' }, { status: 400 });
   }
 
   const id = crypto.randomUUID();
@@ -29,14 +61,14 @@ export async function POST(request: Request) {
   try {
     await adminDb.collection('reviews').doc(id).set({
       id,
-      reviewer_name: name.trim(),
-      quote: quote.trim(),
+      reviewer_name: name,
+      quote,
       source: 'website',
       rating,
       status: 'pending',
-      company_name: company_name ? company_name.trim() : null,
+      company_name: company_name || null,
       contact_type,
-      contact_value: contact_value.trim(),
+      contact_value,
       created_at: now,
       updated_at: now,
     });
@@ -57,7 +89,7 @@ export async function POST(request: Request) {
       auth: { user: smtpUser, pass: smtpPass },
     });
 
-    const stars = '★'.repeat(rating) + '☆'.repeat(5 - rating);
+    const stars = '★'.repeat(rating as number) + '☆'.repeat(5 - (rating as number));
 
     await transporter
       .sendMail({

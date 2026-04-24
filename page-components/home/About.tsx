@@ -52,7 +52,7 @@ export default function About() {
         }}
       />
 
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-20 lg:py-28">
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-14 sm:py-20 lg:py-28">
         {/* ── Split header (Ref 3 style) ────────────────────── */}
         <motion.div
           className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-14"
@@ -196,7 +196,7 @@ export default function About() {
         </div>
 
         {/* ── Split content section (Ref 2 style) ──────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
           {/* Left — Text content */}
           <motion.div
             initial={{ opacity: 0, y: 40 }}

@@ -57,7 +57,7 @@ export default function ServicePageLayout({
     <Layout>
       {/* ── Hero ── */}
       <div
-        className={`relative pt-28 pb-20 px-4 ${heroBgImage ? 'bg-cover bg-center' : 'bg-navy-900'}`}
+        className={`relative pt-24 pb-14 px-4 sm:pt-28 sm:pb-20 sm:px-6 ${heroBgImage ? 'bg-cover bg-center' : 'bg-navy-900'}`}
         style={heroBgImage ? { backgroundImage: `url(${heroBgImage})` } : undefined}
       >
         {heroBgImage && <div className="absolute inset-0" />}
@@ -97,7 +97,7 @@ export default function ServicePageLayout({
         </motion.div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-16 space-y-20">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-14 lg:py-16 space-y-12 sm:space-y-16 lg:space-y-20">
 
         {/* ── Overview ── */}
         <motion.section

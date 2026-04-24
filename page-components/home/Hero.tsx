@@ -43,7 +43,7 @@ export default function Hero() {
   return (
     <section
       id="hero"
-      className="relative min-h-screen flex items-center overflow-hidden"
+      className="relative min-h-[100svh] flex items-center overflow-x-hidden"
     >
       {/* Background */}
       <div
@@ -55,7 +55,7 @@ export default function Hero() {
       {/* <div className="absolute inset-0 bg-gradient-to-r from-navy-950/95 via-navy-900/85 to-navy-900/60" /> */}
       <div className="absolute inset-0 bg-linear-to-t from-navy-950/50 via-transparent to-navy-950/30" />
 
-      {/* Decorative organic blobs */}
+      {/* Decorative organic blobs — overflow-hidden is on this wrapper, not the section, so content can expand vertically */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Large solar glow blob - top right */}
         {/* <div
@@ -111,7 +111,7 @@ export default function Hero() {
 
             {/* Headline */}
             <h1
-              className="text-white font-black text-5xl sm:text-6xl lg:text-7xl xl:text-[5.5rem] leading-[1.05] mb-8"
+              className="text-white font-black text-4xl sm:text-5xl lg:text-7xl xl:text-[5.5rem] leading-[1.05] mb-8"
               style={{ fontFamily: "Poppins, sans-serif" }}
             >
               Future is{" "}

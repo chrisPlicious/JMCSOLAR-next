@@ -33,7 +33,7 @@ const categoryLabels: Record<Project['category'], string> = {
 
 export default function ProjectCard({ project }: ProjectCardProps) {
   return (
-    <div className="relative shrink-0 w-[75vw] h-[250px] sm:w-[560px] sm:h-[400px] md:w-[800px] md:h-[560px] lg:w-[1000px] lg:h-[680px] rounded-2xl overflow-hidden transition-transform hover:scale-101 duration-300 ease-in-out select-none">
+    <div className="relative w-full h-[220px] sm:h-[340px] md:h-[460px] lg:h-[580px] rounded-2xl overflow-hidden transition-transform hover:scale-101 duration-300 ease-in-out select-none">
 
       {/* Background: image if available, gradient fallback */}
       {project.cover_image_path ? (

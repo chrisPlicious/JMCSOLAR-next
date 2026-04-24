@@ -1,7 +1,20 @@
+import type { Metadata } from 'next';
 import ProjectsPage from '@/page-components/projects/ProjectIndex';
 import { adminDb } from '@/lib/firebase/admin';
 import { getPublicUrl } from '@/lib/firebase/storage';
 import type { Project } from '@/types';
+
+export const metadata: Metadata = {
+  title: 'Completed Projects',
+  description:
+    'See completed solar installation projects by JMC Solar PH across Leyte and Visayas. From residential rooftops to 100kW+ commercial systems.',
+  alternates: { canonical: '/projects' },
+  openGraph: {
+    title: 'Completed Projects | JMC Solar PH',
+    description:
+      'Solar installation projects across Leyte and Visayas. Residential, commercial, and industrial systems.',
+  },
+};
 
 export default async function Projects() {
   const snap = await adminDb.collection('projects').orderBy('created_at', 'desc').get();
