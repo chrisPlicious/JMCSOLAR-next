@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Poppins, Montserrat, Geist } from 'next/font/google';
 import './globals.css';
 import LoaderScreen from '@/components/ui/LoaderScreen';
+import LoaderGate from '@/components/ui/LoaderGate';
 import ScrollToTop from '@/components/ui/ScrollToTop';
 import PageTransition from '@/components/ui/PageTransition';
 import { cn } from "@/lib/utils";
@@ -69,10 +70,21 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={cn("font-sans", geist.variable)}>
+      <head>
+        <link rel="preload" as="image" href="/assets/bg-1.jpg" />
+      </head>
       <body className={`${geist.variable} ${poppins.variable} ${montserrat.variable}`}>
         <ScrollToTop />
+        {/* Rendered outside LoaderGate so it's visible behind the loader — no flash when loader dismisses */}
+        <div
+          aria-hidden="true"
+          className="fixed inset-0 bg-cover bg-center"
+          style={{ backgroundImage: 'url(/assets/bg-1.jpg)', zIndex: 0 }}
+        />
         <LoaderScreen />
-        <PageTransition>{children}</PageTransition>
+        <LoaderGate>
+          <PageTransition>{children}</PageTransition>
+        </LoaderGate>
       </body>
     </html>
   );

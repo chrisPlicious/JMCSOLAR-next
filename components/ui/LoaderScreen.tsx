@@ -137,7 +137,10 @@ export default function LoaderScreen() {
             dismissedRef.current = true;
             cancelAnimationFrame(rafRef.current);
             setFading(true);
-            setTimeout(() => setGone(true), 700);
+            setTimeout(() => {
+              setGone(true);
+              window.dispatchEvent(new Event('jmc:loader-done'));
+            }, 700);
           }, 1000);
         } else {
           requestAnimationFrame(waitForFull);

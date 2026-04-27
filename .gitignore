@@ -45,3 +45,5 @@ next-env.d.ts
 .superpowers
 .claude
 docs
+# Added by code-review-graph
+.code-review-graph/
