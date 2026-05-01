@@ -45,15 +45,7 @@ export default function Hero() {
       id="hero"
       className="relative min-h-[100svh] flex items-center overflow-x-hidden"
     >
-      {/* Background */}
-      <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${solarBg})` }}
-      />
-
-      {/* Multi-layer gradient overlay */}
-      {/* <div className="absolute inset-0 bg-gradient-to-r from-navy-950/95 via-navy-900/85 to-navy-900/60" /> */}
-      <div className="absolute inset-0 bg-linear-to-t from-navy-950/50 via-transparent to-navy-950/30" />
+      {/* Background is now handled globally by HeroBgLayer to prevent fade-in */}
 
       {/* Decorative organic blobs — overflow-hidden is on this wrapper, not the section, so content can expand vertically */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">

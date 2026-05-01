@@ -6,7 +6,7 @@ export interface Service {
   highlight?: string;
 }
 
-// Snake_case fields match the Supabase DB schema
+// Snake_case fields match the DB schema
 export interface Project {
   id: string;
   title: string;

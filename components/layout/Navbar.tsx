@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, ChevronDown, LayoutGrid, Package } from 'lucide-react';
+import { Menu, X, ChevronDown, LayoutGrid, Package, Calculator } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { db } from '@/lib/firebase/client';
 import { collection, getDocs, orderBy, query } from 'firebase/firestore';
@@ -50,7 +50,10 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const isServicesActive = pathname.startsWith('/services') || pathname.startsWith('/products');
+  const isServicesActive =
+    pathname.startsWith('/services') ||
+    pathname.startsWith('/products') ||
+    pathname.startsWith('/calculator');
   const isHomePage = pathname === '/';
   const isTransparent = isHomePage && !scrolled;
 
@@ -156,7 +159,7 @@ export default function Navbar() {
 
                   <div className="h-px bg-slate-100 mx-4" />
 
-                  <div className="px-4 py-3">
+                  <div className="px-4 py-3 flex flex-col gap-1">
                     <Link
                       href="/products"
                       className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold text-navy-900 hover:bg-solar-500/8 hover:text-solar-600 transition-all duration-200"
@@ -165,6 +168,19 @@ export default function Navbar() {
                         <Package size={15} className="text-navy-700" />
                       </div>
                       Products
+                    </Link>
+                    <Link
+                      href="/calculator"
+                      className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                        pathname === '/calculator'
+                          ? 'text-solar-600 bg-solar-500/8'
+                          : 'text-navy-900 hover:bg-solar-500/8 hover:text-solar-600'
+                      }`}
+                    >
+                      <div className="w-8 h-8 bg-solar-500/10 rounded-lg flex items-center justify-center">
+                        <Calculator size={15} className="text-solar-500" />
+                      </div>
+                      Solar Calculator
                     </Link>
                   </div>
                 </motion.div>
@@ -309,6 +325,18 @@ export default function Navbar() {
                         >
                           <Package size={14} />
                           Products
+                        </Link>
+
+                        <Link
+                          href="/calculator"
+                          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                            pathname === '/calculator'
+                              ? 'text-solar-400 bg-white/5'
+                              : 'text-white/80 hover:text-solar-400 hover:bg-white/5'
+                          }`}
+                        >
+                          <Calculator size={14} />
+                          Solar Calculator
                         </Link>
                       </div>
                     </motion.div>

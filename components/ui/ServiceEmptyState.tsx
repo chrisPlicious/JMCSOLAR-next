@@ -7,7 +7,7 @@ import * as Icons from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
 import { ArrowLeft } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
-import type { DbService } from '@/lib/supabase/types';
+import type { DbService } from '@/lib/firebase/types';
 
 type IconName = keyof typeof Icons;
 
