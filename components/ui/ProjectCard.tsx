@@ -1,6 +1,7 @@
 'use client';
 
 import { MapPin, Zap, ExternalLink } from 'lucide-react';
+import { motion } from 'framer-motion';
 import type { Project } from '../../types';
 
 interface ProjectCardProps {
@@ -33,7 +34,14 @@ const categoryLabels: Record<Project['category'], string> = {
 
 export default function ProjectCard({ project }: ProjectCardProps) {
   return (
-    <div className="relative w-full h-[220px] sm:h-[340px] md:h-[460px] lg:h-[580px] rounded-2xl overflow-hidden transition-transform hover:scale-101 duration-300 ease-in-out select-none">
+    <motion.div
+      className="relative w-full h-[220px] sm:h-[340px] md:h-[460px] lg:h-[580px] rounded-2xl overflow-hidden select-none"
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-60px' }}
+      transition={{ duration: 0.5 }}
+      whileHover={{ scale: 1.015, transition: { duration: 0.3, ease: 'easeOut' } }}
+    >
 
       {/* Background: image if available, gradient fallback */}
       {project.cover_image_path ? (
@@ -100,6 +108,6 @@ export default function ProjectCard({ project }: ProjectCardProps) {
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

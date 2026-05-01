@@ -12,6 +12,12 @@ interface Props {
 }
 
 export default function ProjectsPage({ projects }: Props) {
+  const parseKwp = (sizeStr: string | null): number => {
+    if (!sizeStr) return 0;
+    const match = sizeStr.match(/([\d.]+)/);
+    return match ? parseFloat(match[1]) : 0;
+  };
+
   // Group projects by year (derived from created_at), sorted newest first
   const timelineData = useMemo(() => {
     const grouped: Record<string, Project[]> = {};
@@ -26,17 +32,23 @@ export default function ProjectsPage({ projects }: Props) {
     }
 
     return Object.entries(grouped)
-      .sort(([a], [b]) => Number(b) - Number(a)) // newest year first
-      .map(([year, yearProjects]) => ({
-        title: year,
-        content: (
-          <div className="flex flex-col gap-6">
-            {yearProjects.map((project) => (
-              <ProjectCard key={project.id} project={project} />
-            ))}
-          </div>
-        ),
-      }));
+      .sort(([a], [b]) => Number(b) - Number(a))
+      .map(([year, yearProjects]) => {
+        const totalKwp = Math.round(
+          yearProjects.reduce((sum, p) => sum + parseKwp(p.system_size), 0)
+        );
+        return {
+          title: year,
+          stats: { projectCount: yearProjects.length, totalKwp },
+          content: (
+            <div className="flex flex-col gap-6">
+              {yearProjects.map((project) => (
+                <ProjectCard key={project.id} project={project} />
+              ))}
+            </div>
+          ),
+        };
+      });
   }, [projects]);
 
   return (

@@ -5,6 +5,7 @@ import LoaderScreen from '@/components/ui/LoaderScreen';
 import LoaderGate from '@/components/ui/LoaderGate';
 import ScrollToTop from '@/components/ui/ScrollToTop';
 import PageTransition from '@/components/ui/PageTransition';
+import HeroBgLayer from './_components/HeroBgLayer';
 import { cn } from "@/lib/utils";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
@@ -75,12 +76,7 @@ export default function RootLayout({
       </head>
       <body className={`${geist.variable} ${poppins.variable} ${montserrat.variable}`}>
         <ScrollToTop />
-        {/* Rendered outside LoaderGate so it's visible behind the loader — no flash when loader dismisses */}
-        <div
-          aria-hidden="true"
-          className="fixed inset-0 bg-cover bg-center"
-          style={{ backgroundImage: 'url(/assets/bg-1.jpg)', zIndex: 0 }}
-        />
+        <HeroBgLayer />
         <LoaderScreen />
         <LoaderGate>
           <PageTransition>{children}</PageTransition>

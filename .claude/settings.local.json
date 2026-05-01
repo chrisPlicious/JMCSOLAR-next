@@ -47,7 +47,10 @@
       "Bash(where pip *)",
       "Bash(where uv *)",
       "Bash(where uvx *)",
-      "Bash(where pipx *)"
+      "Bash(where pipx *)",
+      "mcp__code-review-graph__semantic_search_nodes_tool",
+      "mcp__code-review-graph__get_architecture_overview_tool",
+      "mcp__code-review-graph__list_communities_tool"
     ]
   },
   "enableAllProjectMcpServers": true

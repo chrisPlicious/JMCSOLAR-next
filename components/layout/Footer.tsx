@@ -1,5 +1,8 @@
+'use client';
+
 import Link from 'next/link';
-import { Phone, Mail, MapPin, Facebook, Zap, ArrowRight } from 'lucide-react';
+import { Phone, Mail, MapPin, Facebook, ArrowRight } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const quickLinks = [
   { label: 'Home', href: '/' },
@@ -22,7 +25,13 @@ export default function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10 md:gap-12">
 
           {/* Brand Column */}
-          <div className="flex flex-col gap-5">
+          <motion.div
+            className="flex flex-col gap-5"
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 0.5 }}
+          >
             <div className="flex gap-2.5">
               <div className="flex gap-2.5 group">
                 <div className="leading-tight">
@@ -32,15 +41,6 @@ export default function Footer() {
                   </span>
                 </div>
               </div>
-
-              {/* <div>
-                <span className="text-white font-black text-base block" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                  JMC Solar PH
-                </span>
-                <span className="block text-solar-400 text-[10px] font-semibold tracking-widest uppercase">
-                  Future is Electric
-                </span>
-              </div> */}
             </div>
             <p className="text-white/40 text-sm leading-relaxed">
               Renewable energy advocates serving Ormoc City and Eastern Visayas. Providing free and clean energy for every Filipino home, farm, and business.
@@ -55,10 +55,15 @@ export default function Footer() {
               <span>JMC Solar PH</span>
               <span className="text-white/30 text-xs">(3,300+ Followers)</span>
             </a>
-          </div>
+          </motion.div>
 
           {/* Quick Links */}
-          <div>
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
             <h4 className="text-white font-semibold mb-6 text-sm uppercase tracking-wider" style={{ fontFamily: 'Poppins, sans-serif' }}>
               Quick Links
             </h4>
@@ -75,10 +80,15 @@ export default function Footer() {
                 </li>
               ))}
             </ul>
-          </div>
+          </motion.div>
 
           {/* Contact Info */}
-          <div>
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
             <h4 className="text-white font-semibold mb-6 text-sm uppercase tracking-wider" style={{ fontFamily: 'Poppins, sans-serif' }}>
               Contact Us
             </h4>
@@ -104,18 +114,24 @@ export default function Footer() {
                 </span>
               </li>
             </ul>
-          </div>
+          </motion.div>
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-14 pt-8 border-t border-white/6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <motion.div
+          className="mt-14 pt-8 border-t border-white/6 flex flex-col sm:flex-row items-center justify-between gap-4"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true, margin: '-40px' }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+        >
           <p className="text-white/30 text-sm text-center sm:text-left">
             © {new Date().getFullYear()} JMC Solar PH. All rights reserved.
           </p>
           <p className="text-white/20 text-xs">
             Renewable Energy Advocates · Ormoc City, Leyte, Philippines
           </p>
-        </div>
+        </motion.div>
       </div>
     </footer>
   );

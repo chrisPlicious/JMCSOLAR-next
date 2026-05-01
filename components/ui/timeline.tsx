@@ -11,6 +11,33 @@ import React, { useEffect, useRef, useState } from "react";
 interface TimelineEntry {
   title: string;
   content: React.ReactNode;
+  stats?: {
+    projectCount: number;
+    totalKwp: number;
+  };
+}
+
+function YearStats({
+  stats,
+  isActive,
+}: {
+  stats: { projectCount: number; totalKwp: number };
+  isActive: boolean;
+}) {
+  return (
+    <div className={`mt-3 transition-opacity duration-300 ${isActive ? "opacity-100" : "opacity-30"}`}>
+      <div className="w-10 h-0.5 bg-solar-400 rounded-full mb-3" />
+      <p className="leading-none mb-2">
+        <span className="text-solar-500 font-bold text-lg">{stats.projectCount}</span>
+        <span className="text-slate-400 font-semibold text-[11px] uppercase tracking-widest ml-1.5">Projects</span>
+      </p>
+      <p className="leading-none">
+        <span className="text-solar-500 font-bold text-2xl">{stats.totalKwp}</span>
+        <span className="text-solar-500 font-semibold text-sm">kWp</span>
+        <span className="text-slate-400 font-semibold text-[11px] uppercase tracking-widest ml-1.5">Total Commissioned</span>
+      </p>
+    </div>
+  );
 }
 
 function TimelineItem({ item }: { item: TimelineEntry }) {
@@ -36,8 +63,8 @@ function TimelineItem({ item }: { item: TimelineEntry }) {
       className="flex justify-start pt-10 md:pt-40 md:gap-10"
     >
       {/* Sticky year label — left side */}
-      <div className="sticky flex flex-col md:flex-row z-40 items-center top-40 self-start max-w-xs lg:max-w-sm md:w-full">
-        <div className="h-10 absolute left-3 md:left-3 w-10 rounded-full bg-white flex items-center justify-center">
+      <div className="sticky flex flex-col z-40 top-40 self-start max-w-xs lg:max-w-sm md:w-full">
+        <div className="h-10 absolute left-3 w-10 rounded-full bg-white flex items-center justify-center">
           <div
             className={`h-4 w-4 rounded-full border-2 p-2 transition-colors duration-300 ${
               isActive
@@ -46,26 +73,32 @@ function TimelineItem({ item }: { item: TimelineEntry }) {
             }`}
           />
         </div>
-        <h3
-          className={`hidden md:block text-xl md:pl-20 md:text-5xl font-bold transition-colors duration-300 ${
-            isActive ? "text-solar-500" : "text-navy-300"
-          }`}
-          style={{ fontFamily: "Poppins, sans-serif" }}
-        >
-          {item.title}
-        </h3>
+        <div className="hidden md:flex md:flex-col md:pl-20">
+          <h3
+            className={`text-7xl lg:text-8xl font-black transition-colors duration-300 ${
+              isActive ? "text-solar-500" : "text-navy-900"
+            }`}
+            style={{ fontFamily: "Poppins, sans-serif" }}
+          >
+            {item.title}
+          </h3>
+          {item.stats && <YearStats stats={item.stats} isActive={isActive} />}
+        </div>
       </div>
 
       {/* Content — right side */}
       <div className="relative pl-20 pr-4 md:pl-4 w-full">
-        <h3
-          className={`md:hidden block text-2xl mb-4 text-left font-bold transition-colors duration-300 ${
-            isActive ? "text-solar-500" : "text-navy-300"
-          }`}
-          style={{ fontFamily: "Poppins, sans-serif" }}
-        >
-          {item.title}
-        </h3>
+        <div className="md:hidden mb-4">
+          <h3
+            className={`text-4xl font-black text-left transition-colors duration-300 ${
+              isActive ? "text-navy-900" : "text-navy-300"
+            }`}
+            style={{ fontFamily: "Poppins, sans-serif" }}
+          >
+            {item.title}
+          </h3>
+          {item.stats && <YearStats stats={item.stats} isActive={isActive} />}
+        </div>
         {item.content}
       </div>
     </div>
