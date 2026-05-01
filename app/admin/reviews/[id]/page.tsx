@@ -1,12 +1,15 @@
 import { notFound } from 'next/navigation';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { adminDb } from '@/lib/firebase/admin';
+import type { DbReview } from '@/lib/firebase/types';
 import ReviewForm from '../_components/ReviewForm';
 import { updateReview } from '../actions';
 
+export const dynamic = 'force-dynamic';
+
 export default async function EditReviewPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = createSupabaseServerClient();
-  const { data: review } = await supabase.from('reviews').select('*').eq('id', id).single();
+  const snap = await adminDb.collection('reviews').doc(id).get();
+  const review = snap.exists ? ({ id: snap.id, ...snap.data() } as DbReview) : null;
   if (!review) notFound();
 
   const bound = updateReview.bind(null, id);

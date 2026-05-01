@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, type ComponentType } from "react";
+import { motion } from "framer-motion";
 import type { MouseEvent } from "react";
 import Link from "next/link";
 import * as Icons from "lucide-react";
@@ -8,8 +9,9 @@ import type { LucideProps } from "lucide-react";
 import WhoWeServeCard from "@/components/ui/WhoWeServeCard";
 import Button from "@/components/ui/Button";
 import { ArrowRight } from "lucide-react";
-import { createClient } from "@supabase/supabase-js";
-import type { DbService } from "@/lib/supabase/types";
+import { db } from "@/lib/firebase/client";
+import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import type { DbService } from "@/lib/firebase/types";
 import { clientTypes } from "@/data/services";
 import Layout from "@/components/layout/Layout";
 
@@ -19,6 +21,7 @@ type IconName = keyof typeof Icons;
 
 export default function ServicesPage() {
   const [services, setServices] = useState<DbService[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState<number | null>(0);
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -27,17 +30,12 @@ export default function ServicesPage() {
   const scrollLeft = useRef(0);
 
   useEffect(() => {
-    const client = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-    client
-      .from('services')
-      .select('*')
-      .order('display_order', { ascending: true })
-      .then(({ data }) => {
-        if (data) setServices(data);
-      });
+    const q = query(collection(db, 'services'), orderBy('display_order', 'asc'));
+    getDocs(q).then((snap) => {
+      const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as DbService[];
+      setServices(data);
+      setLoading(false);
+    });
   }, []);
 
   function onMouseDown(e: MouseEvent<HTMLDivElement>) {
@@ -73,9 +71,15 @@ export default function ServicesPage() {
   return (
     <Layout>
     <section id="services" className="py-20 transition-all duration-700 ">
-      <div className=" mx-auto px-4 sm:px-6 lg:px-8">
+      <div className=" px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center max-w-2xl mx-auto mb-14">
+        <motion.div
+          className="text-center max-w-2xl mx-auto mb-14"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.5 }}
+        >
           <span className="text-solar-600 font-semibold text-sm uppercase tracking-widest mb-4 block">
             What We Do
           </span>
@@ -90,16 +94,31 @@ export default function ServicesPage() {
             step of your solar journey for residential, commercial, agricultural,
             and industrial clients.
           </p>
-        </div>
+        </motion.div>
         {/* Mobile: 2-col card grid (hidden on desktop) */}
-        <div className="lg:hidden grid grid-cols-2 gap-4 mb-12">
-          {services.map((service) => {
+        <div className="lg:hidden grid grid-cols-2 sm:grid-cols-3 gap-4 mb-12">
+          {loading
+            ? Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="animate-pulse flex flex-col items-center gap-3 bg-white rounded-2xl p-5 border border-slate-100">
+                  <div className="w-14 h-14 bg-slate-200 rounded-2xl" />
+                  <div className="h-3.5 bg-slate-200 rounded w-3/4" />
+                  <div className="h-3 bg-slate-100 rounded w-1/2" />
+                </div>
+              ))
+            : null}
+          {services.map((service, index) => {
             const IconComponent = Icons[service.icon as IconName] as
               | ComponentType<LucideProps>
               | undefined;
             return (
-              <Link
+              <motion.div
                 key={service.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 0.45, delay: index * 0.07 }}
+              >
+              <Link
                 href={`/services/${service.slug}`}
                 className="flex flex-col items-center text-center gap-3 bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md hover:border-solar-300 transition-all duration-200"
               >
@@ -118,6 +137,7 @@ export default function ServicesPage() {
                   Learn more <ArrowRight size={12} />
                 </span>
               </Link>
+              </motion.div>
             );
           })}
         </div>
@@ -132,6 +152,15 @@ export default function ServicesPage() {
           onMouseUp={onMouseUp}
           onMouseLeave={onMouseLeave}
         >
+          {loading
+            ? Array.from({ length: 6 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="animate-pulse shrink-0 rounded-2xl bg-slate-200"
+                  style={{ width: "92px", height: "100%" }}
+                />
+              ))
+            : null}
           {services.map((service, index) => {
             const isActive = activeIndex === index;
             const IconComponent = Icons[service.icon as IconName] as
@@ -221,23 +250,18 @@ export default function ServicesPage() {
         </div>
         {/* CTA */}
         <div className="text-center">
-          <Button
-            variant="primary"
-            size="lg"
-            href={
-              activeIndex !== null && services[activeIndex]
-                ? `/?service=${services[activeIndex].slug}#contact`
-                : '/#contact'
-            }
-          >
-            Inquire About a Service
-            <ArrowRight size={18} />
-          </Button>
+          
         </div>
         {/* Who We Serve */}
         <div className="max-w-10/13 mx-auto mt-24">
           {/* Header */}
-          <div className="text-center max-w-2xl mx-auto mb-14">
+          <motion.div
+            className="text-center max-w-2xl mx-auto mb-14"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.5 }}
+          >
             <span className="text-solar-600 font-semibold text-sm uppercase tracking-widest mb-4 block">
               Who We Serve
             </span>
@@ -251,7 +275,7 @@ export default function ServicesPage() {
               Whether you're a homeowner, business, farmer, or industrial operator
               — we have the right solar solution for you.
             </p>
-          </div>
+          </motion.div>
           {/* Alternating rows */}
           <div className="flex flex-col gap-16">
             {clientTypes.map((client, index) => (

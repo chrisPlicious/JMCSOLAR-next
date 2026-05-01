@@ -133,10 +133,15 @@ export default function LoaderScreen() {
       // Wait until the rAF loop visually reaches 100, then dismiss
       const waitForFull = () => {
         if (currentRef.current >= 99.5) {
-          dismissedRef.current = true;
-          cancelAnimationFrame(rafRef.current);
-          setFading(true);
-          setTimeout(() => setGone(true), 700);
+          setTimeout(() => {
+            dismissedRef.current = true;
+            cancelAnimationFrame(rafRef.current);
+            setFading(true);
+            setTimeout(() => {
+              setGone(true);
+              window.dispatchEvent(new Event('jmc:loader-done'));
+            }, 700);
+          }, 1000);
         } else {
           requestAnimationFrame(waitForFull);
         }
@@ -171,7 +176,7 @@ export default function LoaderScreen() {
       }}
     >
       {/* ── Tile ring + brand ── */}
-      <div className="relative w-[320px] h-[320px] mb-10">
+      <div className="relative w-[min(320px,85vw)] h-[min(320px,85vw)] mb-10">
 
         {/* Ambient pulse rings (decorative) */}
         <div

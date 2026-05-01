@@ -1,6 +1,9 @@
 import Link from 'next/link';
-import { createSupabaseServerClient, getPublicUrl } from '@/lib/supabase/server';
+import { adminDb } from '@/lib/firebase/admin';
+import { getPublicUrl } from '@/lib/firebase/storage';
 import DeleteProductButton from './_components/DeleteProductButton';
+
+export const dynamic = 'force-dynamic';
 
 function MiniStatCard({ number, label }: { number: string | number; label: string }) {
   return (
@@ -12,16 +15,15 @@ function MiniStatCard({ number, label }: { number: string | number; label: strin
 }
 
 export default async function AdminProductsPage() {
-  const supabase = createSupabaseServerClient();
-  const [{ data: products, error: productsError }, { data: categoryData, error: catError }] = await Promise.all([
-    supabase
-      .from('products')
-      .select('id, name, brand, category, image_path')
-      .order('created_at', { ascending: false }),
-    supabase.from('products').select('category'),
-  ]);
-  if (productsError) throw new Error(productsError.message);
-  if (catError) throw new Error(catError.message);
+  const snap = await adminDb.collection('products').orderBy('created_at', 'desc').get();
+  const products = snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as {
+    id: string;
+    name: string;
+    brand: string | null;
+    category: string;
+    image_path: string | null;
+  }[];
+  const categoryData = products.map(p => ({ category: p.category }));
 
   const totalProducts = products?.length ?? 0;
   const distinctCategories = new Set(categoryData?.map((p) => p.category)).size;
@@ -94,7 +96,7 @@ export default async function AdminProductsPage() {
                   <td className="px-4 py-3">
                     {p.image_path ? (
                       <img
-                        src={getPublicUrl('product-images', p.image_path)!}
+                        src={getPublicUrl(p.image_path)!}
                         alt={p.name}
                         className="w-10 h-10 rounded-lg object-cover border border-slate-100 shrink-0"
                       />

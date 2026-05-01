@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { Poppins, Montserrat, Geist } from 'next/font/google';
 import './globals.css';
 import LoaderScreen from '@/components/ui/LoaderScreen';
+import LoaderGate from '@/components/ui/LoaderGate';
+import ScrollToTop from '@/components/ui/ScrollToTop';
 import PageTransition from '@/components/ui/PageTransition';
 import { cn } from "@/lib/utils";
 
@@ -21,22 +23,43 @@ const montserrat = Montserrat({
   display: 'swap',
 });
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://jmcsolar.ph';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   icons: {
     icon: '/Logos/JMC SOLAR.png',
     apple: '/Logos/JMC SOLAR.png',
   },
-  title: 'JMC Solar PH | Solar Installation in Ormoc City, Leyte',
+  title: {
+    default: 'JMC Solar PH | Solar Installation in Ormoc City, Leyte',
+    template: '%s | JMC Solar PH',
+  },
   description:
     'JMC Solar PH provides professional solar installation services in Ormoc City, Leyte. Hybrid solar, on-grid, battery storage, EV chargers, and more. Future is Electric.',
   keywords:
-    'solar panels Philippines, solar installation Ormoc City, hybrid solar system Leyte, JMC Solar PH, solar energy Visayas',
+    'solar panels Philippines, solar installation Ormoc City, hybrid solar system Leyte, JMC Solar PH, solar energy Visayas, solar panel Leyte, solar energy Philippines',
   openGraph: {
     title: 'JMC Solar PH — Future is Electric',
     description:
       'Professional solar installation services in Ormoc City, Leyte. From residential rooftops to 100kW+ industrial systems.',
+    url: '/',
+    siteName: 'JMC Solar PH',
     type: 'website',
     locale: 'en_PH',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'JMC Solar PH — Future is Electric',
+    description:
+      'Professional solar installation in Ormoc City, Leyte. Hybrid solar, on-grid, battery storage, EV chargers.',
+  },
+  alternates: {
+    canonical: '/',
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 
@@ -47,9 +70,21 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={cn("font-sans", geist.variable)}>
+      <head>
+        <link rel="preload" as="image" href="/assets/bg-1.jpg" />
+      </head>
       <body className={`${geist.variable} ${poppins.variable} ${montserrat.variable}`}>
+        <ScrollToTop />
+        {/* Rendered outside LoaderGate so it's visible behind the loader — no flash when loader dismisses */}
+        <div
+          aria-hidden="true"
+          className="fixed inset-0 bg-cover bg-center"
+          style={{ backgroundImage: 'url(/assets/bg-1.jpg)', zIndex: 0 }}
+        />
         <LoaderScreen />
-        <PageTransition>{children}</PageTransition>
+        <LoaderGate>
+          <PageTransition>{children}</PageTransition>
+        </LoaderGate>
       </body>
     </html>
   );

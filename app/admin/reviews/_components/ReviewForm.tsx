@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import type { DbReview } from '@/lib/supabase/types';
+import type { DbReview } from '@/lib/firebase/types';
 
 const SOURCE_OPTIONS = ['google', 'facebook', 'instagram', 'direct', 'other'] as const;
 
@@ -51,6 +51,41 @@ export default function ReviewForm({ review, action }: ReviewFormProps) {
             </span>
             <hr className="flex-1 border-slate-100" />
           </div>
+
+          {isEdit && review?.status && (
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-slate-700">Current Status:</span>
+              {(() => {
+                const s = review.status;
+                const cls =
+                  s === 'pending'
+                    ? 'bg-amber-100 text-amber-700'
+                    : s === 'rejected'
+                    ? 'bg-red-100 text-red-700'
+                    : 'bg-green-100 text-green-700';
+                return (
+                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full capitalize ${cls}`}>
+                    {s}
+                  </span>
+                );
+              })()}
+            </div>
+          )}
+
+          {isEdit && (
+            <div>
+              <label className={labelCls}>Status</label>
+              <select
+                name="status"
+                defaultValue={review?.status ?? 'approved'}
+                className={inputCls}
+              >
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
+          )}
 
           <div>
             <label className={labelCls}>

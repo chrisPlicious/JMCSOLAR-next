@@ -54,6 +54,17 @@ export type DbReview = {
   updated_at: string;
 };
 
+export type DbContactSubmission = {
+  id: string;
+  name: string;
+  phone: string;
+  email: string | null;
+  city: string | null;
+  system_type: string | null;
+  message: string | null;
+  created_at: string;
+};
+
 export type DbServiceDetail = {
   id: string;
   service_id: string;

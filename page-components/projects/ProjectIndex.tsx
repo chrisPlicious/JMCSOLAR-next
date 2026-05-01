@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { motion } from "framer-motion";
 import ProjectCard from "@/components/ui/ProjectCard";
 import { Timeline } from "@/components/ui/timeline";
 import Layout from "@/components/layout/Layout";
@@ -42,7 +43,13 @@ export default function ProjectsPage({ projects }: Props) {
     <Layout>
       <section id="projects" className="bg-white mx-auto py-20 px-4 lg:py-28">
         {/* Header — kept as-is */}
-        <div className="text-center max-w-2xl mx-auto mb-10">
+        <motion.div
+          className="text-center max-w-2xl mx-auto mb-10"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.5 }}
+        >
           <span className="text-solar-600 font-semibold text-sm uppercase tracking-widest mb-4 block">
             Our Work
           </span>
@@ -56,7 +63,7 @@ export default function ProjectsPage({ projects }: Props) {
             From residential rooftops to large-scale industrial farms — browse
             our completed solar installations across Eastern Visayas.
           </p>
-        </div>
+        </motion.div>
 
         {/* Timeline replaces the carousel */}
         <Timeline data={timelineData} />

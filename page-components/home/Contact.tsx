@@ -2,10 +2,11 @@
 
 import {
   useState,
+  useEffect,
   type ChangeEvent,
+  type FormEvent,
   type ReactNode,
 } from "react";
-import { useForm } from "@formspree/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import { products } from "@/data/products";
@@ -53,6 +54,88 @@ const serviceToMessage: Record<string, string> = {
 export default function Contact() {
   const searchParams = useSearchParams();
 
+  useEffect(() => {
+    let pollId: ReturnType<typeof setInterval> | null = null;
+    let smoothCheckId: ReturnType<typeof setTimeout> | null = null;
+
+    const clearTimers = () => {
+      if (pollId) { clearInterval(pollId); pollId = null; }
+      if (smoothCheckId) { clearTimeout(smoothCheckId); smoothCheckId = null; }
+    };
+
+    const scrollToContact = (behavior: ScrollBehavior = 'instant') => {
+      clearTimers();
+      const el = document.getElementById('contact');
+      if (!el) return;
+
+      const doScroll = (b: ScrollBehavior = behavior) => {
+        const top = el.getBoundingClientRect().top + window.scrollY - 80;
+        window.scrollTo({ top, behavior: b });
+      };
+
+      doScroll();
+
+      if (behavior === 'instant') {
+        // Cross-page: poll to correct for layout shifts (Firestore loading
+        // in Reviews pushes Contact down). Re-scroll whenever the section
+        // drifts from the target position. Stop after stable for 500 ms or 3 s.
+        let attempts = 0;
+        let stableCount = 0;
+        pollId = setInterval(() => {
+          attempts++;
+          const rect = el.getBoundingClientRect();
+          if (Math.abs(rect.top - 80) > 10) {
+            doScroll();
+            stableCount = 0;
+          } else {
+            stableCount++;
+          }
+          if (stableCount >= 5 || attempts >= 30) clearTimers();
+        }, 100);
+      } else {
+        // Smooth scroll: verify position after the animation finishes
+        smoothCheckId = setTimeout(() => {
+          const rect = el.getBoundingClientRect();
+          if (Math.abs(rect.top - 80) > 10) doScroll('instant');
+        }, 800);
+      }
+    };
+
+    // 1) Cross-page navigation or full page load with #contact hash
+    if (window.location.hash === '#contact') {
+      scrollToContact('instant');
+    }
+
+    // 2) Intercept clicks on any /#contact link while on the homepage.
+    //    This prevents the browser's native hash scroll (which ignores
+    //    the 80 px navbar offset) and Next.js <Link> router.push.
+    //    Capture phase fires before React's event delegation.
+    const onClick = (e: MouseEvent) => {
+      const anchor = (e.target as HTMLElement).closest<HTMLAnchorElement>('a');
+      if (!anchor) return;
+      const href = anchor.getAttribute('href');
+      if (!href || !href.includes('#contact')) return;
+      if (window.location.pathname !== '/') return;
+
+      e.preventDefault();
+      scrollToContact('smooth');
+      window.history.pushState(null, '', href);
+    };
+    document.addEventListener('click', onClick, true);
+
+    // 3) hashchange covers edge-cases (back/forward navigation, etc.)
+    const onHashChange = () => {
+      if (window.location.hash === '#contact') scrollToContact('smooth');
+    };
+    window.addEventListener('hashchange', onHashChange);
+
+    return () => {
+      clearTimers();
+      document.removeEventListener('click', onClick, true);
+      window.removeEventListener('hashchange', onHashChange);
+    };
+  }, []);
+
   const [formData, setFormData] = useState(() => {
     const productId = searchParams.get("product") ?? "";
     const foundProduct = products.find((p) => p.id === productId);
@@ -73,7 +156,23 @@ export default function Contact() {
       message,
     };
   });
-  const [state, handleSubmit] = useForm("mjgaoear");
+  const [submitting, setSubmitting] = useState(false);
+  const [succeeded, setSucceeded] = useState(false);
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      if (res.ok) setSucceeded(true);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
@@ -82,12 +181,12 @@ export default function Contact() {
   };
 
   return (
-    <section id="contact" className="relative py-24 bg-warm overflow-hidden">
+    <section id="contact" className="relative py-16 sm:py-20 lg:py-24 bg-warm overflow-hidden scroll-mt-20">
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div
-          className="text-center max-w-2xl mx-auto mb-16"
+          className="text-center max-w-2xl mx-auto mb-10 lg:mb-16"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-60px" }}
@@ -110,7 +209,7 @@ export default function Contact() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12">
           {/* Contact Info (left) */}
           <div className="lg:col-span-2 flex flex-col gap-8">
             <div>
@@ -180,7 +279,7 @@ export default function Contact() {
 
           {/* Inquiry Form (right) */}
           <div className="lg:col-span-3">
-            {state.succeeded ? (
+            {succeeded ? (
               <div className="bg-green-eco/8 border border-green-eco/20 rounded-3xl p-6 sm:p-10 text-center">
                 <div className="w-16 h-16 bg-green-eco/15 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Send size={28} className="text-green-eco" />
@@ -287,10 +386,10 @@ export default function Contact() {
                   variant="primary"
                   size="lg"
                   className="w-full overflow-hidden send-btn"
-                  disabled={state.submitting}
+                  disabled={submitting}
                 >
                   <AnimatePresence mode="wait" initial={false}>
-                    {state.submitting ? (
+                    {submitting ? (
                       <motion.span
                         key="loading"
                         className="inline-flex items-center justify-center gap-2"

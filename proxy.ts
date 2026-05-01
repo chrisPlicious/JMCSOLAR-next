@@ -3,27 +3,44 @@ import type { NextRequest } from 'next/server';
 
 const SESSION_COOKIE = 'admin_session';
 
-async function computeExpectedToken(): Promise<string> {
-  const secret = process.env.SESSION_SECRET!;
-  const password = process.env.ADMIN_PASSWORD!;
+/**
+ * Verify a `nonce.hmac` session token using Edge-compatible crypto.subtle.
+ * Returns true if the HMAC over the nonce matches the one in the token.
+ */
+async function verifyToken(token: string): Promise<boolean> {
+  const dotIndex = token.indexOf('.');
+  if (dotIndex === -1) return false;
+
+  const nonce = token.slice(0, dotIndex);
+  const providedHmac = token.slice(dotIndex + 1);
+  if (!nonce || !providedHmac) return false;
+
+  const secret = process.env.SESSION_SECRET;
+  if (!secret) return false;
+
   const key = await crypto.subtle.importKey(
     'raw',
     new TextEncoder().encode(secret),
     { name: 'HMAC', hash: 'SHA-256' },
     false,
-    ['sign']
+    ['sign'],
   );
-  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(password));
-  return Array.from(new Uint8Array(sig))
+
+  const sig = await crypto.subtle.sign(
+    'HMAC',
+    key,
+    new TextEncoder().encode(nonce),
+  );
+
+  const expectedHmac = Array.from(new Uint8Array(sig))
     .map((b) => b.toString(16).padStart(2, '0'))
     .join('');
-}
 
-function safeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
+  // Constant-time comparison
+  if (providedHmac.length !== expectedHmac.length) return false;
   let diff = 0;
-  for (let i = 0; i < a.length; i++) {
-    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  for (let i = 0; i < providedHmac.length; i++) {
+    diff |= providedHmac.charCodeAt(i) ^ expectedHmac.charCodeAt(i);
   }
   return diff === 0;
 }
@@ -34,11 +51,7 @@ export async function proxy(request: NextRequest) {
 
   if (isAdmin && !isLogin) {
     const token = request.cookies.get(SESSION_COOKIE)?.value;
-    if (!token) {
-      return NextResponse.redirect(new URL('/admin/login', request.url));
-    }
-    const expected = await computeExpectedToken();
-    if (!safeEqual(token, expected)) {
+    if (!token || !(await verifyToken(token))) {
       return NextResponse.redirect(new URL('/admin/login', request.url));
     }
   }

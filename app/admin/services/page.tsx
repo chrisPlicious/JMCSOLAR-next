@@ -1,6 +1,8 @@
 import Link from 'next/link';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { adminDb } from '@/lib/firebase/admin';
 import DeleteServiceButton from './_components/DeleteServiceButton';
+
+export const dynamic = 'force-dynamic';
 
 function MiniStatCard({ number, label }: { number: string | number; label: string }) {
   return (
@@ -12,12 +14,14 @@ function MiniStatCard({ number, label }: { number: string | number; label: strin
 }
 
 export default async function AdminServicesPage() {
-  const supabase = createSupabaseServerClient();
-  const { data: services, error: servicesError } = await supabase
-    .from('services')
-    .select('id, icon, title, highlight, display_order')
-    .order('display_order', { ascending: true });
-  if (servicesError) throw new Error(servicesError.message);
+  const snap = await adminDb.collection('services').orderBy('display_order', 'asc').get();
+  const services = snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as {
+    id: string;
+    icon: string;
+    title: string;
+    highlight: boolean;
+    display_order: number;
+  }[];
 
   const totalServices = services?.length ?? 0;
   const featuredCount = services?.filter((s) => s.highlight === true).length ?? 0;

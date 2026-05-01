@@ -1,0 +1,38 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+    // Public read-only collections
+    match /services/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /serviceDetails/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /projects/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /projectImages/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /products/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /reviews/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    // contactSubmissions: server only
+    match /contactSubmissions/{docId} {
+      allow read, write: if false;
+    }
+  }
+}

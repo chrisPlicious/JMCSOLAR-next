@@ -30,6 +30,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# firebase
+.firebase/logs/
+
 # env files (can opt-in for committing if needed)
 .env*
 
@@ -40,3 +43,12 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .superpowers
+.claude
+docs
+# Added by code-review-graph
+.code-review-graph/
+graphify-out
+.graphify_*
+.mcp.json
+.opencode.json
+.windsurfrules

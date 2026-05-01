@@ -100,16 +100,14 @@ export default function Partners() {
               className="h-25 object-contain opacity-80 hover:opacity-100 hover:scale-102 ease-in-out transition-all duration-800"
             />
             <img
-              src="/Logos/SUNRI.png"
-              alt="Sunri"
-              className="h-25 object-contain opacity-80 hover:opacity-100 hover:scale-102 ease-in-out transition-all duration-800"
+              src="/Logos/THINK POWER.png"
+              alt="Phono Solar"
+              className="h-40 object-contain opacity-80 hover:opacity-100 hover:scale-102 ease-in-out transition-all duration-800"
             />
-            <img
-              src="/Logos/GOODWE.png"
-              alt="goodwe"
-              className="h-25 object-contain opacity-80 hover:opacity-100 hover:scale-102 ease-in-out transition-all duration-800"
-            />
+            
+            
           </div>
+
           <div className="flex flex-col items-center gap-11">
             <img
               src="/Logos/REC.png"
@@ -132,40 +130,36 @@ export default function Partners() {
               className="h-25 object-contain opacity-80 hover:opacity-100 hover:scale-102 ease-in-out transition-all duration-800"
             />
             <img
-              src="/Logos/AIKO.png"
-              alt="aiko"
-              className="h-25 object-contain opacity-80 hover:opacity-100 hover:scale-102 ease-in-out transition-all duration-800"
-            />
-            <img
               src="/Logos/LVTOPSUN.png"
               alt="LVTOPSUN"
               className="h-35 object-contain opacity-80 hover:opacity-100 hover:scale-102 ease-in-out transition-all duration-800"
             />
           </div>
-          <div className="flex flex-col items-center gap-2">
-            <img
-              src="/Logos/VOLTRONICPOWER.png"
-              alt="Voltronic Power"
-              className="h-35 object-contain opacity-80 hover:opacity-100 hover:scale-102 ease-in-out transition-all duration-800"
-            />
+
+          <div className="flex flex-col items-center gap-8">
             <img
               src="/Logos/SRNE.png"
               alt="SRNE Solar"
               className="h-30 object-contain opacity-80 hover:opacity-100 hover:scale-102 ease-in-out transition-all duration-800"
             />
             <img
-              src="/Logos/JAPAN%20SOLAR.png"
-              alt="Japan Solar"
-              className="h-50 object-contain opacity-80 hover:opacity-100 hover:scale-102 ease-in-out transition-all duration-800"
+              src="/Logos/SUNRI.png"
+              alt="Sunri"
+              className="h-25 object-contain opacity-80 hover:opacity-100 hover:scale-102 ease-in-out transition-all duration-800"
             />
             <img
-              src="/Logos/THINK POWER.png"
-              alt="Phono Solar"
-              className="h-40 object-contain opacity-80 hover:opacity-100 hover:scale-102 ease-in-out transition-all duration-800"
+              src="/Logos/GOODWE.png"
+              alt="goodwe"
+              className="h-25 object-contain opacity-80 hover:opacity-100 hover:scale-102 ease-in-out transition-all duration-800"
             />
             <img
               src="/Logos/HYXIPOWER.png"
               alt="HYXIPOWER"
+              className="h-25 object-contain opacity-80 hover:opacity-100 hover:scale-102 ease-in-out transition-all duration-800"
+            />
+            <img
+              src="/Logos/AIKO.png"
+              alt="aiko"
               className="h-25 object-contain opacity-80 hover:opacity-100 hover:scale-102 ease-in-out transition-all duration-800"
             />
           </div>

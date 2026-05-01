@@ -1,23 +1,45 @@
-import { createHmac, timingSafeEqual } from 'crypto';
+import { createHmac, randomBytes, timingSafeEqual } from 'crypto';
 import { cookies } from 'next/headers';
 
 export const SESSION_COOKIE = 'admin_session';
 export const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
-/** Generate the expected session token from env vars */
+/**
+ * Generate a unique session token.
+ *
+ * Each call produces a different token by including a random 32-byte nonce.
+ * Format: `<nonce_hex>.<hmac_hex>`
+ * The HMAC covers the nonce so the token can be verified without a DB lookup.
+ */
 export function generateSessionToken(): string {
-  return createHmac('sha256', process.env.SESSION_SECRET!)
-    .update(process.env.ADMIN_PASSWORD!)
+  const nonce = randomBytes(32).toString('hex');
+  const hmac = createHmac('sha256', process.env.SESSION_SECRET!)
+    .update(nonce)
     .digest('hex');
+  return `${nonce}.${hmac}`;
 }
 
-/** Constant-time comparison to prevent timing attacks */
+/** Verify that a token was issued by this server (constant-time). */
 export function verifySessionToken(token: string): boolean {
   try {
-    const expected = generateSessionToken();
-    const a = Buffer.from(token.padEnd(64, '0'));
-    const b = Buffer.from(expected.padEnd(64, '0'));
-    return timingSafeEqual(a, b) && token.length === expected.length;
+    const dotIndex = token.indexOf('.');
+    if (dotIndex === -1) return false;
+
+    const nonce = token.slice(0, dotIndex);
+    const providedHmac = token.slice(dotIndex + 1);
+
+    // Reject malformed tokens early
+    if (!nonce || !providedHmac) return false;
+
+    const expectedHmac = createHmac('sha256', process.env.SESSION_SECRET!)
+      .update(nonce)
+      .digest('hex');
+
+    const a = Buffer.from(providedHmac);
+    const b = Buffer.from(expectedHmac);
+    if (a.length !== b.length) return false;
+
+    return timingSafeEqual(a, b);
   } catch {
     return false;
   }

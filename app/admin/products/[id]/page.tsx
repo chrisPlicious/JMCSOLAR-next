@@ -1,12 +1,16 @@
 import { notFound } from 'next/navigation';
-import { createSupabaseServerClient, getPublicUrl } from '@/lib/supabase/server';
+import { adminDb } from '@/lib/firebase/admin';
+import { getPublicUrl } from '@/lib/firebase/storage';
+import type { DbProduct } from '@/lib/firebase/types';
 import EditProductForm from '../_components/EditProductForm';
+
+export const dynamic = 'force-dynamic';
 
 export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = createSupabaseServerClient();
-  const { data: product } = await supabase.from('products').select('*').eq('id', id).single();
-  if (!product) notFound();
-  const imageUrl = getPublicUrl('product-images', product.image_path);
+  const snap = await adminDb.collection('products').doc(id).get();
+  if (!snap.exists) notFound();
+  const product = { id: snap.id, ...(snap.data() as Omit<DbProduct, 'id'>) };
+  const imageUrl = getPublicUrl(product.image_path);
   return <EditProductForm product={product} imageUrl={imageUrl} />;
 }

@@ -1,6 +1,8 @@
 import Link from 'next/link';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { adminDb } from '@/lib/firebase/admin';
 import DeleteProjectButton from './_components/DeleteProjectButton';
+
+export const dynamic = 'force-dynamic';
 
 function MiniStatCard({ number, label }: { number: string | number; label: string }) {
   return (
@@ -12,21 +14,19 @@ function MiniStatCard({ number, label }: { number: string | number; label: strin
 }
 
 export default async function AdminProjectsPage() {
-  const supabase = createSupabaseServerClient();
-  const [{ data: projects, error: projectsError }, { data: categoryData, error: catError }] = await Promise.all([
-    supabase
-      .from('projects')
-      .select('id, title, category, location, created_at')
-      .order('created_at', { ascending: false }),
-    supabase.from('projects').select('category'),
-  ]);
-  if (projectsError) throw new Error(projectsError.message);
-  if (catError) throw new Error(catError.message);
+  const snap = await adminDb.collection('projects').orderBy('created_at', 'desc').get();
+  const projects = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as {
+    id: string;
+    title: string;
+    category: string;
+    location: string | null;
+    created_at: string;
+  }[];
 
-  const totalProjects = projects?.length ?? 0;
-  const residentialCount = categoryData?.filter((p) => p.category?.toLowerCase() === 'residential').length ?? 0;
-  const commercialCount = categoryData?.filter((p) => p.category?.toLowerCase() === 'commercial').length ?? 0;
-  const agriculturalCount = categoryData?.filter((p) => p.category?.toLowerCase() === 'agricultural').length ?? 0;
+  const totalProjects = projects.length;
+  const residentialCount = projects.filter((p) => p.category?.toLowerCase() === 'residential').length;
+  const commercialCount = projects.filter((p) => p.category?.toLowerCase() === 'commercial').length;
+  const agriculturalCount = projects.filter((p) => p.category?.toLowerCase() === 'agricultural').length;
 
   const categoryColors: Record<string, string> = {
     residential: 'bg-emerald-50 text-emerald-700',
@@ -57,7 +57,7 @@ export default async function AdminProjectsPage() {
         <MiniStatCard number={agriculturalCount} label="Agricultural" />
       </div>
 
-      {!projects?.length ? (
+      {!projects.length ? (
         /* Empty state */
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-[0_4px_24px_0_rgb(0_0_0/0.06)]">
           <div className="text-center py-16 px-4">
