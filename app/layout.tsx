@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Poppins, Montserrat, Geist } from 'next/font/google';
+import { headers } from 'next/headers';
 import './globals.css';
 import LoaderScreen from '@/components/ui/LoaderScreen';
 import LoaderGate from '@/components/ui/LoaderGate';
@@ -64,13 +65,14 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const nonce = (await headers()).get('x-nonce') ?? '';
   return (
-    <html lang="en" className={cn("font-sans", geist.variable)}>
+    <html lang="en" className={cn("font-sans", geist.variable)} nonce={nonce}>
       <head>
         <link rel="preload" as="image" href="/assets/bg-1.jpg" />
       </head>
