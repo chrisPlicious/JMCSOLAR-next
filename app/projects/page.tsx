@@ -3,6 +3,7 @@ import ProjectsPage from '@/page-components/projects/ProjectIndex';
 import { adminDb } from '@/lib/firebase/admin';
 import { getPublicUrl } from '@/lib/firebase/storage';
 import type { Project, ProjectImage } from '@/types';
+import { makeBreadcrumbLd } from '@/lib/seo/breadcrumb';
 
 export const metadata: Metadata = {
   title: 'Completed Projects',
@@ -55,5 +56,15 @@ export default async function Projects() {
     };
   });
 
-  return <ProjectsPage projects={projects} />;
+  const breadcrumb = makeBreadcrumbLd([
+    { name: 'Home', url: '/' },
+    { name: 'Completed Projects', url: '/projects' },
+  ]);
+
+  return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
+      <ProjectsPage projects={projects} />
+    </>
+  );
 }

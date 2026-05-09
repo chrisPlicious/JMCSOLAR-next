@@ -4,6 +4,8 @@ import { adminDb } from '@/lib/firebase/admin';
 import ServicePageLayout from '@/components/ui/ServicePageLayout';
 import ServiceEmptyState from '@/components/ui/ServiceEmptyState';
 import type { DbService, DbServiceDetail } from '@/lib/firebase/types';
+import { SITE_URL } from '@/lib/seo/site';
+import { makeBreadcrumbLd } from '@/lib/seo/breadcrumb';
 
 export const revalidate = 60;
 
@@ -54,20 +56,40 @@ export default async function ServiceDetailPage({
     return <ServiceEmptyState service={service} />;
   }
 
+  const serviceLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    name: service.title,
+    description: service.description,
+    provider: { '@id': `${SITE_URL}/#business` },
+    areaServed: { '@type': 'AdministrativeArea', name: 'Leyte, Philippines' },
+    url: `${SITE_URL}/services/${slug}`,
+  };
+
+  const breadcrumb = makeBreadcrumbLd([
+    { name: 'Home', url: '/' },
+    { name: 'Services', url: '/services' },
+    { name: service.title, url: `/services/${slug}` },
+  ]);
+
   return (
-    <ServicePageLayout
-      heroBgImage="/assets/bg-4.jpg"
-      title={service.title}
-      iconName={service.icon}
-      serviceId={service.slug}
-      tagline={detail.tagline}
-      overview={detail.overview}
-      whatIsIt={detail.what_is_it}
-      howItWorks={detail.how_it_works}
-      benefits={detail.benefits}
-      useCases={detail.use_cases.map((u) => u.item)}
-      specs={detail.specs}
-      sources={detail.sources}
-    />
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
+      <ServicePageLayout
+        heroBgImage="/assets/bg-4.jpg"
+        title={service.title}
+        iconName={service.icon}
+        serviceId={service.slug}
+        tagline={detail.tagline}
+        overview={detail.overview}
+        whatIsIt={detail.what_is_it}
+        howItWorks={detail.how_it_works}
+        benefits={detail.benefits}
+        useCases={detail.use_cases.map((u) => u.item)}
+        specs={detail.specs}
+        sources={detail.sources}
+      />
+    </>
   );
 }

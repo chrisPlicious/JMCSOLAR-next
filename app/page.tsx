@@ -2,15 +2,16 @@ import HomePage from '@/page-components/home/HomePage';
 import { adminDb } from '@/lib/firebase/admin';
 import type { DbReview } from '@/lib/firebase/types';
 import type { Review } from '@/types';
+import { SITE_URL } from '@/lib/seo/site';
 
-const jsonLd = {
+const baseJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'LocalBusiness',
-  '@id': 'https://jmcsolar.ph/#business',
+  '@id': `${SITE_URL}/#business`,
   name: 'JMC Solar PH',
   description:
     'Professional solar installation services in Ormoc City, Leyte. Hybrid solar, on-grid, battery storage, EV chargers, and more.',
-  url: 'https://jmcsolar.ph',
+  url: SITE_URL,
   telephone: '+639175088220',
   email: 'jmcsolarph@gmail.com',
   address: {
@@ -73,6 +74,20 @@ async function fetchApprovedReviews(): Promise<Review[]> {
 
 export default async function Home() {
   const reviews = await fetchApprovedReviews();
+
+  const ratings = reviews.filter((r) => typeof r.rating === 'number');
+  const aggregateRating =
+    ratings.length > 0
+      ? {
+          '@type': 'AggregateRating',
+          ratingValue: (ratings.reduce((s, r) => s + r.rating, 0) / ratings.length).toFixed(1),
+          reviewCount: ratings.length,
+          bestRating: 5,
+          worstRating: 1,
+        }
+      : undefined;
+
+  const jsonLd = { ...baseJsonLd, ...(aggregateRating && { aggregateRating }) };
 
   return (
     <>

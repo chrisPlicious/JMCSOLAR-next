@@ -3,6 +3,7 @@ import ProductsPage from '@/page-components/products/ProductsIndex';
 import { adminDb } from '@/lib/firebase/admin';
 import { getPublicUrl } from '@/lib/firebase/storage';
 import type { Product } from '@/types';
+import { makeBreadcrumbLd } from '@/lib/seo/breadcrumb';
 
 export const metadata: Metadata = {
   title: 'Solar Products',
@@ -25,5 +26,15 @@ export default async function Products() {
     image_path: getPublicUrl((p as { image_path?: string | null }).image_path ?? null),
   }));
 
-  return <ProductsPage products={products} />;
+  const breadcrumb = makeBreadcrumbLd([
+    { name: 'Home', url: '/' },
+    { name: 'Solar Products', url: '/products' },
+  ]);
+
+  return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
+      <ProductsPage products={products} />
+    </>
+  );
 }

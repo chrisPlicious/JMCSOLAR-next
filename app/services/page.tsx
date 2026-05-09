@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import ServicesPage from '@/page-components/services/ServiceIndex';
+import { makeBreadcrumbLd } from '@/lib/seo/breadcrumb';
 
 export const metadata: Metadata = {
   title: 'Solar Services',
@@ -13,6 +14,16 @@ export const metadata: Metadata = {
   },
 };
 
+const breadcrumb = makeBreadcrumbLd([
+  { name: 'Home', url: '/' },
+  { name: 'Services', url: '/services' },
+]);
+
 export default function Services() {
-  return <ServicesPage />;
+  return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
+      <ServicesPage />
+    </>
+  );
 }

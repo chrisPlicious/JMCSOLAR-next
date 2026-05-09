@@ -9,6 +9,7 @@ import ScrollToTop from '@/components/ui/ScrollToTop';
 import PageTransition from '@/components/ui/PageTransition';
 import HeroBgLayer from './_components/HeroBgLayer';
 import { cn } from "@/lib/utils";
+import { SITE_URL } from '@/lib/seo/site';
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -25,8 +26,6 @@ const montserrat = Montserrat({
   variable: '--font-montserrat',
   display: 'swap',
 });
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://jmcsolar.ph';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -52,7 +51,7 @@ export const metadata: Metadata = {
     locale: 'en_PH',
   },
   twitter: {
-    card: 'summary',
+    card: 'summary_large_image',
     title: 'JMC Solar PH — Future is Electric',
     description:
       'Professional solar installation in Ormoc City, Leyte. Hybrid solar, on-grid, battery storage, EV chargers.',
@@ -63,6 +62,12 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
+  },
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION,
+    other: process.env.BING_SITE_VERIFICATION
+      ? { 'msvalidate.01': process.env.BING_SITE_VERIFICATION }
+      : undefined,
   },
 };
 
