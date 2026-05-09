@@ -11,7 +11,7 @@ const partners = [
   { name: "REC Group", logo: "/Logos/REC.png" },
   { name: "Deye", logo: "/Logos/DEYE.png" },
   { name: "Livoltek", logo: "/Logos/LIVOLTEK.png" },
-  { name: "LVTOPSUN", logo: "/Logos/LVTOPSUN.webp" },
+  { name: "LVTOPSUN", logo: "/Logos/LVTOPSUN.png" },
   { name: "Voltronic Power", logo: "/Logos/VOLTRONICPOWER.png" },
   { name: "SRNE Solar", logo: "/Logos/SRNE.png" },
   { name: "Japan Solar", logo: "/Logos/JAPAN%20SOLAR.png" },
@@ -93,7 +93,7 @@ export default function Partners() {
         </motion.div>
 
         {/* Desktop: Logo Grid */}
-        <div className="hidden lg:grid grid-cols-3 gap-8">
+        <div className="relative hidden lg:grid grid-cols-3 gap-8">
           <motion.div
             className="flex flex-col items-center gap-8"
             variants={colVariants(0)}

@@ -1,38 +1,46 @@
 import { createHmac, randomBytes, timingSafeEqual } from 'crypto';
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { SESSION_COOKIE, TOKEN_TTL_MS } from './auth-constants';
 
-export const SESSION_COOKIE = 'admin_session';
-export const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
+if (!process.env.SESSION_SECRET) {
+  throw new Error('SESSION_SECRET env var is required');
+}
+
+export { SESSION_COOKIE, COOKIE_MAX_AGE, TOKEN_TTL_MS } from './auth-constants';
 
 /**
- * Generate a unique session token.
+ * Token format: `<nonce_hex>.<iat_hex>.<hmac_hex>`
+ * HMAC covers `nonce.iat` so expiry cannot be forged.
  *
- * Each call produces a different token by including a random 32-byte nonce.
- * Format: `<nonce_hex>.<hmac_hex>`
- * The HMAC covers the nonce so the token can be verified without a DB lookup.
+ * Deploy note: format changed from 2-part to 3-part — all existing sessions
+ * will be invalidated on first deploy. Admins must log in again.
  */
 export function generateSessionToken(): string {
   const nonce = randomBytes(32).toString('hex');
+  const iat = Date.now().toString(16);
   const hmac = createHmac('sha256', process.env.SESSION_SECRET!)
-    .update(nonce)
+    .update(`${nonce}.${iat}`)
     .digest('hex');
-  return `${nonce}.${hmac}`;
+  return `${nonce}.${iat}.${hmac}`;
 }
 
-/** Verify that a token was issued by this server (constant-time). */
+/** Verify that a token was issued by this server and has not expired. */
 export function verifySessionToken(token: string): boolean {
   try {
-    const dotIndex = token.indexOf('.');
-    if (dotIndex === -1) return false;
+    const parts = token.split('.');
+    if (parts.length !== 3) return false;
 
-    const nonce = token.slice(0, dotIndex);
-    const providedHmac = token.slice(dotIndex + 1);
+    const [nonce, iatHex, providedHmac] = parts;
+    if (!nonce || !iatHex || !providedHmac) return false;
 
-    // Reject malformed tokens early
-    if (!nonce || !providedHmac) return false;
+    // M1: cap length to prevent overflow with malformed tokens
+    if (iatHex.length > 16) return false;
+    const iat = parseInt(iatHex, 16);
+    if (isNaN(iat) || Date.now() - iat > TOKEN_TTL_MS) return false;
 
     const expectedHmac = createHmac('sha256', process.env.SESSION_SECRET!)
-      .update(nonce)
+      .update(`${nonce}.${iatHex}`)
       .digest('hex');
 
     const a = Buffer.from(providedHmac);
@@ -45,11 +53,11 @@ export function verifySessionToken(token: string): boolean {
   }
 }
 
-/** Throws if the request is not authenticated — call at top of every server action */
+/** Redirects to login if not authenticated — call at top of every server action. */
 export async function requireAdminAuth(): Promise<void> {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value;
   if (!token || !verifySessionToken(token)) {
-    throw new Error('Unauthorized');
+    redirect('/admin/login');
   }
 }

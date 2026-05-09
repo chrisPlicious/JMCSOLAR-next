@@ -54,7 +54,8 @@ export default async function AdminDashboard() {
     adminDb.collection('services').where('highlight', '==', true).get(),
     adminDb.collection('projects').orderBy('created_at', 'desc').limit(5).get(),
     adminDb.collection('products').orderBy('created_at', 'desc').limit(5).get(),
-    adminDb.collection('reviews').get(),
+    // M4: replaced full collection scan with aggregate count + limited rating query
+    adminDb.collection('reviews').where('status', '==', 'approved').get(),
   ]);
 
   const projectCount = projectCountAgg.data().count;

@@ -4,14 +4,19 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireAdminAuth } from '@/lib/auth';
 import { adminDb } from '@/lib/firebase/admin';
+import { requireField } from '@/lib/form-data';
 
 export async function createReview(fd: FormData): Promise<void> {
   await requireAdminAuth();
+  const reviewer_name = requireField(fd, 'reviewer_name');
+  const quote = requireField(fd, 'quote');
+  if (!reviewer_name || !quote) return;
   const id = crypto.randomUUID();
-  await adminDb.collection('reviews').doc(id).set({
+  // M3: create() fails loudly on UUID collision
+  await adminDb.collection('reviews').doc(id).create({
     id,
-    reviewer_name: fd.get('reviewer_name') as string,
-    quote: fd.get('quote') as string,
+    reviewer_name,
+    quote,
     source: fd.get('source') as string,
     rating: Number(fd.get('rating') ?? 5),
     status: 'approved',
@@ -26,20 +31,24 @@ export async function createReviewFromDialog(
   fd: FormData
 ): Promise<{ error: string } | null> {
   await requireAdminAuth();
+  const reviewer_name = requireField(fd, 'reviewer_name');
+  const quote = requireField(fd, 'quote');
+  if (!reviewer_name) return { error: 'Reviewer name is required.' };
+  if (!quote) return { error: 'Review quote is required.' };
   try {
     const id = crypto.randomUUID();
-    await adminDb.collection('reviews').doc(id).set({
+    await adminDb.collection('reviews').doc(id).create({
       id,
-      reviewer_name: fd.get('reviewer_name') as string,
-      quote: fd.get('quote') as string,
+      reviewer_name,
+      quote,
       source: fd.get('source') as string,
       rating: Number(fd.get('rating') ?? 5),
       status: 'approved',
       created_at: new Date().toISOString(),
     });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
-    return { error: message };
+    console.error('[createReviewFromDialog]', err);
+    return { error: 'Failed to save review' };
   }
   revalidatePath('/admin/reviews');
   return null;
@@ -47,9 +56,12 @@ export async function createReviewFromDialog(
 
 export async function updateReview(id: string, fd: FormData): Promise<void> {
   await requireAdminAuth();
+  const reviewer_name = requireField(fd, 'reviewer_name');
+  const quote = requireField(fd, 'quote');
+  if (!reviewer_name || !quote) return;
   const updateData: Record<string, unknown> = {
-    reviewer_name: fd.get('reviewer_name') as string,
-    quote: fd.get('quote') as string,
+    reviewer_name,
+    quote,
     source: fd.get('source') as string,
     rating: Number(fd.get('rating') ?? 5),
     updated_at: new Date().toISOString(),

@@ -13,19 +13,22 @@ const securityHeaders = [
     key: 'Strict-Transport-Security',
     value: 'max-age=63072000; includeSubDomains; preload',
   },
+  // CSP is set per-request in middleware.ts with a per-request nonce (no unsafe-inline)
 ];
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ['janitor-cultivate-arrive.ngrok-free.dev'],
   turbopack: {
     root: __dirname,
   },
   experimental: {
     scrollRestoration: false,
     serverActions: {
-      bodySizeLimit: '5mb',
+      // H2: reduced from 50mb to match max file size (10MB) + overhead
+      bodySizeLimit: '12mb',
     },
   },
-  transpilePackages: ['framer-motion'],
+  // M9: removed transpilePackages — framer-motion v11+ ships ESM, no transpile needed
   async headers() {
     return [
       {

@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import ProjectCard from "@/components/ui/ProjectCard";
+import ProjectCarouselModal from "@/components/ui/ProjectCarouselModal";
 import { Timeline } from "@/components/ui/timeline";
 import Layout from "@/components/layout/Layout";
 import type { Project } from "@/types";
@@ -12,6 +13,8 @@ interface Props {
 }
 
 export default function ProjectsPage({ projects }: Props) {
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+
   const parseKwp = (sizeStr: string | null): number => {
     if (!sizeStr) return 0;
     const match = sizeStr.match(/([\d.]+)/);
@@ -43,7 +46,11 @@ export default function ProjectsPage({ projects }: Props) {
           content: (
             <div className="flex flex-col gap-6">
               {yearProjects.map((project) => (
-                <ProjectCard key={project.id} project={project} />
+                <ProjectCard
+                  key={project.id}
+                  project={project}
+                  onClick={() => setSelectedProject(project)}
+                />
               ))}
             </div>
           ),
@@ -77,9 +84,14 @@ export default function ProjectsPage({ projects }: Props) {
           </p>
         </motion.div>
 
-        {/* Timeline replaces the carousel */}
         <Timeline data={timelineData} />
       </section>
+
+      <ProjectCarouselModal
+        project={selectedProject}
+        open={!!selectedProject}
+        onClose={() => setSelectedProject(null)}
+      />
     </Layout>
   );
 }

@@ -1,11 +1,13 @@
 'use client';
 
+import Image from 'next/image';
 import { MapPin, Zap, ExternalLink } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { Project } from '../../types';
 
 interface ProjectCardProps {
   project: Project;
+  onClick?: () => void;
 }
 
 const categoryGradients: Record<Project['category'], string> = {
@@ -32,10 +34,13 @@ const categoryLabels: Record<Project['category'], string> = {
   school:       'School',
 };
 
-export default function ProjectCard({ project }: ProjectCardProps) {
+export default function ProjectCard({ project, onClick }: ProjectCardProps) {
+  const hasGallery = (project.images?.length ?? 0) > 0;
+
   return (
     <motion.div
-      className="relative w-full h-[220px] sm:h-[340px] md:h-[460px] lg:h-[580px] rounded-2xl overflow-hidden select-none"
+      className={`relative w-full h-[220px] sm:h-[340px] md:h-[460px] lg:h-[580px] rounded-2xl overflow-hidden select-none ${onClick ? 'cursor-pointer' : ''}`}
+      onClick={onClick}
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-60px' }}
@@ -45,10 +50,13 @@ export default function ProjectCard({ project }: ProjectCardProps) {
 
       {/* Background: image if available, gradient fallback */}
       {project.cover_image_path ? (
-        <img
+        // M7: next/image for Vercel optimisation + LCP
+        <Image
           src={project.cover_image_path}
           alt={project.title}
-          className="absolute inset-0 w-full h-full object-cover"
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          className="object-cover"
           draggable={false}
         />
       ) : (

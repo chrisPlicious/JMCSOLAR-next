@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import ProjectsPage from '@/page-components/projects/ProjectIndex';
 import { adminDb } from '@/lib/firebase/admin';
 import { getPublicUrl } from '@/lib/firebase/storage';
-import type { Project } from '@/types';
+import type { Project, ProjectImage } from '@/types';
 
 export const metadata: Metadata = {
   title: 'Completed Projects',
@@ -17,7 +17,22 @@ export const metadata: Metadata = {
 };
 
 export default async function Projects() {
-  const snap = await adminDb.collection('projects').orderBy('created_at', 'desc').get();
+  const [snap, imagesSnap] = await Promise.all([
+    adminDb.collection('projects').orderBy('created_at', 'desc').get(),
+    adminDb.collection('projectImages').orderBy('display_order').get(),
+  ]);
+
+  const imagesByProject: Record<string, ProjectImage[]> = {};
+  for (const doc of imagesSnap.docs) {
+    const data = doc.data() as { project_id: string; storage_path: string; caption: string | null; display_order: number };
+    if (!imagesByProject[data.project_id]) imagesByProject[data.project_id] = [];
+    imagesByProject[data.project_id].push({
+      id: doc.id,
+      storage_path: getPublicUrl(data.storage_path) ?? data.storage_path,
+      caption: data.caption ?? null,
+      display_order: data.display_order ?? 0,
+    });
+  }
 
   const projects: Project[] = snap.docs.map((doc) => {
     const data = doc.data() as {
@@ -36,6 +51,7 @@ export default async function Projects() {
       id: doc.id,
       category: data.category as Project['category'],
       cover_image_path: getPublicUrl(data.cover_image_path),
+      images: imagesByProject[doc.id] ?? [],
     };
   });
 

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { updateProjectAction } from "../actions";
 import Link from "next/link";
+import DragDropImageUploader from "./DragDropImageUploader";
 
 const inputCls =
   "w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-navy-950 outline-none focus:ring-2 focus:ring-solar-500/30 focus:border-solar-500 transition-colors";
@@ -201,16 +202,8 @@ export default function EditProjectForm({ project }: { project: Project }) {
           </div>
 
           <div>
-            <label htmlFor="new_image" className={labelCls}>
-              Add New Photo
-            </label>
-            <input
-              id="new_image"
-              name="new_image"
-              type="file"
-              accept="image/*"
-              className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-solar-500/10 file:text-solar-600 file:font-medium hover:file:bg-solar-500/20 file:cursor-pointer"
-            />
+            <label className={labelCls}>Add New Photos</label>
+            <DragDropImageUploader name="images" />
             <label className="flex items-center gap-2 mt-3 cursor-pointer text-sm text-slate-600">
               <input
                 type="checkbox"
@@ -218,7 +211,7 @@ export default function EditProjectForm({ project }: { project: Project }) {
                 value="true"
                 className="w-4 h-4 accent-solar-500"
               />
-              Set as cover image
+              Set first new image as cover
             </label>
           </div>
         </form>

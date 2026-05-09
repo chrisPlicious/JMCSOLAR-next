@@ -782,7 +782,7 @@ export default function SolarCalculator() {
                         {
                           label: 'System Size',
                           value: `${result.systemSizeKw} kW`,
-                          sub: `${result.panelCount} panels · 450 Wp`,
+                          sub: `${result.panelCount} panels · 550 Wp`,
                           tooltip: 'Sized to fully offset your monthly consumption.',
                         },
                         {
@@ -808,10 +808,10 @@ export default function SolarCalculator() {
                           {...cardAnim(i + 1)}
                           className="bg-white rounded-2xl px-4 py-4 border border-slate-100 shadow-sm"
                         >
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex items-center">
+                          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex items-center">
                             {card.label}
                             {card.tooltip && <Tooltip text={card.tooltip} />}
-                          </p>
+                          </div>
                           <p
                             className="text-navy-900 font-black text-base leading-tight"
                             style={{ fontFamily: 'Poppins, sans-serif' }}

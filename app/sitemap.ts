@@ -24,8 +24,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.7,
       };
     });
-  } catch {
-    // Firestore unavailable at build time — return static pages only
+  } catch (err) {
+    // M5: log so we notice if Firestore is permanently down
+    console.error('[sitemap] Failed to fetch service pages:', err);
   }
 
   return [...staticPages, ...servicePages];

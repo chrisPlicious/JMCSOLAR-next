@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase/admin';
 import { rateLimit } from '@/lib/rate-limit';
+import { getClientIp } from '@/lib/get-client-ip';
 import nodemailer from 'nodemailer';
 
 // 5 submissions per IP per 15 minutes
@@ -8,9 +9,8 @@ const RATE_LIMIT = 5;
 const RATE_WINDOW = 15 * 60 * 1000;
 
 export async function POST(request: Request) {
-  const ip =
-    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
-  const { allowed, retryAfterMs } = rateLimit(ip, RATE_LIMIT, RATE_WINDOW);
+  const ip = getClientIp(request.headers);
+  const { allowed, retryAfterMs } = await rateLimit(ip, RATE_LIMIT, RATE_WINDOW);
   if (!allowed) {
     return NextResponse.json(
       { error: 'Too many requests. Please try again later.' },
@@ -28,11 +28,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 });
   }
 
-  const name = typeof body.name === 'string' ? body.name.trim().slice(0, 200) : '';
-  const phone = typeof body.phone === 'string' ? body.phone.trim().slice(0, 30) : '';
-  const email = typeof body.email === 'string' ? body.email.trim().slice(0, 254) : '';
-  const city = typeof body.city === 'string' ? body.city.trim().slice(0, 200) : '';
-  const systemType = typeof body.systemType === 'string' ? body.systemType.trim().slice(0, 200) : '';
+  const name = typeof body.name === 'string' ? body.name.replace(/[\r\n]/g, ' ').trim().slice(0, 200) : '';
+  const phone = typeof body.phone === 'string' ? body.phone.replace(/[\r\n]/g, ' ').trim().slice(0, 30) : '';
+  const email = typeof body.email === 'string' ? body.email.replace(/[\r\n]/g, '').trim().slice(0, 254) : '';
+  const city = typeof body.city === 'string' ? body.city.replace(/[\r\n]/g, ' ').trim().slice(0, 200) : '';
+  const systemType = typeof body.systemType === 'string' ? body.systemType.replace(/[\r\n]/g, ' ').trim().slice(0, 200) : '';
   const message = typeof body.message === 'string' ? body.message.trim().slice(0, 2000) : '';
 
   if (!name || !phone) {

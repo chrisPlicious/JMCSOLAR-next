@@ -17,9 +17,14 @@ const SunIcon = () => (
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; next?: string }>;
 }) {
   const params = await searchParams;
+  // H4: validate next before forwarding to prevent open redirect
+  const nextPath =
+    params.next && params.next.startsWith('/admin/') && !params.next.includes('..')
+      ? params.next
+      : undefined;
 
   return (
     <div
@@ -40,14 +45,21 @@ export default async function LoginPage({
         </p>
 
         {/* Error */}
-        {params.error && (
+        {params.error === '1' && (
           <div className="mb-6 px-4 py-2.5 bg-red-50 text-red-600 text-sm rounded-full text-center font-medium">
             Incorrect password. Please try again.
+          </div>
+        )}
+        {params.error === '2' && (
+          <div className="mb-6 px-4 py-2.5 bg-red-50 text-red-600 text-sm rounded-full text-center font-medium">
+            Too many attempts. Please wait 15 minutes before trying again.
           </div>
         )}
 
         {/* Form */}
         <form action={loginAction} className="space-y-4">
+          {/* H4: forward intended path so action can redirect back after auth */}
+          {nextPath && <input type="hidden" name="next" value={nextPath} />}
           <input
             type="password"
             name="password"

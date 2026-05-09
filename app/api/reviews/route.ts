@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
+import { createHmac } from 'crypto';
 import { adminDb } from '@/lib/firebase/admin';
 import { rateLimit } from '@/lib/rate-limit';
+import { getClientIp } from '@/lib/get-client-ip';
 import nodemailer from 'nodemailer';
 
 // 3 review submissions per IP per 30 minutes
@@ -8,9 +10,8 @@ const RATE_LIMIT = 3;
 const RATE_WINDOW = 30 * 60 * 1000;
 
 export async function POST(request: Request) {
-  const ip =
-    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
-  const { allowed, retryAfterMs } = rateLimit(ip, RATE_LIMIT, RATE_WINDOW);
+  const ip = getClientIp(request.headers);
+  const { allowed, retryAfterMs } = await rateLimit(ip, RATE_LIMIT, RATE_WINDOW);
   if (!allowed) {
     return NextResponse.json(
       { error: 'Too many requests. Please try again later.' },
@@ -28,8 +29,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 });
   }
 
-  const name = typeof body.name === 'string' ? body.name.trim().slice(0, 200) : '';
-  const company_name = typeof body.company_name === 'string' ? body.company_name.trim().slice(0, 200) : '';
+  const name = typeof body.name === 'string' ? body.name.replace(/[\r\n]/g, ' ').trim().slice(0, 200) : '';
+  const company_name = typeof body.company_name === 'string' ? body.company_name.replace(/[\r\n]/g, ' ').trim().slice(0, 200) : '';
   const contact_type = body.contact_type;
   const contact_value = typeof body.contact_value === 'string' ? body.contact_value.trim().slice(0, 254) : '';
   const rating = body.rating;
@@ -59,7 +60,8 @@ export async function POST(request: Request) {
   const now = new Date().toISOString();
 
   try {
-    await adminDb.collection('reviews').doc(id).set({
+    // M3: create() fails loudly on UUID collision
+    await adminDb.collection('reviews').doc(id).create({
       id,
       reviewer_name: name,
       quote,
@@ -68,7 +70,8 @@ export async function POST(request: Request) {
       status: 'pending',
       company_name: company_name || null,
       contact_type,
-      contact_value,
+      // H3: HMAC-SHA256 with server pepper — lookup-table attacks blocked
+      contact_value: createHmac('sha256', process.env.CONTACT_PEPPER!).update(contact_value).digest('hex'),
       created_at: now,
       updated_at: now,
     });

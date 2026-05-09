@@ -1,14 +1,21 @@
 import * as admin from 'firebase-admin'
 
+const APP_NAME = 'jmc-admin'
+
 function getAdminApp(): admin.app.App {
-  if (admin.apps.length > 0) return admin.apps[0]!
+  const existing = admin.apps.find((a) => a?.name === APP_NAME)
+  if (existing) return existing
+
   const json = process.env.FIREBASE_SERVICE_ACCOUNT_JSON
   if (!json) throw new Error('FIREBASE_SERVICE_ACCOUNT_JSON env var is not set')
-  const serviceAccount = JSON.parse(json) as admin.ServiceAccount
-  return admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  })
+
+  return admin.initializeApp(
+    {
+      credential: admin.credential.cert(JSON.parse(json) as admin.ServiceAccount),
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    },
+    APP_NAME,
+  )
 }
 
 // Lazy proxies — Firebase Admin initializes only on the first request, not at build time
