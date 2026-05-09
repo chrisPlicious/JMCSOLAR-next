@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Poppins, Montserrat, Geist } from 'next/font/google';
 import { headers } from 'next/headers';
 import './globals.css';
+import NextTopLoader from 'nextjs-toploader';
 import LoaderScreen from '@/components/ui/LoaderScreen';
 import LoaderGate from '@/components/ui/LoaderGate';
 import ScrollToTop from '@/components/ui/ScrollToTop';
@@ -77,6 +78,15 @@ export default async function RootLayout({
         <link rel="preload" as="image" href="/assets/bg-1.jpg" />
       </head>
       <body className={`${geist.variable} ${poppins.variable} ${montserrat.variable}`}>
+        <NextTopLoader
+          color="#f59e0b"
+          height={3}
+          showSpinner={false}
+          crawl={true}
+          crawlSpeed={200}
+          speed={200}
+          shadow="0 0 10px #f59e0b,0 0 5px #f59e0b"
+        />
         <ScrollToTop />
         <HeroBgLayer />
         <LoaderScreen />
