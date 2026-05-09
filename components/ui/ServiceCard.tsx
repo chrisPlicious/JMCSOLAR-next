@@ -1,4 +1,7 @@
+'use client';
+
 import { type ComponentType } from "react";
+import { motion } from "framer-motion";
 import * as Icons from "lucide-react";
 import type { LucideProps } from "lucide-react";
 import type { Service } from "../../types";
@@ -24,7 +27,14 @@ export default function ServiceCard({ service }: ServiceCardProps) {
 
   if (service.highlight) {
     return (
-      <div className="group relative bg-navy-900 rounded-2xl p-6 flex flex-col gap-4 shadow-card-hover overflow-hidden">
+      <motion.div
+        className="group relative bg-navy-900 rounded-2xl p-6 flex flex-col gap-4 shadow-card-hover overflow-hidden"
+        initial={{ opacity: 0, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-60px' }}
+        transition={{ duration: 0.5 }}
+        whileHover={{ y: -5 }}
+      >
         {/* Ambient glow accent */}
         <div className="absolute -top-10 -right-10 w-40 h-40 bg-solar-500/15 rounded-full blur-3xl pointer-events-none" />
 
@@ -53,12 +63,19 @@ export default function ServiceCard({ service }: ServiceCardProps) {
         <div className="flex items-center gap-1.5 text-solar-400 text-sm font-semibold group-hover:gap-3 transition-all duration-200 mt-auto">
           Learn more <ArrowRight size={14} />
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className="group relative bg-white rounded-2xl p-6 shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1 border border-slate-100 flex flex-col gap-4 overflow-hidden">
+    <motion.div
+      className="group relative bg-white rounded-2xl p-6 shadow-card hover:shadow-card-hover transition-shadow duration-300 border border-slate-100 flex flex-col gap-4 overflow-hidden"
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-60px' }}
+      transition={{ duration: 0.5 }}
+      whileHover={{ y: -5, transition: { duration: 0.2, ease: 'easeOut' } }}
+    >
       {/* Top accent bar */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-solar-500 rounded-t-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
@@ -84,6 +101,6 @@ export default function ServiceCard({ service }: ServiceCardProps) {
       <div className="flex items-center gap-1.5 text-solar-600 text-sm font-semibold group-hover:gap-3 transition-all duration-200 mt-auto">
         Learn more <ArrowRight size={14} />
       </div>
-    </div>
+    </motion.div>
   );
 }

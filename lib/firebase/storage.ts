@@ -15,6 +15,8 @@ export async function uploadFile(
 
 export function getPublicUrl(path: string | null): string | null {
   if (!path) return null
+  // M6: if already a full URL (e.g. migrated data), return as-is to avoid double-prefix
+  if (path.startsWith('http://') || path.startsWith('https://')) return path
   return `https://storage.googleapis.com/${BUCKET}/${path}`
 }
 

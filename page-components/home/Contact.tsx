@@ -220,16 +220,17 @@ export default function Contact() {
                 Contact Information
               </h3>
               <ul className="space-y-5">
-                <ContactItem icon={<Phone size={18} />} href="tel:+639175088220">
+                <ContactItem icon={<Phone size={18} />} href="tel:+639175088220" delay={0}>
                   0917 508 8220
                 </ContactItem>
                 <ContactItem
                   icon={<Mail size={18} />}
                   href="mailto:jmcsolarph@gmail.com"
+                  delay={0.07}
                 >
                   jmcsolarph@gmail.com
                 </ContactItem>
-                <ContactItem icon={<MapPin size={18} />}>
+                <ContactItem icon={<MapPin size={18} />} delay={0.14}>
                   Lilia Avenue, Cogon,
                   <br />
                   Ormoc City, Leyte 6541
@@ -240,20 +241,27 @@ export default function Contact() {
                   icon={<Facebook size={18} />}
                   href="https://www.facebook.com/JMCSolarPH"
                   external
+                  delay={0.21}
                 >
                   JMC Solar PH on Facebook
                 </ContactItem>
-                <ContactItem icon={<Clock size={18} />}>
+                <ContactItem icon={<Clock size={18} />} delay={0.28}>
                   Monday - Friday: 8:00 AM - 5:00 PM
                 </ContactItem>
-                <ContactItem icon={<CreditCard size={18} />}>
+                <ContactItem icon={<CreditCard size={18} />} delay={0.35}>
                   We accept credit card payments and installment options
                 </ContactItem>
               </ul>
             </div>
 
             {/* Service Areas Box */}
-            <div className="bg-linear-to-br from-navy-900 to-navy-800 rounded-3xl p-6 text-white shadow-elevated">
+            <motion.div
+              className="bg-linear-to-br from-navy-900 to-navy-800 rounded-3xl p-6 text-white shadow-elevated"
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-40px' }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+            >
               <h4
                 className="font-semibold mb-4"
                 style={{ fontFamily: "Poppins, sans-serif" }}
@@ -274,13 +282,20 @@ export default function Contact() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </motion.div>
           </div>
 
           {/* Inquiry Form (right) */}
           <div className="lg:col-span-3">
+            <AnimatePresence mode="wait">
             {succeeded ? (
-              <div className="bg-green-eco/8 border border-green-eco/20 rounded-3xl p-6 sm:p-10 text-center">
+              <motion.div
+                key="success"
+                initial={{ opacity: 0, scale: 0.96, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.35 }}
+                className="bg-green-eco/8 border border-green-eco/20 rounded-3xl p-6 sm:p-10 text-center"
+              >
                 <div className="w-16 h-16 bg-green-eco/15 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Send size={28} className="text-green-eco" />
                 </div>
@@ -294,9 +309,12 @@ export default function Contact() {
                   Thank you for reaching out. Our team will get back to you within
                   24 hours.
                 </p>
-              </div>
+              </motion.div>
             ) : (
-              <form
+              <motion.form
+                key="form"
+                initial={{ opacity: 1 }}
+                exit={{ opacity: 0, transition: { duration: 0.2 } }}
                 onSubmit={handleSubmit}
                 className="bg-white rounded-3xl p-5 sm:p-7 lg:p-9 border border-slate-100 shadow-soft space-y-5"
               >
@@ -425,13 +443,20 @@ export default function Contact() {
                   We respect your privacy. Your information will never be shared
                   with third parties.
                 </p>
-              </form>
+              </motion.form>
             )}
+            </AnimatePresence>
           </div>
         </div>
 
         {/* Map Embed */}
-        <div className="mt-16">
+        <motion.div
+          className="mt-16"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={{ duration: 0.5 }}
+        >
           <div className="flex items-center gap-2 mb-4">
             <div className="w-8 h-8 bg-solar-500/10 rounded-lg flex items-center justify-center">
               <MapPin size={16} className="text-solar-500" />
@@ -461,7 +486,7 @@ export default function Contact() {
             </a>{" "}
             contributors · Lilia Avenue, Cogon, Ormoc City, Leyte 6541
           </p>
-        </div>
+        </motion.div>
       </div>
     </section>
   );
@@ -493,11 +518,13 @@ function ContactItem({
   icon,
   href,
   external,
+  delay = 0,
   children,
 }: {
   icon: ReactNode;
   href?: string;
   external?: boolean;
+  delay?: number;
   children: ReactNode;
 }) {
   const content = (
@@ -511,7 +538,12 @@ function ContactItem({
 
   if (href) {
     return (
-      <li>
+      <motion.li
+        initial={{ opacity: 0, x: -16 }}
+        whileInView={{ opacity: 1, x: 0 }}
+        viewport={{ once: true, margin: '-40px' }}
+        transition={{ duration: 0.4, delay }}
+      >
         <a
           href={href}
           target={external ? "_blank" : undefined}
@@ -520,9 +552,18 @@ function ContactItem({
         >
           {content}
         </a>
-      </li>
+      </motion.li>
     );
   }
 
-  return <li>{content}</li>;
+  return (
+    <motion.li
+      initial={{ opacity: 0, x: -16 }}
+      whileInView={{ opacity: 1, x: 0 }}
+      viewport={{ once: true, margin: '-40px' }}
+      transition={{ duration: 0.4, delay }}
+    >
+      {content}
+    </motion.li>
+  );
 }

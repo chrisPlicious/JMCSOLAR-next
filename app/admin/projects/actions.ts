@@ -5,6 +5,7 @@ import { requireAdminAuth } from '@/lib/auth';
 import { adminDb } from '@/lib/firebase/admin';
 import { uploadFile, deleteFile, deleteFiles } from '@/lib/firebase/storage';
 import { validateImageUpload, safeExtension } from '@/lib/upload-validation';
+import { requireField } from '@/lib/form-data';
 
 type ActionResult = { error?: string; success?: boolean };
 
@@ -13,7 +14,12 @@ export async function createProjectAction(
   formData: FormData,
 ): Promise<ActionResult> {
   await requireAdminAuth();
-  const file = formData.get('cover_image') as File | null;
+
+  const title = requireField(formData, 'title');
+  const category = requireField(formData, 'category');
+  if (!title) return { error: 'Project title is required.' };
+  if (!category) return { error: 'Category is required.' };
+
   const completedRaw = (formData.get('completed_at') as string)?.trim() || null;
   const completed_at = completedRaw
     ? completedRaw.length <= 7
@@ -24,8 +30,8 @@ export async function createProjectAction(
   const projectId = crypto.randomUUID();
   const projectData = {
     id: projectId,
-    title: formData.get('title') as string,
-    category: formData.get('category') as string,
+    title,
+    category,
     system_size: (formData.get('system_size') as string) || null,
     description: (formData.get('description') as string) || null,
     location: (formData.get('location') as string) || null,
@@ -36,32 +42,43 @@ export async function createProjectAction(
   };
 
   try {
-    await adminDb.collection('projects').doc(projectId).set(projectData);
+    // M3: use create() so UUID collision fails loudly
+    await adminDb.collection('projects').doc(projectId).create(projectData);
 
-    if (file && file.size > 0) {
-      const uploadError = validateImageUpload(file);
-      if (uploadError) return { error: uploadError };
+    const files = formData.getAll('images') as File[];
+    let firstPath: string | null = null;
 
-      const ext = safeExtension(file);
-      const path = `project-images/${projectId}/cover-${Date.now()}.${ext}`;
-      const buffer = Buffer.from(await file.arrayBuffer());
-      await uploadFile(path, buffer, file.type);
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (file.size > 0) {
+        const uploadError = await validateImageUpload(file);
+        if (uploadError) return { error: uploadError };
 
-      await adminDb.collection('projects').doc(projectId).update({ cover_image_path: path });
+        const ext = safeExtension(file);
+        const path = `project-images/${projectId}/img-${Date.now()}-${i}.${ext}`;
+        const buffer = Buffer.from(await file.arrayBuffer());
+        await uploadFile(path, buffer, file.type);
 
-      const imgId = crypto.randomUUID();
-      await adminDb.collection('projectImages').doc(imgId).set({
-        id: imgId,
-        project_id: projectId,
-        storage_path: path,
-        caption: null,
-        display_order: 0,
-        created_at: new Date().toISOString(),
-      });
+        if (!firstPath) firstPath = path;
+
+        const imgId = crypto.randomUUID();
+        await adminDb.collection('projectImages').doc(imgId).create({
+          id: imgId,
+          project_id: projectId,
+          storage_path: path,
+          caption: null,
+          display_order: i,
+          created_at: new Date().toISOString(),
+        });
+      }
+    }
+
+    if (firstPath) {
+      await adminDb.collection('projects').doc(projectId).update({ cover_image_path: firstPath });
     }
   } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : 'Unknown error';
-    return { error: message };
+    console.error('[createProjectAction]', e);
+    return { error: 'Failed to create project' };
   }
 
   revalidatePath('/projects');
@@ -75,6 +92,12 @@ export async function updateProjectAction(
   formData: FormData,
 ): Promise<ActionResult> {
   await requireAdminAuth();
+
+  const title = requireField(formData, 'title');
+  const category = requireField(formData, 'category');
+  if (!title) return { error: 'Project title is required.' };
+  if (!category) return { error: 'Category is required.' };
+
   const completedRaw = (formData.get('completed_at') as string)?.trim() || null;
   const completed_at = completedRaw
     ? completedRaw.length <= 7
@@ -84,8 +107,8 @@ export async function updateProjectAction(
 
   try {
     await adminDb.collection('projects').doc(id).update({
-      title: formData.get('title') as string,
-      category: formData.get('category') as string,
+      title,
+      category,
       system_size: (formData.get('system_size') as string) || null,
       description: (formData.get('description') as string) || null,
       location: (formData.get('location') as string) || null,
@@ -93,34 +116,41 @@ export async function updateProjectAction(
       completed_at,
     });
 
-    const file = formData.get('new_image') as File | null;
-    if (file && file.size > 0) {
-      const uploadError = validateImageUpload(file);
-      if (uploadError) return { error: uploadError };
+    const files = formData.getAll('images') as File[];
+    let firstPath: string | null = null;
 
-      const ext = safeExtension(file);
-      const path = `project-images/${id}/img-${Date.now()}.${ext}`;
-      const buffer = Buffer.from(await file.arrayBuffer());
-      await uploadFile(path, buffer, file.type);
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (file.size > 0) {
+        const uploadError = await validateImageUpload(file);
+        if (uploadError) return { error: uploadError };
 
-      const imgId = crypto.randomUUID();
-      await adminDb.collection('projectImages').doc(imgId).set({
-        id: imgId,
-        project_id: id,
-        storage_path: path,
-        caption: null,
-        display_order: 0,
-        created_at: new Date().toISOString(),
-      });
+        const ext = safeExtension(file);
+        const path = `project-images/${id}/img-${Date.now()}-${i}.${ext}`;
+        const buffer = Buffer.from(await file.arrayBuffer());
+        await uploadFile(path, buffer, file.type);
 
-      const setCover = formData.get('set_as_cover') === 'true';
-      if (setCover) {
-        await adminDb.collection('projects').doc(id).update({ cover_image_path: path });
+        if (!firstPath) firstPath = path;
+
+        const imgId = crypto.randomUUID();
+        await adminDb.collection('projectImages').doc(imgId).create({
+          id: imgId,
+          project_id: id,
+          storage_path: path,
+          caption: null,
+          display_order: i,
+          created_at: new Date().toISOString(),
+        });
       }
     }
+
+    const setCover = formData.get('set_as_cover') === 'true';
+    if (setCover && firstPath) {
+      await adminDb.collection('projects').doc(id).update({ cover_image_path: firstPath });
+    }
   } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : 'Unknown error';
-    return { error: message };
+    console.error('[updateProjectAction]', e);
+    return { error: 'Failed to update project' };
   }
 
   revalidatePath('/projects');

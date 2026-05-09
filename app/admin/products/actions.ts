@@ -5,11 +5,12 @@ import { requireAdminAuth } from '@/lib/auth';
 import { adminDb } from '@/lib/firebase/admin';
 import { uploadFile, deleteFile } from '@/lib/firebase/storage';
 import { validateImageUpload, safeExtension } from '@/lib/upload-validation';
+import { requireField, optionalField } from '@/lib/form-data';
 
 type ActionResult = { error?: string; success?: boolean };
 
 async function uploadProductImage(productId: string, file: File): Promise<string | null> {
-  const validationError = validateImageUpload(file);
+  const validationError = await validateImageUpload(file);
   if (validationError) return null;
 
   const ext = safeExtension(file);
@@ -29,23 +30,30 @@ export async function createProductAction(
 ): Promise<ActionResult> {
   await requireAdminAuth();
 
+  const name = requireField(formData, 'name');
+  const category = requireField(formData, 'category');
+  if (!name) return { error: 'Product name is required.' };
+  if (!category) return { error: 'Category is required.' };
+
   const productId = crypto.randomUUID();
 
   try {
-    await adminDb.collection('products').doc(productId).set({
+    // M3: use create() so a UUID collision fails loudly instead of silently overwriting
+    await adminDb.collection('products').doc(productId).create({
       id: productId,
-      name: formData.get('name') as string,
-      brand: (formData.get('brand') as string) || null,
-      category: formData.get('category') as string,
-      specs: (formData.get('specs') as string) || null,
-      description: (formData.get('description') as string) || null,
-      badge: (formData.get('badge') as string) || null,
-      related_service: (formData.get('related_service') as string) || null,
+      name,
+      category,
+      brand: optionalField(formData, 'brand'),
+      specs: optionalField(formData, 'specs'),
+      description: optionalField(formData, 'description'),
+      badge: optionalField(formData, 'badge'),
+      related_service: optionalField(formData, 'related_service'),
       image_path: null,
       created_at: new Date().toISOString(),
     });
   } catch (e: unknown) {
-    return { error: e instanceof Error ? e.message : 'Failed to create product' };
+    console.error('[createProductAction]', e);
+    return { error: 'Failed to create product' };
   }
 
   const file = formData.get('image') as File | null;
@@ -68,14 +76,19 @@ export async function updateProductAction(
 ): Promise<ActionResult> {
   await requireAdminAuth();
 
+  const name = requireField(formData, 'name');
+  const category = requireField(formData, 'category');
+  if (!name) return { error: 'Product name is required.' };
+  if (!category) return { error: 'Category is required.' };
+
   const update: Record<string, string | null> = {
-    name: formData.get('name') as string,
-    brand: (formData.get('brand') as string) || null,
-    category: formData.get('category') as string,
-    specs: (formData.get('specs') as string) || null,
-    description: (formData.get('description') as string) || null,
-    badge: (formData.get('badge') as string) || null,
-    related_service: (formData.get('related_service') as string) || null,
+    name,
+    category,
+    brand: optionalField(formData, 'brand'),
+    specs: optionalField(formData, 'specs'),
+    description: optionalField(formData, 'description'),
+    badge: optionalField(formData, 'badge'),
+    related_service: optionalField(formData, 'related_service'),
   };
 
   const file = formData.get('image') as File | null;
@@ -94,7 +107,8 @@ export async function updateProductAction(
   try {
     await adminDb.collection('products').doc(id).update(update);
   } catch (e: unknown) {
-    return { error: e instanceof Error ? e.message : 'Failed to update product' };
+    console.error('[updateProductAction]', e);
+    return { error: 'Failed to update product' };
   }
 
   revalidatePath('/products');

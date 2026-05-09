@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   Sun,
   Battery,
@@ -107,32 +107,44 @@ export default function ProductsPage({ products }: Props) {
 
   return (
     <Layout>
-      <div className="bg-gradient-to-br from-navy-900 via-navy-800 to-navy-700 pt-28 pb-14 px-4">
+      {/* Hero */}
+      <motion.div
+        className="bg-gradient-to-br from-navy-900 via-navy-800 to-navy-700 pt-28 pb-14 px-4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6 }}
+      >
         <div className="max-w-6xl mx-auto">
-          <div className="flex items-center gap-2 text-white/60 text-sm mb-8">
-            <Link href="/" className="hover:text-white transition-colors">Home</Link>
-            <span>/</span>
-            <span className="text-white">Products</span>
-          </div>
-
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-              <Package size={28} className="text-white" />
-            </div>
-          </div>
-
-          <h1
-            className="text-white font-black text-4xl sm:text-5xl leading-tight mb-3"
-            style={{ fontFamily: 'Poppins, sans-serif' }}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
           >
-            Our Products
-          </h1>
-          <p className="text-white/70 text-base sm:text-lg max-w-2xl">
-            Quality solar equipment sourced from trusted global brands — panels,
-            batteries, inverters, charge controllers, and more.
-          </p>
+            <div className="flex items-center gap-2 text-white/60 text-sm mb-8">
+              <Link href="/" className="hover:text-white transition-colors">Home</Link>
+              <span>/</span>
+              <span className="text-white">Products</span>
+            </div>
+
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                <Package size={28} className="text-white" />
+              </div>
+            </div>
+
+            <h1
+              className="text-white font-black text-4xl sm:text-5xl leading-tight mb-3"
+              style={{ fontFamily: 'Poppins, sans-serif' }}
+            >
+              Our Products
+            </h1>
+            <p className="text-white/70 text-base sm:text-lg max-w-2xl">
+              Quality solar equipment sourced from trusted global brands — panels,
+              batteries, inverters, charge controllers, and more.
+            </p>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-12">
@@ -154,39 +166,61 @@ export default function ProductsPage({ products }: Props) {
                   ? products.length
                   : products.filter((p) => p.category === cat.id).length;
               return (
-                <button
+                <motion.button
                   key={cat.id}
                   onClick={() => setActiveCategory(cat.id as ProductCategory | 'all')}
-                  className={`px-4 py-2 rounded-full text-sm font-semibold border whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 ${
+                  className={`px-4 py-2 rounded-full text-sm font-semibold border whitespace-nowrap transition-colors duration-200 flex items-center gap-1.5 ${
                     isActive
                       ? 'bg-navy-900 border-navy-900 text-white'
                       : 'bg-white border-slate-200 text-navy-900 hover:border-navy-300'
                   }`}
+                  whileTap={{ scale: 0.96 }}
                 >
                   {cat.label}
                   <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>
                     {count}
                   </span>
-                </button>
+                </motion.button>
               );
             })}
           </div>
         </div>
 
-        {filtered.length > 0 ? (
-          <div key={activeCategory} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
-            {filtered.map((product, i) => (
-              <ProductCard key={product.id} product={product} index={i} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-20 text-slate-400">
-            <Package size={40} className="mx-auto mb-3 opacity-40" />
-            <p className="text-lg font-medium">No products in this category yet.</p>
-          </div>
-        )}
+        <AnimatePresence mode="wait">
+          {filtered.length > 0 ? (
+            <motion.div
+              key={activeCategory}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25 }}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12"
+            >
+              {filtered.map((product, i) => (
+                <ProductCard key={product.id} product={product} index={i} />
+              ))}
+            </motion.div>
+          ) : (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="text-center py-20 text-slate-400"
+            >
+              <Package size={40} className="mx-auto mb-3 opacity-40" />
+              <p className="text-lg font-medium">No products in this category yet.</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        <div className="mt-24 bg-navy-900 rounded-3xl px-5 py-10 sm:px-10 sm:py-14 text-center">
+        <motion.div
+          className="mt-24 bg-navy-900 rounded-3xl px-5 py-10 sm:px-10 sm:py-14 text-center"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={{ duration: 0.5 }}
+        >
           <h2 className="text-white font-black text-2xl sm:text-3xl mb-3" style={{ fontFamily: 'Poppins, sans-serif' }}>
             Not sure which product fits your system?
           </h2>
@@ -201,7 +235,7 @@ export default function ProductsPage({ products }: Props) {
               View our services →
             </Link>
           </div>
-        </div>
+        </motion.div>
       </div>
     </Layout>
   );

@@ -1,10 +1,13 @@
+'use client';
+
 import { type ComponentType } from 'react';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import * as Icons from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
 import { ArrowLeft } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
-import type { DbService } from '@/lib/supabase/types';
+import type { DbService } from '@/lib/firebase/types';
 
 type IconName = keyof typeof Icons;
 
@@ -22,7 +25,12 @@ export default function ServiceEmptyState({ service }: ServiceEmptyStateProps) {
     <Layout>
       {/* ── Hero ── */}
       <div className="relative pt-28 pb-20 px-4 bg-navy-900">
-        <div className="relative z-10 max-w-5xl mx-auto">
+        <motion.div
+          className="relative z-10 max-w-5xl mx-auto"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
           <div className="flex items-center gap-2 text-white/60 text-sm mb-8">
             <Link href="/" className="hover:text-white transition-colors">
               Home
@@ -47,14 +55,24 @@ export default function ServiceEmptyState({ service }: ServiceEmptyStateProps) {
           >
             {service.title}
           </h1>
-        </div>
+        </motion.div>
       </div>
 
       {/* ── Coming Soon Message ── */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-20 text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-solar-500/10 rounded-2xl mb-6">
+      <motion.div
+        className="max-w-5xl mx-auto px-4 sm:px-6 py-20 text-center"
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-60px' }}
+        transition={{ duration: 0.5 }}
+      >
+        <motion.div
+          className="inline-flex items-center justify-center w-16 h-16 bg-solar-500/10 rounded-2xl mb-6"
+          animate={{ rotate: [0, 5, -5, 0] }}
+          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+        >
           <Icon name="Clock" size={32} className="text-solar-500" />
-        </div>
+        </motion.div>
 
         <h2
           className="text-navy-900 font-black text-2xl sm:text-3xl mb-4"
@@ -82,7 +100,7 @@ export default function ServiceEmptyState({ service }: ServiceEmptyStateProps) {
             Contact Us to Inquire
           </Link>
         </div>
-      </div>
+      </motion.div>
     </Layout>
   );
 }

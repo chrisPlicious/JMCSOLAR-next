@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createProjectAction } from "../actions";
 import Link from "next/link";
+import DragDropImageUploader from "./DragDropImageUploader";
 
 const inputCls =
   "w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-navy-950 outline-none focus:ring-2 focus:ring-solar-500/30 focus:border-solar-500 transition-colors";
@@ -174,16 +175,8 @@ export default function NewProjectForm() {
           </div>
 
           <div>
-            <label htmlFor="cover_image" className={labelCls}>
-              Cover Photo
-            </label>
-            <input
-              id="cover_image"
-              name="cover_image"
-              type="file"
-              accept="image/*"
-              className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-solar-500/10 file:text-solar-600 file:font-medium hover:file:bg-solar-500/20 file:cursor-pointer"
-            />
+            <label className={labelCls}>Project Photos</label>
+            <DragDropImageUploader name="images" />
           </div>
         </form>
       </div>

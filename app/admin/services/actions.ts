@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { requireAdminAuth } from '@/lib/auth';
 import { adminDb } from '@/lib/firebase/admin';
+import { requireField } from '@/lib/form-data';
 
 export type ServiceFormState = { error: string } | { success: true } | null;
 
@@ -12,9 +13,12 @@ export async function createService(
 ): Promise<ServiceFormState> {
   await requireAdminAuth();
 
+  const title = requireField(fd, 'title');
+  const slug = requireField(fd, 'slug');
+  if (!title) return { error: 'Service title is required.' };
+  if (!slug) return { error: 'Slug is required.' };
+
   const icon = fd.get('icon') as string;
-  const title = fd.get('title') as string;
-  const slug = fd.get('slug') as string;
   const description = fd.get('description') as string;
   const highlight = fd.get('highlight') === 'on';
   const display_order = Number(fd.get('display_order') ?? 0);
@@ -22,7 +26,8 @@ export async function createService(
   const id = crypto.randomUUID();
 
   try {
-    await adminDb.collection('services').doc(id).set({
+    // M3: create() fails loudly on UUID collision
+    await adminDb.collection('services').doc(id).create({
       icon,
       title,
       slug,
@@ -95,7 +100,7 @@ export async function createService(
       sources.length > 0;
 
     if (hasDetail) {
-      await adminDb.collection('serviceDetails').doc(id).set({
+      await adminDb.collection('serviceDetails').doc(id).create({
         service_id: id,
         tagline,
         overview,
@@ -110,7 +115,8 @@ export async function createService(
       });
     }
   } catch (e) {
-    return { error: (e as Error).message };
+    console.error('[createService]', e);
+    return { error: 'Failed to create service' };
   }
 
   revalidatePath('/services');
@@ -126,9 +132,12 @@ export async function updateService(
 ): Promise<ServiceFormState> {
   await requireAdminAuth();
 
+  const title = requireField(fd, 'title');
+  const slug = requireField(fd, 'slug');
+  if (!title) return { error: 'Service title is required.' };
+  if (!slug) return { error: 'Slug is required.' };
+
   const icon = fd.get('icon') as string;
-  const title = fd.get('title') as string;
-  const slug = fd.get('slug') as string;
   const description = fd.get('description') as string;
   const highlight = fd.get('highlight') === 'on';
   const display_order = Number(fd.get('display_order') ?? 0);
@@ -223,7 +232,8 @@ export async function updateService(
       );
     }
   } catch (e) {
-    return { error: (e as Error).message };
+    console.error('[updateService]', e);
+    return { error: 'Failed to update service' };
   }
 
   revalidatePath('/services');

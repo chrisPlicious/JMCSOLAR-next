@@ -1,37 +1,16 @@
-'use client';
+// H1: Server component — receives pre-fetched reviews as props.
+// No client Firebase SDK shipped to visitors; Firestore rules can now deny public reads.
 
-import { useState, useEffect } from 'react';
 import { Star, ThumbsUp, MessageSquarePlus } from 'lucide-react';
 import ReviewCard from '@/components/ui/ReviewCard';
-import { motion } from 'framer-motion';
-import { db } from '@/lib/firebase/client';
-import { collection, getDocs, orderBy, query, where } from 'firebase/firestore';
-import type { DbReview } from '@/lib/firebase/types';
 import type { Review } from '@/types';
-import ReviewSubmitDialog from './ReviewSubmitDialog';
+import ReviewsClient from './ReviewsClient';
 
-function toReviewCardData(r: DbReview): Review {
-  return {
-    id: r.id,
-    name: r.reviewer_name,
-    rating: r.rating,
-    quote: r.quote,
-    source: r.source as Review['source'],
-  };
+interface ReviewsProps {
+  reviews: Review[];
 }
 
-export default function Reviews() {
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [dialogOpen, setDialogOpen] = useState(false);
-
-  useEffect(() => {
-    const q = query(collection(db, 'reviews'), where('status', '==', 'approved'), orderBy('created_at', 'desc'));
-    getDocs(q).then((snap) => {
-      const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as DbReview[];
-      setReviews(data.map(toReviewCardData));
-    });
-  }, []);
-
+export default function Reviews({ reviews }: ReviewsProps) {
   const mid = Math.ceil(reviews.length / 2);
   const topReviews = reviews.slice(0, mid);
   const bottomReviews = reviews.slice(mid);
@@ -65,19 +44,13 @@ export default function Reviews() {
       </style>
 
       {/* Decorative elements */}
-      <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-solar-500/20 to-transparent" />oo
+      <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-solar-500/20 to-transparent" />
 
       {/* SINGLE UNIFIED CONTAINER */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Header Section */}
-        <motion.div
-          className="text-center max-w-2xl mx-auto mb-10 sm:mb-14"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.5 }}
-        >
+        <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-14">
           <span className="inline-flex items-center gap-2 text-solar-400 font-semibold text-xs sm:text-sm uppercase tracking-widest mb-4 sm:mb-5">
             <span className="w-6 sm:w-8 h-px bg-solar-500/50" />
             Customer Reviews
@@ -111,7 +84,7 @@ export default function Reviews() {
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Marquee Section */}
         {reviews.length > 0 && (
@@ -122,14 +95,14 @@ export default function Reviews() {
               <div className="marquee-left flex w-max relative z-[1] py-4 -my-4 transition-[z-index] duration-0 hover:z-50 group-hover/wall:[animation-play-state:paused]">
                 <div className="flex gap-3 sm:gap-5 pr-3 sm:pr-5 mt-2">
                   {topReviews.map((review) => (
-                    <div key={review.id} className="w-[280px] sm:w-[340px] shrink-0 transition-transform duration-300 hover:-translate-y-2">
+                    <div key={review.id} className="w-[280px] sm:w-[340px] shrink-0 transition-transform duration-300 hover:-translate-y-0.5">
                       <ReviewCard review={review} />
                     </div>
                   ))}
                 </div>
                 <div className="flex gap-3 sm:gap-5 pr-3 sm:pr-5 mt-2" aria-hidden="true">
                   {topReviews.map((review) => (
-                    <div key={`dup-${review.id}`} className="w-[280px] sm:w-[340px] shrink-0 transition-transform duration-300 hover:-translate-y-2">
+                    <div key={`dup-${review.id}`} className="w-[280px] sm:w-[340px] shrink-0 transition-transform duration-300 hover:-translate-y-0.5">
                       <ReviewCard review={review} />
                     </div>
                   ))}
@@ -157,35 +130,20 @@ export default function Reviews() {
               </div>
             )}
 
+            {/* H6: empty-state fallback */}
+            {reviews.length === 0 && (
+              <p className="text-white/40 text-sm text-center py-8">No reviews yet.</p>
+            )}
           </div>
         )}
 
-        {/* CTA Section */}
-        <div className="text-center flex flex-col items-center gap-4">
-          <button
-            onClick={() => setDialogOpen(true)}
-            className="inline-flex items-center gap-2 bg-solar-500 hover:bg-solar-400 text-navy-950 font-bold px-6 py-3 rounded-xl text-sm transition-colors"
-          >
-            <MessageSquarePlus size={16} />
-            Share Your Experience
-          </button>
-          <a
-            href="https://www.facebook.com/jmcsolar/reviews/?id=100063736463795&sk=reviews"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-white/40 hover:text-solar-400 transition-colors text-xs sm:text-sm font-medium"
-          >
-            <span>See all reviews on Facebook</span>
-            <span className="text-solar-500">→</span>
-          </a>
-        </div>
+        {/* CTA Section — needs interactivity, delegate to client component */}
+        <ReviewsClient />
 
       </div>
 
       {/* Bottom gradient line */}
       <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-solar-500/20 to-transparent" />
-
-      <ReviewSubmitDialog open={dialogOpen} onOpenChange={setDialogOpen} />
     </section>
   );
 }

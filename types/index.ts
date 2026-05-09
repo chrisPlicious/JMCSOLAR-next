@@ -6,7 +6,14 @@ export interface Service {
   highlight?: string;
 }
 
-// Snake_case fields match the Supabase DB schema
+export interface ProjectImage {
+  id: string;
+  storage_path: string;
+  caption: string | null;
+  display_order: number;
+}
+
+// Snake_case fields match the DB schema
 export interface Project {
   id: string;
   title: string;
@@ -18,6 +25,7 @@ export interface Project {
   cover_image_path: string | null;
   created_at: string;
   completed_at: string | null;
+  images?: ProjectImage[];
 }
 
 export interface Product {
