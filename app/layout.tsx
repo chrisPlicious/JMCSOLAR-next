@@ -72,7 +72,7 @@ export default async function RootLayout({
 }) {
   const nonce = (await headers()).get('x-nonce') ?? '';
   return (
-    <html lang="en" className={cn("font-sans", geist.variable)} nonce={nonce}>
+    <html lang="en" className={cn("font-sans", geist.variable)} nonce={nonce} suppressHydrationWarning>
       <head>
         <link rel="preload" as="image" href="/assets/bg-1.jpg" />
       </head>

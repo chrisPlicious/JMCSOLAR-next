@@ -100,142 +100,152 @@ export default function ServicePageLayout({
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-14 lg:py-16 space-y-12 sm:space-y-16 lg:space-y-20">
 
         {/* ── Overview ── */}
-        <motion.section
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.5 }}
-        >
-          <Label>Overview</Label>
-          <h2 className="text-navy-900 font-black text-2xl sm:text-3xl leading-tight mt-2 mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            What Is {title}?
-          </h2>
-          <p className="text-slate-600 text-lg leading-relaxed mb-6">{overview}</p>
-          <p className="text-slate-600 text-lg leading-relaxed">{whatIsIt}</p>
-        </motion.section>
+        {(overview || whatIsIt) && (
+          <motion.section
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.5 }}
+          >
+            <Label>Overview</Label>
+            <h2 className="text-navy-900 font-black text-2xl sm:text-3xl leading-tight mt-2 mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              What Is {title}?
+            </h2>
+            {overview && <p className="text-slate-600 text-lg leading-relaxed mb-6">{overview}</p>}
+            {whatIsIt && <p className="text-slate-600 text-lg leading-relaxed">{whatIsIt}</p>}
+          </motion.section>
+        )}
 
         {/* ── How It Works ── */}
-        <motion.section
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.5 }}
-        >
-          <Label>Process</Label>
-          <h2 className="text-navy-900 font-black text-2xl sm:text-3xl leading-tight mt-2 mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            How It Works
-          </h2>
-          <div className="space-y-6 mt-8">
-            {howItWorks.map((item, i) => (
-              <motion.div
-                key={i}
-                className="flex gap-5"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.4, delay: i * 0.07 }}
-              >
-                <div className="shrink-0 w-10 h-10 bg-solar-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                  {i + 1}
-                </div>
-                <div>
-                  <h3 className="text-navy-900 font-bold text-base mb-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                    {item.step}
-                  </h3>
-                  <p className="text-slate-600 leading-relaxed">{item.description}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.section>
+        {howItWorks?.length > 0 && (
+          <motion.section
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.5 }}
+          >
+            <Label>Process</Label>
+            <h2 className="text-navy-900 font-black text-2xl sm:text-3xl leading-tight mt-2 mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              How It Works
+            </h2>
+            <div className="space-y-6 mt-8">
+              {howItWorks.map((item, i) => (
+                <motion.div
+                  key={i}
+                  className="flex gap-5"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-60px" }}
+                  transition={{ duration: 0.4, delay: i * 0.07 }}
+                >
+                  <div className="shrink-0 w-10 h-10 bg-solar-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                    {i + 1}
+                  </div>
+                  <div>
+                    <h3 className="text-navy-900 font-bold text-base mb-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                      {item.step}
+                    </h3>
+                    <p className="text-slate-600 leading-relaxed">{item.description}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.section>
+        )}
 
         {/* ── Benefits ── */}
-        <motion.section
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.5 }}
-        >
-          <Label>Why It Matters</Label>
-          <h2 className="text-navy-900 font-black text-2xl sm:text-3xl leading-tight mt-2 mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            Key Benefits
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-            {benefits.map((b, i) => (
-              <motion.div
-                key={i}
-                className="bg-slate-50 rounded-2xl p-6 border border-slate-100"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.4, delay: i * 0.07 }}
-              >
-                <div className="w-11 h-11 bg-solar-500/10 rounded-xl flex items-center justify-center mb-4">
-                  <Icon name={b.iconName} size={22} className="text-solar-600" />
-                </div>
-                <h3 className="text-navy-900 font-bold text-base mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                  {b.title}
-                </h3>
-                <p className="text-slate-600 text-sm leading-relaxed">{b.description}</p>
-              </motion.div>
-            ))}
-          </div>
-        </motion.section>
+        {benefits?.length > 0 && (
+          <motion.section
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.5 }}
+          >
+            <Label>Why It Matters</Label>
+            <h2 className="text-navy-900 font-black text-2xl sm:text-3xl leading-tight mt-2 mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              Key Benefits
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+              {benefits.map((b, i) => (
+                <motion.div
+                  key={i}
+                  className="bg-slate-50 rounded-2xl p-6 border border-slate-100"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-60px" }}
+                  transition={{ duration: 0.4, delay: i * 0.07 }}
+                >
+                  <div className="w-11 h-11 bg-solar-500/10 rounded-xl flex items-center justify-center mb-4">
+                    <Icon name={b.iconName} size={22} className="text-solar-600" />
+                  </div>
+                  <h3 className="text-navy-900 font-bold text-base mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                    {b.title}
+                  </h3>
+                  <p className="text-slate-600 text-sm leading-relaxed">{b.description}</p>
+                </motion.div>
+              ))}
+            </div>
+          </motion.section>
+        )}
 
         {/* ── Use Cases ── */}
-        <motion.section
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.5 }}
-        >
-          <Label>Applications</Label>
-          <h2 className="text-navy-900 font-black text-2xl sm:text-3xl leading-tight mt-2 mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            Common Use Cases
-          </h2>
-          <ul className="mt-6 space-y-3">
-            {useCases.map((uc, i) => (
-              <motion.li
-                key={i}
-                className="flex items-start gap-3 text-slate-700"
-                initial={{ opacity: 0, x: -10 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.35, delay: i * 0.05 }}
-              >
-                <CheckCircle size={18} className="text-green-eco mt-0.5 shrink-0" />
-                <span>{uc}</span>
-              </motion.li>
-            ))}
-          </ul>
-        </motion.section>
+        {useCases?.length > 0 && (
+          <motion.section
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.5 }}
+          >
+            <Label>Applications</Label>
+            <h2 className="text-navy-900 font-black text-2xl sm:text-3xl leading-tight mt-2 mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              Common Use Cases
+            </h2>
+            <ul className="mt-6 space-y-3">
+              {useCases.map((uc, i) => (
+                <motion.li
+                  key={i}
+                  className="flex items-start gap-3 text-slate-700"
+                  initial={{ opacity: 0, x: -10 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, margin: "-60px" }}
+                  transition={{ duration: 0.35, delay: i * 0.05 }}
+                >
+                  <CheckCircle size={18} className="text-green-eco mt-0.5 shrink-0" />
+                  <span>{uc}</span>
+                </motion.li>
+              ))}
+            </ul>
+          </motion.section>
+        )}
 
         {/* ── Specs ── */}
-        <motion.section
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.5 }}
-        >
-          <Label>Technical Details</Label>
-          <h2 className="text-navy-900 font-black text-2xl sm:text-3xl leading-tight mt-2 mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            Typical Specifications
-          </h2>
-          <div className="mt-6 rounded-2xl border border-slate-200 overflow-hidden">
-            <table className="w-full text-sm">
-              <tbody>
-                {specs.map((spec, i) => (
-                  <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
-                    <td className="px-3 sm:px-6 py-3 font-semibold text-navy-900 w-2/5 border-r border-slate-100 text-sm sm:text-base">
-                      {spec.label}
-                    </td>
-                    <td className="px-3 sm:px-6 py-3 text-slate-600 text-sm sm:text-base">{spec.value}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </motion.section>
+        {specs?.length > 0 && (
+          <motion.section
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.5 }}
+          >
+            <Label>Technical Details</Label>
+            <h2 className="text-navy-900 font-black text-2xl sm:text-3xl leading-tight mt-2 mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              Typical Specifications
+            </h2>
+            <div className="mt-6 rounded-2xl border border-slate-200 overflow-hidden">
+              <table className="w-full text-sm">
+                <tbody>
+                  {specs.map((spec, i) => (
+                    <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                      <td className="px-3 sm:px-6 py-3 font-semibold text-navy-900 w-2/5 border-r border-slate-100 text-sm sm:text-base">
+                        {spec.label}
+                      </td>
+                      <td className="px-3 sm:px-6 py-3 text-slate-600 text-sm sm:text-base">{spec.value}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </motion.section>
+        )}
 
         {/* ── CTA Strip ── */}
         <motion.section
@@ -271,36 +281,38 @@ export default function ServicePageLayout({
         </motion.section>
 
         {/* ── Sources ── */}
-        <motion.section
-          className="border-t border-slate-100 pt-10"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.5 }}
-        >
-          <h3 className="text-slate-500 font-semibold text-sm uppercase tracking-widest mb-5">
-            References & Sources
-          </h3>
-          <ul className="space-y-2">
-            {sources.map((src, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm text-slate-500">
-                <ExternalLink size={14} className="mt-0.5 shrink-0 text-slate-400" />
-                <span>
-                  <span className="font-medium text-slate-700">{src.publisher}</span>
-                  {' — '}
-                  <a
-                    href={src.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-solar-600 hover:text-solar-500 underline underline-offset-2"
-                  >
-                    {src.title}
-                  </a>
-                </span>
-              </li>
-            ))}
-          </ul>
-        </motion.section>
+        {sources?.length > 0 && (
+          <motion.section
+            className="border-t border-slate-100 pt-10"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.5 }}
+          >
+            <h3 className="text-slate-500 font-semibold text-sm uppercase tracking-widest mb-5">
+              References & Sources
+            </h3>
+            <ul className="space-y-2">
+              {sources.map((src, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm text-slate-500">
+                  <ExternalLink size={14} className="mt-0.5 shrink-0 text-slate-400" />
+                  <span>
+                    <span className="font-medium text-slate-700">{src.publisher}</span>
+                    {' — '}
+                    <a
+                      href={src.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-solar-600 hover:text-solar-500 underline underline-offset-2"
+                    >
+                      {src.title}
+                    </a>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </motion.section>
+        )}
 
       </div>
     </Layout>

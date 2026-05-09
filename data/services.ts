@@ -53,7 +53,7 @@ export const clientTypes: ClientType[] = [
     icon: 'Home',
     title: 'Residential',
     description: 'We bring clean, reliable solar energy to homes — from grid-tied systems to full hybrid setups with battery backup for 24/7 power.',
-    image: solarImg,
+    image: '/assets/clients/resedential.jpg',
     badge: 'residential',
   },
   {
@@ -61,7 +61,7 @@ export const clientTypes: ClientType[] = [
     icon: 'Building2',
     title: 'Commercial',
     description: 'Reduce operating costs and meet sustainability goals with commercial-scale solar installations tailored to your business needs.',
-    image: solarImg,
+    image: '/assets/clients/commercial.jpeg',
     badge: 'commercial',
   },
   {
@@ -69,7 +69,7 @@ export const clientTypes: ClientType[] = [
     icon: 'Sprout',
     title: 'Agricultural',
     description: 'Power irrigation pumps and farm operations at zero fuel cost using solar pumping and off-grid systems built for the field.',
-    image: solarImg,
+    image: '/assets/clients/agricultural.jpg',
     badge: 'agricultural',
   },
   {
@@ -77,7 +77,7 @@ export const clientTypes: ClientType[] = [
     icon: 'Factory',
     title: 'Industrial',
     description: 'High-capacity solar solutions for manufacturing plants, warehouses, and industrial facilities that demand uninterrupted power.',
-    image: solarImg,
+    image: '/assets/clients/industrial.jpg',
     badge: 'industrial',
   },
 ];

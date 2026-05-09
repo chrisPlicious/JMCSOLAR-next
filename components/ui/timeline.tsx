@@ -1,9 +1,9 @@
 "use client";
 
 import {
-  useMotionValueEvent,
   useScroll,
   useTransform,
+  useSpring,
   motion,
 } from "framer-motion";
 import React, { useEffect, useRef, useState } from "react";
@@ -112,8 +112,18 @@ export const Timeline = ({ data }: { data: TimelineEntry[] }) => {
 
   useEffect(() => {
     if (ref.current) {
-      const rect = ref.current.getBoundingClientRect();
-      setHeight(rect.height);
+      const updateHeight = () => {
+        if (ref.current) {
+          setHeight(ref.current.getBoundingClientRect().height);
+        }
+      };
+
+      updateHeight();
+      
+      const resizeObserver = new ResizeObserver(() => updateHeight());
+      resizeObserver.observe(ref.current);
+      
+      return () => resizeObserver.disconnect();
     }
   }, [ref]);
 
@@ -122,8 +132,14 @@ export const Timeline = ({ data }: { data: TimelineEntry[] }) => {
     offset: ["start 10%", "end 50%"],
   });
 
-  const heightTransform = useTransform(scrollYProgress, [0, 1], [0, height]);
-  const opacityTransform = useTransform(scrollYProgress, [0, 0.1], [0, 1]);
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001,
+  });
+
+  const heightTransform = useTransform(smoothProgress, [0, 1], [0, height]);
+  const opacityTransform = useTransform(smoothProgress, [0, 0.1], [0, 1]);
 
   return (
     <div className="relative w-full bg-white font-sans md:px-10" ref={containerRef}>

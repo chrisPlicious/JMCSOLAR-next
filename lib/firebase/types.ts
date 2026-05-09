@@ -40,6 +40,7 @@ export type DbService = {
   description: string;
   highlight: boolean;
   display_order: number;
+  photo_url?: string;
   created_at: string;
   updated_at: string;
 };

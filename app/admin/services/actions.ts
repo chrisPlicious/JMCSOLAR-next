@@ -22,6 +22,7 @@ export async function createService(
   const description = fd.get('description') as string;
   const highlight = fd.get('highlight') === 'on';
   const display_order = Number(fd.get('display_order') ?? 0);
+  const photo_url = (fd.get('photo_url') as string) || null;
 
   const id = crypto.randomUUID();
 
@@ -34,6 +35,7 @@ export async function createService(
       description,
       highlight,
       display_order,
+      ...(photo_url ? { photo_url } : {}),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     });
@@ -141,6 +143,7 @@ export async function updateService(
   const description = fd.get('description') as string;
   const highlight = fd.get('highlight') === 'on';
   const display_order = Number(fd.get('display_order') ?? 0);
+  const photo_url = (fd.get('photo_url') as string) || null;
 
   try {
     await adminDb.collection('services').doc(id).update({
@@ -150,6 +153,7 @@ export async function updateService(
       description,
       highlight,
       display_order,
+      ...(photo_url !== null ? { photo_url } : {}),
       updated_at: new Date().toISOString(),
     });
 

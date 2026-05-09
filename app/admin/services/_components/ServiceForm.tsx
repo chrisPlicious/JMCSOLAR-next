@@ -1,11 +1,11 @@
 'use client';
 
-import { type ComponentType, type ReactNode, useActionState, useEffect, useState } from 'react';
+import { type ComponentType, type ReactNode, useActionState, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import * as Icons from 'lucide-react';
-import { ArrowRight, CheckCircle, ExternalLink } from 'lucide-react';
+import { ArrowRight, CheckCircle, ExternalLink, Upload, X } from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
 import type { DbService, DbServiceDetail } from '@/lib/firebase/types';
 import type { ServiceFormState } from '../actions';
@@ -87,6 +87,31 @@ export default function ServiceForm({ action, service, detail }: ServiceFormProp
   const [title, setTitle] = useState(service?.title ?? '');
   const [slug, setSlug] = useState(service?.slug ?? '');
   const [slugEdited, setSlugEdited] = useState(isEdit);
+
+  // Accordion photo
+  const [photoUrl, setPhotoUrl] = useState(service?.photo_url ?? '');
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadProgress(0);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('path', `services/${slug || crypto.randomUUID()}/accordion`);
+      setUploadProgress(50);
+      const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
+      if (!res.ok) throw new Error('Upload failed');
+      const { url } = await res.json() as { url: string };
+      setPhotoUrl(url);
+    } catch {
+      toast.error('Upload failed');
+    } finally {
+      setUploadProgress(null);
+    }
+  }
 
   // Detail section open/closed
   const [detailOpen, setDetailOpen] = useState(detail != null);
@@ -242,6 +267,44 @@ export default function ServiceForm({ action, service, detail }: ServiceFormProp
             <label htmlFor="highlight" className="text-sm font-medium text-slate-700">
               Highlight (featured service)
             </label>
+          </div>
+
+          {/* Accordion Photo */}
+          <div>
+            <label className={labelCls}>Accordion Background Photo</label>
+            <input type="hidden" name="photo_url" value={photoUrl} />
+            {photoUrl ? (
+              <div className="relative w-full h-40 rounded-xl overflow-hidden border border-slate-200">
+                <img src={photoUrl} alt="Accordion preview" className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => { setPhotoUrl(''); if (fileInputRef.current) fileInputRef.current.value = ''; }}
+                  className="absolute top-2 right-2 bg-white/90 hover:bg-white rounded-full p-1 shadow transition-colors"
+                >
+                  <X size={14} className="text-slate-600" />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadProgress !== null}
+                className="w-full h-32 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center gap-2 text-slate-400 hover:border-solar-400 hover:text-solar-500 transition-colors disabled:opacity-60"
+              >
+                <Upload size={22} />
+                <span className="text-sm font-medium">
+                  {uploadProgress !== null ? `Uploading… ${uploadProgress}%` : 'Click to upload photo'}
+                </span>
+                <span className="text-xs">JPG, PNG, WEBP — shown as accordion card background</span>
+              </button>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handlePhotoUpload}
+            />
           </div>
 
           {/* ── Detail Page Section ── */}
