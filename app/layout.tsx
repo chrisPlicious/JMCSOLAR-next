@@ -30,8 +30,8 @@ const montserrat = Montserrat({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   icons: {
-    icon: '/Logos/JMC SOLAR.png',
-    apple: '/Logos/JMC SOLAR.png',
+    icon: '/JMC.png',
+    apple: '/JMC.png',
   },
   title: {
     default: 'JMC Solar PH | Solar Installation in Ormoc City, Leyte',
