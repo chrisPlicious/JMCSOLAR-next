@@ -16,7 +16,6 @@ const categories = [
   "commercial",
   "industrial",
   "agricultural",
-  "school",
 ];
 
 export default function NewProjectForm() {

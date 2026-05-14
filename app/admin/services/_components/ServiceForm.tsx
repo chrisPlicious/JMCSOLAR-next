@@ -275,7 +275,7 @@ export default function ServiceForm({ action, service, detail }: ServiceFormProp
             <input type="hidden" name="photo_url" value={photoUrl} />
             {photoUrl ? (
               <div className="relative w-full h-40 rounded-xl overflow-hidden border border-slate-200">
-                <img src={photoUrl} alt="Accordion preview" className="w-full h-full object-cover" />
+                <img src={photoUrl} alt="Accordion preview" className="w-full h-full object-cover" loading="lazy" decoding="async" />
                 <button
                   type="button"
                   onClick={() => { setPhotoUrl(''); if (fileInputRef.current) fileInputRef.current.value = ''; }}

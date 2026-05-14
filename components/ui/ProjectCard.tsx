@@ -15,7 +15,6 @@ const categoryGradients: Record<Project['category'], string> = {
   commercial:   'from-purple-700 via-purple-500 to-purple-400',
   industrial:   'from-orange-700 via-orange-500 to-orange-400',
   agricultural: 'from-green-700 via-green-500 to-green-400',
-  school:       'from-solar-700 via-solar-500 to-solar-400',
 };
 
 const categoryIcons: Record<Project['category'], string> = {
@@ -23,24 +22,25 @@ const categoryIcons: Record<Project['category'], string> = {
   commercial:   '🏢',
   industrial:   '🏭',
   agricultural: '🌾',
-  school:       '🏫',
-};
-
-const categoryLabels: Record<Project['category'], string> = {
-  residential:  'Residential',
-  commercial:   'Commercial',
-  industrial:   'Industrial',
-  agricultural: 'Agricultural',
-  school:       'School',
 };
 
 export default function ProjectCard({ project, onClick }: ProjectCardProps) {
   const hasGallery = (project.images?.length ?? 0) > 0;
 
+  // Warm cache for first gallery image so modal opens instantly
+  const prefetchGallery = () => {
+    const first = project.images?.[0]?.storage_path;
+    if (!first) return;
+    const img = new window.Image();
+    img.src = first;
+  };
+
   return (
     <motion.div
       className={`relative w-full h-[220px] sm:h-[340px] md:h-[460px] lg:h-[580px] rounded-2xl overflow-hidden select-none ${onClick ? 'cursor-pointer' : ''}`}
       onClick={onClick}
+      onMouseEnter={prefetchGallery}
+      onTouchStart={prefetchGallery}
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-60px' }}
@@ -65,13 +65,6 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
 
       {/* Dark overlay for readability */}
       <div className="absolute inset-0 bg-black/20 hover:bg-black/0 transition-colors duration-500" />
-
-      {/* Category label — top left */}
-      <div className="absolute top-4 left-4 z-10">
-        <span className="inline-block bg-white/20 backdrop-blur-sm text-white text-xs md:text-xl font-semibold px-3 py-1 rounded-full">
-          {categoryLabels[project.category]}
-        </span>
-      </div>
 
       {/* Facebook link — top right */}
       {project.facebook_url && (

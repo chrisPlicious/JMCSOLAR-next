@@ -43,7 +43,7 @@ export default function PhotoGrid({ images, projectId, coverPath }: Props) {
             return (
               <div key={img.id} className="bg-white rounded-xl overflow-hidden border border-slate-200 shadow-sm group">
                 <div className="relative aspect-video overflow-hidden">
-                  {url && <img src={url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />}
+                  {url && <img src={url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" decoding="async" />}
                   {isCover && (
                     <span className="absolute top-2 left-2 text-[10px] font-bold bg-solar-500 text-navy-950 px-2 py-0.5 rounded-full">Cover</span>
                   )}

@@ -13,7 +13,6 @@ interface TimelineEntry {
   content: React.ReactNode;
   stats?: {
     projectCount: number;
-    totalKwp: number;
   };
 }
 
@@ -21,20 +20,15 @@ function YearStats({
   stats,
   isActive,
 }: {
-  stats: { projectCount: number; totalKwp: number };
+  stats: { projectCount: number };
   isActive: boolean;
 }) {
   return (
     <div className={`mt-3 transition-opacity duration-300 ${isActive ? "opacity-100" : "opacity-30"}`}>
       <div className="w-10 h-0.5 bg-solar-400 rounded-full mb-3" />
-      <p className="leading-none mb-2">
-        <span className="text-solar-500 font-bold text-lg">{stats.projectCount}</span>
-        <span className="text-slate-400 font-semibold text-[11px] uppercase tracking-widest ml-1.5">Projects</span>
-      </p>
       <p className="leading-none">
-        <span className="text-solar-500 font-bold text-2xl">{stats.totalKwp}</span>
-        <span className="text-solar-500 font-semibold text-sm">kWp</span>
-        <span className="text-slate-400 font-semibold text-[11px] uppercase tracking-widest ml-1.5">Total Commissioned</span>
+        <span className="text-solar-500 font-bold text-4xl">{stats.projectCount}</span>
+        <span className="text-navy-900 font-extrabold text-2xl uppercase tracking-tight  ml-1.5">Projects</span>
       </p>
     </div>
   );
@@ -60,10 +54,10 @@ function TimelineItem({ item }: { item: TimelineEntry }) {
   return (
     <div
       ref={itemRef}
-      className="flex justify-start pt-10 md:pt-40 md:gap-10"
+      className="flex justify-start pt-10 lg:pt-40 lg:gap-10"
     >
-      {/* Sticky year label — left side */}
-      <div className="sticky flex flex-col z-40 top-40 self-start max-w-xs lg:max-w-sm md:w-full">
+      {/* Sticky category label — left side (lg+) */}
+      <div className="sticky flex flex-col z-40 top-40 self-start max-w-xs lg:max-w-xl lg:w-full">
         <div className="h-10 absolute left-3 w-10 rounded-full bg-white flex items-center justify-center">
           <div
             className={`h-4 w-4 rounded-full border-2 p-2 transition-colors duration-300 ${
@@ -73,9 +67,9 @@ function TimelineItem({ item }: { item: TimelineEntry }) {
             }`}
           />
         </div>
-        <div className="hidden md:flex md:flex-col md:pl-20">
+        <div className="hidden lg:flex lg:flex-col lg:pl-20">
           <h3
-            className={`text-7xl lg:text-8xl font-black transition-colors duration-300 ${
+            className={`text-6xl lg:text-7xl font-black leading-tight break-words transition-colors duration-300 ${
               isActive ? "text-solar-500" : "text-navy-900"
             }`}
             style={{ fontFamily: "Poppins, sans-serif" }}
@@ -87,10 +81,10 @@ function TimelineItem({ item }: { item: TimelineEntry }) {
       </div>
 
       {/* Content — right side */}
-      <div className="relative pl-20 pr-4 md:pl-4 w-full">
-        <div className="md:hidden mb-4">
+      <div className="relative pl-20 pr-4 lg:pl-4 w-full">
+        <div className="lg:hidden mb-4">
           <h3
-            className={`text-4xl font-black text-left transition-colors duration-300 ${
+            className={`text-4xl sm:text-5xl font-black text-left leading-tight break-words transition-colors duration-300 ${
               isActive ? "text-navy-900" : "text-navy-300"
             }`}
             style={{ fontFamily: "Poppins, sans-serif" }}
@@ -142,8 +136,8 @@ export const Timeline = ({ data }: { data: TimelineEntry[] }) => {
   const opacityTransform = useTransform(smoothProgress, [0, 0.1], [0, 1]);
 
   return (
-    <div className="relative w-full bg-white font-sans md:px-10" ref={containerRef}>
-      <div ref={ref} className="relative max-w-7xl mx-auto pb-20">
+    <div className="relative w-full bg-white font-sans md:px-30" ref={containerRef}>
+      <div ref={ref} className="relative mx-auto pb-20">
         {data.map((item, index) => (
           <TimelineItem key={index} item={item} />
         ))}

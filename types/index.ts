@@ -17,7 +17,7 @@ export interface ProjectImage {
 export interface Project {
   id: string;
   title: string;
-  category: 'residential' | 'commercial' | 'industrial' | 'agricultural' | 'school';
+  category: 'residential' | 'commercial' | 'industrial' | 'agricultural';
   system_size: string | null;
   description: string | null;
   location: string | null;
@@ -61,14 +61,12 @@ export type NavItem = {
   href: string;
 };
 
-// 'school' added — was missing from previous type
 export type ProjectCategory =
   | 'all'
   | 'residential'
   | 'commercial'
   | 'industrial'
-  | 'agricultural'
-  | 'school';
+  | 'agricultural';
 
 export type ProductCategory =
   | 'panels'

@@ -108,7 +108,7 @@ export default function About() {
                   className="text-white font-black text-4xl block"
                   style={{ fontFamily: "Poppins, sans-serif" }}
                 >
-                  13+
+                  15+
                 </span>
                 <span className="text-white/50 text-sm">Brand Partners</span>
               </div>
@@ -117,7 +117,7 @@ export default function About() {
                   className="text-white font-black text-4xl block"
                   style={{ fontFamily: "Poppins, sans-serif" }}
                 >
-                  9+
+                  10+
                 </span>
                 <span className="text-white/50 text-sm">
                   Projects Completed

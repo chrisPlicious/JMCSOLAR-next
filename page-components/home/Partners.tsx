@@ -39,7 +39,7 @@ function colVariants(delayChildren: number) {
 function PartnerCard({ name, logo }: { name: string; logo: string }) {
   return (
     <div className="flex items-center justify-center bg-white rounded-2xl shadow-soft px-6 py-5 min-w-[140px] border border-slate-100/50 hover:shadow-card hover:border-solar-300/30 transition-all duration-300">
-      <img src={logo} alt={name} className="h-12 object-contain" />
+      <img src={logo} alt={name} className="h-12 object-contain" loading="lazy" decoding="async" />
     </div>
   );
 }

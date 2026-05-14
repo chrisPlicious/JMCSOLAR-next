@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import type { Project, ProjectImage } from '@/types';
 
@@ -25,6 +25,21 @@ export default function ProjectCarouselModal({ project, open, onClose }: Props) 
   useEffect(() => {
     if (open) setCurrent(0);
   }, [open, project?.id]);
+
+  // Preload neighbor slides so arrow clicks render instantly
+  const neighborSrcs = useMemo(() => {
+    if (!open || images.length <= 1) return [];
+    const nextIdx = (current + 1) % images.length;
+    const prevIdx = (current - 1 + images.length) % images.length;
+    return [images[nextIdx]?.storage_path, images[prevIdx]?.storage_path].filter(Boolean) as string[];
+  }, [open, current, images]);
+
+  useEffect(() => {
+    neighborSrcs.forEach((src) => {
+      const img = new window.Image();
+      img.src = src;
+    });
+  }, [neighborSrcs]);
 
   useEffect(() => {
     if (!open || images.length <= 1) return;
@@ -71,6 +86,8 @@ export default function ProjectCarouselModal({ project, open, onClose }: Props) 
               alt={project.title}
               className="w-full h-full object-contain drop-shadow-2xl"
               draggable={false}
+              decoding="async"
+              fetchPriority="high"
             />
           ) : (
             <span className="text-white/40 text-sm">No images available</span>
@@ -129,6 +146,8 @@ export default function ProjectCarouselModal({ project, open, onClose }: Props) 
                   alt=""
                   className="w-full h-full object-cover"
                   draggable={false}
+                  loading="lazy"
+                  decoding="async"
                 />
               </button>
             ))}

@@ -33,7 +33,6 @@ export default async function AdminProjectsPage() {
     commercial: 'bg-blue-50 text-blue-700',
     industrial: 'bg-orange-50 text-orange-700',
     agricultural: 'bg-lime-50 text-lime-700',
-    school: 'bg-purple-50 text-purple-700',
   };
 
   return (

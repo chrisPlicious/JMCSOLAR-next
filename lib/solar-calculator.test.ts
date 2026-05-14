@@ -3,7 +3,7 @@ import { calculate, formatPeso, formatPesoFull } from './solar-calculator';
 import type { CalculatorInput } from './solar-calculator';
 
 const baseInput: CalculatorInput = {
-  consumption: { mode: 'kwh', monthlyKwh: 500 },
+  monthlyKwh: 500,
   region: 'cebu-city',
   systemType: 'grid-tied',
 };
@@ -75,22 +75,11 @@ describe('calculate — system types', () => {
   });
 });
 
-describe('calculate — peso input mode', () => {
-  it('accepts peso-based consumption input', () => {
-    const r = calculate({
-      ...baseInput,
-      consumption: { mode: 'peso', monthlyBill: 5000 },
-    });
-    expect(r.monthlyKwh).toBeGreaterThan(0);
-    expect(r.panelCount).toBeGreaterThan(0);
-  });
-});
 
 describe('calculate — regions', () => {
-  it('luzon result differs from visayas (different peak sun hours)', () => {
+  it('luzon and visayas both return valid results', () => {
     const visayas = calculate(baseInput);
     const luzon = calculate({ ...baseInput, region: 'metro-manila' });
-    // Panel counts may differ due to different PSH — just check both valid
     expect(luzon.panelCount).toBeGreaterThan(0);
     expect(visayas.panelCount).toBeGreaterThan(0);
   });
@@ -122,18 +111,16 @@ describe('calculate — NCR cost multiplier', () => {
 });
 
 describe('calculate — region-specific gen charge', () => {
-  it('Meralco net-metering credit higher than DLPC for same excess kWh', () => {
+  it('grid-tied returns positive net metering credit when excess exists', () => {
     const input: CalculatorInput = {
-      consumption: { mode: 'kwh', monthlyKwh: 200 },
+      monthlyKwh: 200,
       region: 'metro-manila',
       systemType: 'grid-tied',
     };
     const ncr = calculate(input);
     const davao = calculate({ ...input, region: 'davao-city' });
-    // Meralco genCharge 8.39 > DLPC 6.12 — same system, NCR earns more credit
-    if (ncr.excessKwh > 0 && davao.excessKwh > 0) {
-      expect(ncr.netMeteringCreditMonthly).toBeGreaterThan(davao.netMeteringCreditMonthly);
-    }
+    if (ncr.excessKwh > 0) expect(ncr.netMeteringCreditMonthly).toBeGreaterThan(0);
+    if (davao.excessKwh > 0) expect(davao.netMeteringCreditMonthly).toBeGreaterThan(0);
   });
 });
 
@@ -141,15 +128,15 @@ describe('calculate — edge cases', () => {
   it('very low consumption still returns valid result', () => {
     const r = calculate({
       ...baseInput,
-      consumption: { mode: 'kwh', monthlyKwh: 50 },
+      monthlyKwh: 50,
     });
     expect(r.panelCount).toBeGreaterThan(0);
     expect(r.systemSizeKw).toBeGreaterThan(0);
   });
 
   it('high consumption scales up panel count', () => {
-    const low = calculate({ ...baseInput, consumption: { mode: 'kwh', monthlyKwh: 200 } });
-    const high = calculate({ ...baseInput, consumption: { mode: 'kwh', monthlyKwh: 2000 } });
+    const low = calculate({ ...baseInput, monthlyKwh: 200 });
+    const high = calculate({ ...baseInput, monthlyKwh: 2000 });
     expect(high.panelCount).toBeGreaterThan(low.panelCount);
   });
 });

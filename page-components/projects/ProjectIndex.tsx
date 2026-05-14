@@ -15,37 +15,46 @@ interface Props {
 export default function ProjectsPage({ projects }: Props) {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
-  const parseKwp = (sizeStr: string | null): number => {
-    if (!sizeStr) return 0;
-    const match = sizeStr.match(/([\d.]+)/);
-    return match ? parseFloat(match[1]) : 0;
+  const CATEGORY_ORDER: Project["category"][] = [
+    "industrial",
+    "commercial",
+    "agricultural",
+    "residential",
+  ];
+
+  const CATEGORY_LABELS: Record<Project["category"], string> = {
+    industrial: "Industrial",
+    commercial: "Commercial",
+    agricultural: "Agricultural",
+    residential: "Residential",
   };
 
-  // Group projects by year (derived from created_at), sorted newest first
+  // Group projects by classification, fixed category order, hide empty
   const timelineData = useMemo(() => {
-    const grouped: Record<string, Project[]> = {};
+    const grouped: Record<Project["category"], Project[]> = {
+      industrial: [],
+      commercial: [],
+      agricultural: [],
+      residential: [],
+    };
 
     for (const project of projects) {
-      const date = project.completed_at
-        ? new Date(project.completed_at)
-        : new Date(project.created_at);
-      const year = date.getFullYear().toString();
-      if (!grouped[year]) grouped[year] = [];
-      grouped[year].push(project);
+      grouped[project.category]?.push(project);
     }
 
-    return Object.entries(grouped)
-      .sort(([a], [b]) => Number(b) - Number(a))
-      .map(([year, yearProjects]) => {
-        const totalKwp = Math.round(
-          yearProjects.reduce((sum, p) => sum + parseKwp(p.system_size), 0)
-        );
+    return CATEGORY_ORDER.filter((cat) => grouped[cat].length > 0).map(
+      (cat) => {
+        const catProjects = [...grouped[cat]].sort((a, b) => {
+          const aDate = a.completed_at ?? a.created_at;
+          const bDate = b.completed_at ?? b.created_at;
+          return new Date(bDate).getTime() - new Date(aDate).getTime();
+        });
         return {
-          title: year,
-          stats: { projectCount: yearProjects.length, totalKwp },
+          title: CATEGORY_LABELS[cat],
+          stats: { projectCount: catProjects.length },
           content: (
             <div className="flex flex-col gap-6">
-              {yearProjects.map((project) => (
+              {catProjects.map((project) => (
                 <ProjectCard
                   key={project.id}
                   project={project}
@@ -55,7 +64,8 @@ export default function ProjectsPage({ projects }: Props) {
             </div>
           ),
         };
-      });
+      }
+    );
   }, [projects]);
 
   return (
@@ -69,11 +79,11 @@ export default function ProjectsPage({ projects }: Props) {
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.5 }}
         >
-          <span className="text-solar-600 font-semibold text-sm uppercase tracking-widest mb-4 block">
+          <span className="text-solar-600 font-semibold text-lg uppercase tracking-widest mb-4 block">
             Our Work
           </span>
           <h2
-            className="text-navy-900 font-black text-3xl sm:text-4xl lg:text-5xl leading-tight mb-4"
+            className="text-navy-900 font-black text-3xl sm:text-4xl lg:text-6xl leading-tight mb-4"
             style={{ fontFamily: "Poppins, sans-serif" }}
           >
             Projects & <span className="text-solar-500">Installations</span>

@@ -92,31 +92,19 @@ const SYSTEM_COST_TABLE: Record<SystemType, readonly CostBracket[]> = {
 };
 
 // ---------------------------------------------------------------------------
-// Calculator input — discriminated union on input mode
+// Calculator input
 // ---------------------------------------------------------------------------
 
-export type InputMode = 'kwh' | 'peso';
-
-export interface KwhInput {
-  readonly mode: 'kwh';
-  readonly monthlyKwh: number;
-}
-
-export interface PesoInput {
-  readonly mode: 'peso';
-  readonly monthlyBill: number;
-}
-
-export type ConsumptionInput = KwhInput | PesoInput;
-
 export interface CalculatorInput {
-  readonly consumption: ConsumptionInput;
+  readonly monthlyKwh: number;
   readonly region: RegionKey;
   readonly systemType: SystemType;
   /** kWp per panel, default 0.55 */
   readonly panelWattage?: number;
   /** 0.75–0.80, default 0.78 */
   readonly efficiencyFactor?: number;
+  /** Override region rate — used when region is 'other' */
+  readonly customRate?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -238,19 +226,16 @@ export function calculate(input: CalculatorInput): CalculatorResult {
   const region = REGIONS[input.region];
   const panelWattageKw = (input.panelWattage ?? 550) / 1000;
   const efficiency = input.efficiencyFactor ?? 0.78;
-  const rate = region.rate;
+  const rate = input.customRate ?? region.rate;
   const psh = region.psh;
   const genCharge = region.genCharge;
 
   // 1. Monthly kWh
-  const monthlyKwh =
-    input.consumption.mode === 'kwh'
-      ? input.consumption.monthlyKwh
-      : input.consumption.monthlyBill / rate;
+  const monthlyKwh = input.monthlyKwh;
 
-  // 2. System size
+  // 2. System size: kWh / 30 days / 4 sun hours
   const dailyKwh = monthlyKwh / 30;
-  const systemSizeKw = dailyKwh / psh / efficiency;
+  const systemSizeKw = dailyKwh / 4;
 
   // 3. Panel count (round up)
   const panelCount = Math.ceil(systemSizeKw / panelWattageKw);

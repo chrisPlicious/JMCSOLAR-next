@@ -380,30 +380,48 @@ function SavingsChart({ result }: { result: CalculatorResult }) {
 // ---------------------------------------------------------------------------
 
 export default function SolarCalculator() {
-  const [inputMode, setInputMode] = useState<'kwh' | 'peso'>('peso');
-  const [monthlyBill, setMonthlyBill] = useState('');
   const [monthlyKwh, setMonthlyKwh] = useState('');
-  const [region, setRegion] = useState<RegionKey>('metro-manila');
+  const [region, setRegion] = useState<RegionKey>('eastern-visayas-ormoc');
+  const [locationSearch, setLocationSearch] = useState<string>(REGIONS['eastern-visayas-ormoc'].label);
+  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  const [customRate, setCustomRate] = useState('');
   const [systemType, setSystemType] = useState<SystemType>('grid-tied');
   const [calculated, setCalculated] = useState(false);
   const [result, setResult] = useState<CalculatorResult | null>(null);
+  const locationRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (locationRef.current && !locationRef.current.contains(e.target as Node)) {
+        setShowLocationDropdown(false);
+      }
+    }
+    document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, []);
+
+  const filteredRegions = (
+    Object.entries(REGIONS) as [RegionKey, (typeof REGIONS)[RegionKey]][]
+  ).filter(([, val]) =>
+    val.label.toLowerCase().includes(locationSearch.toLowerCase()),
+  );
 
   const canCalculate =
-    (inputMode === 'peso' && Number(monthlyBill) > 0) ||
-    (inputMode === 'kwh' && Number(monthlyKwh) > 0);
+    Number(monthlyKwh.replace(/,/g, '')) > 0 &&
+    (region !== 'other' || Number(customRate.replace(/,/g, '')) > 0);
 
   // Count-up for hero metric
   const animatedSavings = useCountUp(result?.monthlySavings ?? 0, calculated && !!result);
 
   function handleCalculate() {
     if (!canCalculate) return;
+    const parsedKwh = Number(monthlyKwh.replace(/,/g, ''));
+    const parsedRate = customRate ? Number(customRate.replace(/,/g, '')) : undefined;
     const res = calculate({
-      consumption:
-        inputMode === 'peso'
-          ? { mode: 'peso', monthlyBill: Number(monthlyBill) }
-          : { mode: 'kwh', monthlyKwh: Number(monthlyKwh) },
+      monthlyKwh: parsedKwh,
       region,
       systemType,
+      ...(parsedRate ? { customRate: parsedRate } : {}),
     });
     setResult(res);
     setCalculated(true);
@@ -413,8 +431,8 @@ export default function SolarCalculator() {
   }
 
   function handleReset() {
-    setMonthlyBill('');
     setMonthlyKwh('');
+    setCustomRate('');
     setCalculated(false);
     setResult(null);
   }
@@ -467,7 +485,7 @@ export default function SolarCalculator() {
               <span className="text-solar-400">save with solar?</span>
             </h1>
             <p className="text-white/60 text-base sm:text-lg max-w-xl leading-relaxed">
-              Enter your electric bill. Get your estimated savings, system size,
+              Enter your monthly kWh usage. Get your estimated system size, savings,
               and payback period — tailored to your region.
             </p>
           </motion.div>
@@ -492,101 +510,144 @@ export default function SolarCalculator() {
                 Step 1 — Your Details
               </p>
 
-              {/* Input mode toggle */}
-              <div className="relative flex bg-slate-100 rounded-2xl p-1 mb-6">
-                <motion.div
-                  className="absolute inset-y-1 rounded-xl bg-white shadow-sm"
-                  layout
-                  layoutId="toggleBg"
-                  style={{ width: 'calc(50% - 4px)', left: inputMode === 'peso' ? 4 : 'calc(50%)' }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 40 }}
-                />
-                {(['peso', 'kwh'] as const).map((mode) => (
-                  <button
-                    key={mode}
-                    type="button"
-                    onClick={() => setInputMode(mode)}
-                    className={`relative flex-1 py-2.5 text-sm font-semibold rounded-xl transition-colors duration-200 cursor-pointer ${
-                      inputMode === mode ? 'text-navy-900' : 'text-slate-400 hover:text-slate-600'
-                    }`}
-                  >
-                    {mode === 'peso' ? '₱ Monthly Bill' : 'kWh Usage'}
-                  </button>
-                ))}
-              </div>
-
               {/* Consumption input */}
               <div className="mb-5">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={inputMode}
-                    initial={{ opacity: 0, x: inputMode === 'peso' ? -8 : 8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.18 }}
-                  >
-                    <label
-                      htmlFor="consumption-input"
-                      className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2"
-                    >
-                      {inputMode === 'peso' ? 'Monthly Electric Bill' : 'Monthly Consumption'}
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold select-none">
-                        {inputMode === 'peso' ? '₱' : 'kWh'}
-                      </span>
-                      <input
-                        id="consumption-input"
-                        type="number"
-                        inputMode="decimal"
-                        min={0}
-                        value={inputMode === 'peso' ? monthlyBill : monthlyKwh}
-                        onChange={(e) =>
-                          inputMode === 'peso'
-                            ? setMonthlyBill(e.target.value)
-                            : setMonthlyKwh(e.target.value)
-                        }
-                        placeholder={inputMode === 'peso' ? '5,000' : '362'}
-                        className="w-full pl-12 pr-4 py-4 border-2 border-slate-200 rounded-2xl text-navy-900 font-bold text-lg focus:outline-none focus:border-solar-400 focus:ring-4 focus:ring-solar-400/10 transition-all duration-200 placeholder:text-slate-300 placeholder:font-medium"
-                      />
-                    </div>
-                    <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
-                      {inputMode === 'peso'
-                        ? 'Total amount on your monthly Meralco / utility bill'
-                        : 'Find this on your bill under "kWh used this period"'}
-                    </p>
-                  </motion.div>
-                </AnimatePresence>
+                <label
+                  htmlFor="consumption-input"
+                  className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2"
+                >
+                  Monthly Consumption
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold select-none">
+                    kWh
+                  </span>
+                  <input
+                    id="consumption-input"
+                    type="text"
+                    inputMode="decimal"
+                    value={monthlyKwh}
+                    onChange={(e) =>
+                      setMonthlyKwh(e.target.value.replace(/[^0-9.,]/g, ''))
+                    }
+                    placeholder="362"
+                    className="w-full pl-14 pr-4 py-4 border-2 border-slate-200 rounded-2xl text-navy-900 font-bold text-lg focus:outline-none focus:border-solar-400 focus:ring-4 focus:ring-solar-400/10 transition-all duration-200 placeholder:text-slate-300 placeholder:font-medium"
+                  />
+                </div>
+                <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
+                  Find this on your bill under &quot;kWh used this period&quot;
+                </p>
               </div>
 
               {/* Location */}
-              <div className="mb-6">
+              <div className="mb-6" ref={locationRef}>
                 <label
-                  htmlFor="region-select"
+                  htmlFor="location-search"
                   className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2"
                 >
                   <MapPin size={10} className="inline mr-1 -mt-px" />
                   Location / Utility
                 </label>
                 <div className="relative">
-                  <select
-                    id="region-select"
-                    value={region}
-                    onChange={(e) => setRegion(e.target.value as RegionKey)}
-                    className="w-full appearance-none pl-4 pr-10 py-3.5 border-2 border-slate-200 rounded-2xl text-navy-900 font-semibold text-sm focus:outline-none focus:border-solar-400 focus:ring-4 focus:ring-solar-400/10 transition-all duration-200 bg-white cursor-pointer"
-                  >
-                    {(Object.entries(REGIONS) as [RegionKey, (typeof REGIONS)[RegionKey]][]).map(
-                      ([key, val]) => (
-                        <option key={key} value={key}>
-                          {val.label}
-                        </option>
-                      ),
-                    )}
-                  </select>
+                  <input
+                    id="location-search"
+                    type="text"
+                    autoComplete="off"
+                    value={locationSearch}
+                    onChange={(e) => {
+                      setLocationSearch(e.target.value);
+                      setShowLocationDropdown(true);
+                    }}
+                    onFocus={() => setShowLocationDropdown(true)}
+                    placeholder="Search location or utility…"
+                    className="w-full pl-4 pr-10 py-3.5 border-2 border-slate-200 rounded-2xl text-navy-900 font-semibold text-sm focus:outline-none focus:border-solar-400 focus:ring-4 focus:ring-solar-400/10 transition-all duration-200 bg-white"
+                  />
                   <ChevronDown
                     size={16}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
                   />
+                  {showLocationDropdown && (
+                    <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden">
+                      <div className="max-h-52 overflow-y-auto">
+                        {filteredRegions.length > 0 ? (
+                          filteredRegions.map(([key, val]) => (
+                            <button
+                              key={key}
+                              type="button"
+                              onMouseDown={(e) => e.preventDefault()}
+                              onClick={() => {
+                                setRegion(key);
+                                setLocationSearch(val.label);
+                                setShowLocationDropdown(false);
+                                if (key !== 'other') setCustomRate('');
+                              }}
+                              className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                                region === key
+                                  ? 'bg-solar-50 text-solar-700 font-semibold'
+                                  : 'text-navy-900 hover:bg-slate-50'
+                              }`}
+                            >
+                              {val.label}
+                            </button>
+                          ))
+                        ) : (
+                          <button
+                            type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => {
+                              setRegion('other');
+                              setLocationSearch(REGIONS.other.label);
+                              setShowLocationDropdown(false);
+                            }}
+                            className="w-full text-left px-4 py-2.5 text-sm text-slate-500 hover:bg-slate-50"
+                          >
+                            Other / Not listed
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Rate — always visible; read-only for known regions, editable for Other */}
+                <div className="mt-3">
+                  <label
+                    htmlFor="custom-rate"
+                    className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2"
+                  >
+                    Your Rate (₱ / kWh)
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold select-none">
+                      ₱
+                    </span>
+                    <input
+                      id="custom-rate"
+                      type="text"
+                      inputMode="decimal"
+                      readOnly={region !== 'other'}
+                      value={
+                        region !== 'other'
+                          ? REGIONS[region].rate.toString()
+                          : customRate
+                      }
+                      onChange={(e) =>
+                        region === 'other' &&
+                        setCustomRate(e.target.value.replace(/[^0-9.,]/g, ''))
+                      }
+                      placeholder="12.00"
+                      className={`w-full pl-8 pr-4 py-3.5 border-2 rounded-2xl font-bold text-sm transition-all duration-200 placeholder:text-slate-300 ${
+                        region !== 'other'
+                          ? 'border-slate-100 bg-slate-50 text-slate-400 cursor-default select-none'
+                          : 'border-slate-200 bg-white text-navy-900 focus:outline-none focus:border-solar-400 focus:ring-4 focus:ring-solar-400/10'
+                      }`}
+                    />
+                  </div>
+                  {region === 'other' && (
+                    <p className="text-[11px] text-slate-400 mt-1.5">
+                      Check your monthly bill for the rate per kWh
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -596,7 +657,7 @@ export default function SolarCalculator() {
                   System Type
                 </p>
                 <div className="flex flex-col gap-2">
-                  {(Object.keys(SYSTEM_TYPE_LABELS) as SystemType[]).map((type) => {
+                  {(Object.keys(SYSTEM_TYPE_LABELS) as SystemType[]).filter((t) => t !== 'off-grid').map((type) => {
                     const cfg = SYSTEM_CONFIG[type];
                     const active = systemType === type;
                     return (
@@ -705,7 +766,7 @@ export default function SolarCalculator() {
                       Your results await
                     </h3>
                     <p className="text-slate-400 text-sm max-w-xs leading-relaxed">
-                      Enter your monthly bill and location on the left, then hit{' '}
+                      Enter your monthly kWh usage and location on the left, then hit{' '}
                       <strong className="text-navy-900">Calculate My Savings</strong>.
                     </p>
 

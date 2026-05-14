@@ -16,7 +16,6 @@ const categories = [
   "commercial",
   "industrial",
   "agricultural",
-  "school",
 ];
 
 type Project = {
