@@ -271,8 +271,8 @@ export default function Contact() {
               <ul className="text-white/60 text-sm space-y-2">
                 {[
                   "Ormoc City",
-                  "Cebu Port Center",
-                  "ZBO & Ipil",
+                  "Cebu City",
+                  "Bohol",
                   "Eastern Visayas",
                   "All of Leyte",
                 ].map((area) => (
