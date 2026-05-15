@@ -54,3 +54,4 @@ graphify-out
 .windsurfrules
 .gemini
 jmc-review.diff
+.env*.local
