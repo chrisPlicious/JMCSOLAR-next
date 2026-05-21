@@ -90,6 +90,19 @@ const navItems = [
       </svg>
     ),
   },
+  {
+    label: 'Results',
+    href: '/admin/results',
+    exact: false,
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1" y="2" width="16" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" fill="none" />
+        <line x1="9" y1="2" x2="9" y2="16" stroke="currentColor" strokeWidth="1.5" />
+        <rect x="2.5" y="4" width="5" height="10" rx="1" fill="currentColor" opacity="0.4" />
+        <rect x="10.5" y="4" width="5" height="10" rx="1" fill="currentColor" />
+      </svg>
+    ),
+  },
 ];
 
 const SignOutIcon = () => (

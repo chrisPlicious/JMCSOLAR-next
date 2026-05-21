@@ -191,6 +191,10 @@ export default function Navbar() {
           <Link href="/projects" className={linkClass(pathname === '/projects')}>
             Projects
           </Link>
+
+          <Link href="/results" className={linkClass(pathname === '/results')}>
+            Results
+          </Link>
         </div>
 
         {/* Desktop CTA */}
@@ -351,6 +355,15 @@ export default function Navbar() {
                 }`}
               >
                 Projects
+              </Link>
+
+              <Link
+                href="/results"
+                className={`text-base font-medium px-4 py-3.5 rounded-xl transition-colors ${
+                  pathname === '/results' ? 'text-solar-400 bg-white/5' : 'text-white/80 hover:text-solar-400 hover:bg-white/5'
+                }`}
+              >
+                Results
               </Link>
 
               <a
