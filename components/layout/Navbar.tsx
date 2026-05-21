@@ -191,6 +191,9 @@ export default function Navbar() {
           <Link href="/projects" className={linkClass(pathname === '/projects')}>
             Projects
           </Link>
+          <Link href="/locations" className={linkClass(pathname.startsWith('/locations'))}>
+            Locations
+          </Link>
         </div>
 
         {/* Desktop CTA */}
@@ -351,6 +354,15 @@ export default function Navbar() {
                 }`}
               >
                 Projects
+              </Link>
+
+              <Link
+                href="/locations"
+                className={`text-base font-medium px-4 py-3.5 rounded-xl transition-colors ${
+                  pathname.startsWith('/locations') ? 'text-solar-400 bg-white/5' : 'text-white/80 hover:text-solar-400 hover:bg-white/5'
+                }`}
+              >
+                Locations
               </Link>
 
               <a

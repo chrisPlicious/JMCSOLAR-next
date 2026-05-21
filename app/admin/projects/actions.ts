@@ -35,6 +35,7 @@ export async function createProjectAction(
     system_size: (formData.get('system_size') as string) || null,
     description: (formData.get('description') as string) || null,
     location: (formData.get('location') as string) || null,
+    city_slug: (formData.get('city_slug') as string) || null,
     facebook_url: (formData.get('facebook_url') as string) || null,
     cover_image_path: null as string | null,
     completed_at,
@@ -112,6 +113,7 @@ export async function updateProjectAction(
       system_size: (formData.get('system_size') as string) || null,
       description: (formData.get('description') as string) || null,
       location: (formData.get('location') as string) || null,
+      city_slug: (formData.get('city_slug') as string) || null,
       facebook_url: (formData.get('facebook_url') as string) || null,
       completed_at,
     });

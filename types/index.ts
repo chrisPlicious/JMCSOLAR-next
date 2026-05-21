@@ -21,6 +21,7 @@ export interface Project {
   system_size: string | null;
   description: string | null;
   location: string | null;
+  city_slug?: string | null;
   facebook_url: string | null;
   cover_image_path: string | null;
   created_at: string;

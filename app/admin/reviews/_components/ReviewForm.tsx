@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import type { DbReview } from '@/lib/firebase/types';
+import { LOCATIONS } from '@/data/locations';
 
 const SOURCE_OPTIONS = ['google', 'facebook', 'instagram', 'direct', 'other'] as const;
 
@@ -155,6 +156,22 @@ export default function ReviewForm({ review, action }: ReviewFormProps) {
               <span className="ml-2 text-sm text-slate-500">{rating} / 5</span>
             </div>
             <input type="hidden" name="rating" value={rating} />
+          </div>
+
+          <div>
+            <label className={labelCls}>City / Area</label>
+            <select
+              name="city_slug"
+              defaultValue={review?.city_slug ?? ''}
+              className={inputCls}
+            >
+              <option value="">Other / unlisted</option>
+              {LOCATIONS.filter((l) => l.tier === 'municipality').map((loc) => (
+                <option key={loc.slug} value={loc.slug}>
+                  {loc.name}{loc.province ? ` — ${loc.province}` : ''}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>
