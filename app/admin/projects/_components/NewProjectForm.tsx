@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { createProjectAction } from "../actions";
 import Link from "next/link";
 import DragDropImageUploader from "./DragDropImageUploader";
+import { LOCATIONS } from "@/data/locations";
 
 const inputCls =
   "w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-navy-950 outline-none focus:ring-2 focus:ring-solar-500/30 focus:border-solar-500 transition-colors";
@@ -94,13 +95,27 @@ export default function NewProjectForm() {
           </div>
 
           <div>
+            <label htmlFor="city_slug" className={labelCls}>
+              City / Area
+            </label>
+            <select id="city_slug" name="city_slug" className={inputCls}>
+              <option value="">Other / unlisted</option>
+              {LOCATIONS.filter((l) => l.tier === 'municipality').map((loc) => (
+                <option key={loc.slug} value={loc.slug}>
+                  {loc.name}{loc.province ? ` — ${loc.province}` : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
             <label htmlFor="location" className={labelCls}>
-              Location
+              Location Detail
             </label>
             <input
               id="location"
               name="location"
-              placeholder="e.g. Ormoc City, Leyte"
+              placeholder="e.g. Brgy Cogon, Ormoc City"
               className={inputCls}
             />
           </div>

@@ -5,6 +5,7 @@ export type DbProject = {
   system_size: string | null;
   description: string | null;
   location: string | null;
+  city_slug: string | null;
   facebook_url: string | null;
   cover_image_path: string | null;
   created_at: string;
@@ -54,6 +55,7 @@ export type DbReview = {
   source: string;
   rating: number;
   status?: ReviewStatus;
+  city_slug?: string | null;
   company_name?: string;
   contact_type?: 'email' | 'phone';
   contact_value?: string;

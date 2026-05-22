@@ -10,8 +10,10 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import { products } from "@/data/products";
+import Link from "next/link";
 import { Phone, Mail, MapPin, Facebook, Send, Clock, CreditCard } from "lucide-react";
 import Button from "@/components/ui/Button";
+import { getMunicipalityLocations } from "@/data/locations";
 
 const systemTypes = [
   "Hybrid Solar System",
@@ -268,17 +270,13 @@ export default function Contact() {
               >
                 We Serve
               </h4>
-              <ul className="text-white/60 text-sm space-y-2">
-                {[
-                  "Ormoc City",
-                  "Cebu City",
-                  "Bohol",
-                  "Eastern Visayas",
-                  "All of Leyte",
-                ].map((area) => (
-                  <li key={area} className="flex items-center gap-2.5">
+              <ul className="text-white/60 text-sm grid grid-cols-2 gap-x-3 gap-y-2">
+                {getMunicipalityLocations().map((loc) => (
+                  <li key={loc.slug} className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-solar-400 shrink-0" />
-                    {area}
+                    <Link href={`/locations/${loc.slug}`} className="hover:text-solar-400 transition-colors truncate">
+                      {loc.name}
+                    </Link>
                   </li>
                 ))}
               </ul>

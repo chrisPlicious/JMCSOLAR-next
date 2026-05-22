@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { MapPin, Zap, ExternalLink } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { Project } from '../../types';
@@ -104,7 +105,17 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
           {project.location && (
             <span className="flex items-center gap-1">
               <MapPin size={15} />
-              {project.location}
+              {project.city_slug ? (
+                <Link
+                  href={`/locations/${project.city_slug}`}
+                  className="hover:text-solar-300 transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {project.location}
+                </Link>
+              ) : (
+                project.location
+              )}
             </span>
           )}
         </div>

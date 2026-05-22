@@ -6,6 +6,7 @@ import ServiceEmptyState from '@/components/ui/ServiceEmptyState';
 import type { DbService, DbServiceDetail } from '@/lib/firebase/types';
 import { SITE_URL } from '@/lib/seo/site';
 import { makeBreadcrumbLd } from '@/lib/seo/breadcrumb';
+import { buildAreaServedArray } from '@/lib/seo/serviceArea';
 
 export const revalidate = 60;
 
@@ -62,7 +63,7 @@ export default async function ServiceDetailPage({
     name: service.title,
     description: service.description,
     provider: { '@id': `${SITE_URL}/#business` },
-    areaServed: { '@type': 'AdministrativeArea', name: 'Leyte, Philippines' },
+    areaServed: buildAreaServedArray(),
     url: `${SITE_URL}/services/${slug}`,
   };
 

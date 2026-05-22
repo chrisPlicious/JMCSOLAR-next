@@ -4,6 +4,35 @@ import Link from 'next/link';
 import { Phone, Mail, MapPin, Facebook, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+type ProvinceGroup = { provinceSlug: string; cities: { slug: string; name: string }[] };
+
+const serviceAreaLinks: Record<string, ProvinceGroup> = {
+  Leyte: {
+    provinceSlug: 'leyte',
+    cities: [
+      { slug: 'ormoc-city', name: 'Ormoc City' },
+      { slug: 'tacloban-city', name: 'Tacloban City' },
+      { slug: 'baybay-city', name: 'Baybay City' },
+    ],
+  },
+  'Southern Leyte': {
+    provinceSlug: 'southern-leyte',
+    cities: [
+      { slug: 'maasin-city', name: 'Maasin City' },
+      { slug: 'sogod', name: 'Sogod' },
+      { slug: 'macrohon', name: 'Macrohon' },
+    ],
+  },
+  Cebu: {
+    provinceSlug: 'cebu',
+    cities: [
+      { slug: 'cebu-city', name: 'Cebu City' },
+      { slug: 'mandaue-city', name: 'Mandaue City' },
+      { slug: 'talisay-cebu', name: 'Talisay City' },
+    ],
+  },
+};
+
 const quickLinks = [
   { label: 'Home', href: '/' },
   { label: 'Services', href: '/services' },
@@ -22,7 +51,7 @@ export default function Footer() {
       <div className="absolute top-10 -right-20 w-60 h-60 bg-solar-500/3 blob-shape pointer-events-none" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10 md:gap-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12">
 
           {/* Brand Column */}
           <motion.div
@@ -80,6 +109,50 @@ export default function Footer() {
                 </li>
               ))}
             </ul>
+          </motion.div>
+
+          {/* Service Areas */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 0.5, delay: 0.15 }}
+          >
+            <h4 className="text-white font-semibold mb-6 text-sm uppercase tracking-wider" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              Service Areas
+            </h4>
+            <div className="flex flex-col gap-5">
+              {Object.entries(serviceAreaLinks).map(([province, { provinceSlug, cities }]) => (
+                <div key={province}>
+                  <Link
+                    href={`/locations/${provinceSlug}`}
+                    className="text-white/25 text-[10px] font-bold uppercase tracking-widest mb-2 block hover:text-solar-500/60 transition-colors"
+                  >
+                    {province}
+                  </Link>
+                  <ul className="flex flex-col gap-2">
+                    {cities.map((city) => (
+                      <li key={city.slug}>
+                        <Link
+                          href={`/locations/${city.slug}`}
+                          className="text-white/40 hover:text-solar-400 transition-colors text-sm flex items-center gap-2 group"
+                        >
+                          <ArrowRight size={12} className="text-solar-500/40 group-hover:text-solar-400 group-hover:translate-x-0.5 transition-all duration-200" />
+                          {city.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+            <Link
+              href="/locations"
+              className="inline-flex items-center gap-1 text-solar-500/50 hover:text-solar-400 text-xs font-medium transition-colors mt-4"
+            >
+              View all locations
+              <ArrowRight size={11} />
+            </Link>
           </motion.div>
 
           {/* Contact Info */}
