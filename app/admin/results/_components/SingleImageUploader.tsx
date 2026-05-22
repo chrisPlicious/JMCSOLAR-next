@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { UploadCloud, X } from 'lucide-react';
 
 interface Props {
@@ -10,10 +10,21 @@ interface Props {
 
 export default function SingleImageUploader({ name, currentUrl }: Props) {
   const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(currentUrl ?? null);
   const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const preview = file ? URL.createObjectURL(file) : (currentUrl ?? null);
+  useEffect(() => {
+    if (!file) {
+      setPreview(currentUrl ?? null);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target?.result) setPreview(e.target.result as string);
+    };
+    reader.readAsDataURL(file);
+  }, [file, currentUrl]);
 
   return (
     <div className="w-full">
@@ -50,7 +61,12 @@ export default function SingleImageUploader({ name, currentUrl }: Props) {
             e.preventDefault();
             setIsDragging(false);
             const dropped = e.dataTransfer.files[0];
-            if (dropped?.type.startsWith('image/')) setFile(dropped);
+            if (dropped?.type.startsWith('image/')) {
+              setFile(dropped);
+              const dt = new DataTransfer();
+              dt.items.add(dropped);
+              if (inputRef.current) inputRef.current.files = dt.files;
+            }
           }}
           onClick={() => inputRef.current?.click()}
           className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors aspect-[3/4] flex flex-col items-center justify-center ${

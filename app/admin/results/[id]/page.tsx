@@ -6,8 +6,9 @@ import type { BillResult } from '@/types';
 
 export const dynamic = 'force-dynamic';
 
-export default async function EditResultPage({ params }: { params: { id: string } }) {
-  const doc = await adminDb.collection('results').doc(params.id).get();
+export default async function EditResultPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const doc = await adminDb.collection('results').doc(id).get();
   if (!doc.exists) notFound();
 
   const data = doc.data() as Omit<BillResult, 'id'>;
