@@ -10,6 +10,7 @@ import PageTransition from '@/components/ui/PageTransition';
 import HeroBgLayer from './_components/HeroBgLayer';
 import { cn } from "@/lib/utils";
 import { SITE_URL } from '@/lib/seo/site';
+import { Analytics } from '@vercel/analytics/next';
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -98,6 +99,7 @@ export default async function RootLayout({
         <LoaderGate>
           <PageTransition>{children}</PageTransition>
         </LoaderGate>
+        <Analytics />
       </body>
     </html>
   );

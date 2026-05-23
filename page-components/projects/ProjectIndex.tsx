@@ -70,7 +70,17 @@ export default function ProjectsPage({ projects }: Props) {
 
   return (
     <Layout>
-      <section id="projects" className="bg-white mx-auto py-20 px-4 lg:py-28">
+      <section id="projects" className="relative bg-white mx-auto py-20 px-4 lg:py-28">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage: 'radial-gradient(circle, #d1d5db 1px, transparent 1px)',
+            backgroundSize: '24px 24px',
+            maskImage: 'radial-gradient(ellipse 75% 60% at 50% 10%, black 20%, transparent 100%)',
+            WebkitMaskImage: 'radial-gradient(ellipse 75% 60% at 50% 10%, black 20%, transparent 100%)',
+          }}
+        />
         {/* Header — kept as-is */}
         <motion.div
           className="text-center max-w-2xl mx-auto mb-10"
