@@ -89,6 +89,7 @@ export interface BillResult {
   id: string;
   before_image_path: string;
   after_image_path: string;
+  description?: string | null;
   display_order: number;
   created_at: string;
 }

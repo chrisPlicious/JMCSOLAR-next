@@ -54,6 +54,26 @@ export default function EditResultForm({ result, beforeImageUrl, afterImageUrl }
 
           <div className="flex items-center gap-3 my-6">
             <span className="text-xs font-bold uppercase tracking-widest text-slate-400 whitespace-nowrap">
+              Content
+            </span>
+            <hr className="flex-1 border-slate-100" />
+          </div>
+
+          <div>
+            <label htmlFor="description" className={labelCls}>Description</label>
+            <textarea
+              id="description"
+              name="description"
+              rows={4}
+              required
+              defaultValue={result.description || ''}
+              placeholder="E.g., This customer switched to solar and saw a significant reduction in their monthly electric bill..."
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-solar-400 focus:border-transparent transition-all outline-none text-slate-700 resize-y"
+            />
+          </div>
+
+          <div className="flex items-center gap-3 my-6">
+            <span className="text-xs font-bold uppercase tracking-widest text-slate-400 whitespace-nowrap">
               Bill Photos
             </span>
             <hr className="flex-1 border-slate-100" />

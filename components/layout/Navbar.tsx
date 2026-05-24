@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, ChevronDown, LayoutGrid, Package, Calculator } from 'lucide-react';
+import { Menu, X, ChevronDown, LayoutGrid, Package, Calculator, MapPin } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { db } from '@/lib/firebase/client';
 import { collection, getDocs, orderBy, query } from 'firebase/firestore';
@@ -132,6 +132,19 @@ export default function Navbar() {
                       </div>
                       All Services
                     </Link>
+                    <Link
+                      href="/locations"
+                      className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                        pathname.startsWith('/locations')
+                          ? 'text-solar-600 bg-solar-500/8'
+                          : 'text-navy-900 hover:bg-solar-500/8 hover:text-solar-600'
+                      }`}
+                    >
+                      <div className="w-8 h-8 bg-blue-500/10 rounded-lg flex items-center justify-center">
+                        <MapPin size={15} className="text-blue-500" />
+                      </div>
+                      Locations
+                    </Link>
                   </div>
 
                   <div className="h-px bg-slate-100 mx-4" />
@@ -194,10 +207,6 @@ export default function Navbar() {
 
           <Link href="/results" className={linkClass(pathname === '/results')}>
             Results
-          </Link>
-
-          <Link href="/locations" className={linkClass(pathname.startsWith('/locations'))}>
-            Locations
           </Link>
         </div>
 
@@ -308,6 +317,18 @@ export default function Navbar() {
                           <LayoutGrid size={14} />
                           All Services
                         </Link>
+                        
+                        <Link
+                          href="/locations"
+                          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                            pathname.startsWith('/locations')
+                              ? 'text-solar-400 bg-white/5'
+                              : 'text-white/80 hover:text-solar-400 hover:bg-white/5'
+                          }`}
+                        >
+                          <MapPin size={14} />
+                          Locations
+                        </Link>
 
                         <div className="h-px bg-white/10 my-1.5 mx-3" />
 
@@ -368,15 +389,6 @@ export default function Navbar() {
                 }`}
               >
                 Results
-              </Link>
-
-              <Link
-                href="/locations"
-                className={`text-base font-medium px-4 py-3.5 rounded-xl transition-colors ${
-                  pathname.startsWith('/locations') ? 'text-solar-400 bg-white/5' : 'text-white/80 hover:text-solar-400 hover:bg-white/5'
-                }`}
-              >
-                Locations
               </Link>
 
               <a

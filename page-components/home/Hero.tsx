@@ -103,16 +103,16 @@ export default function Hero() {
 
             {/* Tagline — demoted for SEO; H1 holds primary keyword */}
             <p
-              className="text-solar-400 font-black text-2xl sm:text-3xl leading-tight mb-4"
+              className="text-solar-400 font-black text-2xl sm:text-3xl leading-tight mb-4 flex flex-wrap items-center justify-center lg:justify-start gap-x-2"
               style={{ fontFamily: "Poppins, sans-serif" }}
             >
-              Future is{" "}
-              <span className="relative inline-block overflow-hidden">
+              <span>Future is</span>
+              <span className="relative inline-flex overflow-hidden">
                 <span className="invisible pointer-events-none">Sustainable</span>
                 <AnimatePresence mode="wait">
                   <motion.span
                     key={currentIndex}
-                    className="absolute inset-0 flex items-center justify-center lg:justify-start"
+                    className="absolute inset-0 flex items-center justify-start"
                     initial={{ opacity: 0, y: 40 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -40 }}
@@ -121,16 +121,15 @@ export default function Hero() {
                     {words[currentIndex]}
                   </motion.span>
                 </AnimatePresence>
-                <span className="absolute -bottom-2 left-0 right-0 h-1 bg-linear-to-r from-solar-500 to-solar-300 rounded-full opacity-60" />
               </span>
             </p>
 
             <h1
-              className="text-white font-black text-4xl sm:text-5xl lg:text-7xl xl:text-[5.5rem] leading-[1.05] mb-8"
+              className="text-white font-black text-5xl sm:text-5xl lg:text-7xl xl:text-[5.5rem] leading-[1.05] mb-8"
               style={{ fontFamily: "Poppins, sans-serif" }}
             >
-              Solar Installation{" "}
-              <span className="text-solar-400">in Ormoc City</span>
+              Solar Installation in{" "}
+              <span className="text-solar-400">Ormoc City</span>
             </h1>
 
             {/* Subtitle */}

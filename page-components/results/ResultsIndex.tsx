@@ -116,56 +116,80 @@ function ResultCard({
   index: number;
   onOpen: (result: ResultWithUrls) => void;
 }) {
+  const isReversed = index % 2 !== 0;
+
   return (
-    <motion.button
-      onClick={() => onOpen(result)}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.06, ease: [0.4, 0, 0.2, 1] }}
-      className="group w-full text-left bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all duration-300 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.5 }}
+      className={`flex flex-col sm:flex-row items-center gap-8 sm:gap-12 lg:gap-16 ${
+        isReversed ? 'sm:flex-row-reverse' : ''
+      }`}
     >
-      {/* Header strip */}
-      <div className="bg-gray-100 px-4 py-2.5 flex items-center gap-2 border-b border-gray-200">
-        <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400">
-          Customer #{index + 1}
-        </span>
-        <div className="flex-1" />
-        <span className="text-[10px] text-gray-300 uppercase tracking-wider hidden sm:block">tap to expand</span>
+      {/* Image Side */}
+      <div className="w-full sm:w-1/2 shrink-0">
+        <button
+          onClick={() => onOpen(result)}
+          className="group block w-full text-left bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all duration-300 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+        >
+          {/* Header strip */}
+          <div className="bg-gray-100 px-4 py-2.5 flex items-center gap-2 border-b border-gray-200">
+            <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400">
+              Customer #{index + 1}
+            </span>
+            <div className="flex-1" />
+            <span className="text-[10px] text-gray-300 uppercase tracking-wider hidden sm:block transition-colors group-hover:text-amber-500">tap to expand</span>
+          </div>
+
+          {/* Images — edge to edge, tight gap */}
+          <div className="grid grid-cols-2 gap-1 p-1">
+            {/* Before */}
+            <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-gray-100">
+              <Image
+                src={result.beforeUrl}
+                alt="Before solar"
+                fill
+                sizes="(max-width: 640px) 90vw, 40vw"
+                className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+              />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
+              <span className="absolute top-2 left-2 text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-red-500/85 text-white backdrop-blur-sm leading-none">
+                Before
+              </span>
+            </div>
+
+            {/* After */}
+            <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-gray-100">
+              <Image
+                src={result.afterUrl}
+                alt="After solar"
+                fill
+                sizes="(max-width: 640px) 90vw, 40vw"
+                className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+              />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
+              <span className="absolute top-2 right-2 text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-green-500/85 text-white backdrop-blur-sm leading-none">
+                After
+              </span>
+            </div>
+          </div>
+        </button>
       </div>
 
-      {/* Images — edge to edge, tight gap */}
-      <div className="grid grid-cols-2 gap-1 p-1">
-        {/* Before */}
-        <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-gray-100">
-          <Image
-            src={result.beforeUrl}
-            alt="Before solar"
-            fill
-            sizes="(max-width: 640px) 44vw, (max-width: 1024px) 20vw, 15vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-          />
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
-          <span className="absolute top-2 left-2 text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-red-500/85 text-white backdrop-blur-sm leading-none">
-            Before
-          </span>
-        </div>
-
-        {/* After */}
-        <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-gray-100">
-          <Image
-            src={result.afterUrl}
-            alt="After solar"
-            fill
-            sizes="(max-width: 640px) 44vw, (max-width: 1024px) 20vw, 15vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-          />
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
-          <span className="absolute top-2 right-2 text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-green-500/85 text-white backdrop-blur-sm leading-none">
-            After
-          </span>
-        </div>
+      {/* Content Side */}
+      <div className="flex flex-col gap-4 w-full sm:w-1/2">
+        <h3 className="text-slate-900 font-bold text-2xl sm:text-3xl lg:text-4xl leading-snug" style={{ fontFamily: "Poppins, sans-serif" }}>
+          Customer Result #{index + 1}
+        </h3>
+        <p className="text-slate-600 text-xl sm:text-xl leading-relaxed">
+          {result.description || "This customer switched to solar and saw a significant reduction in their monthly electric bill. Our tailored solar solutions ensure maximum efficiency and long-term savings."}
+        </p>
+        {/* Accent underline */}
+        <div className="w-12 h-1 rounded-full mt-2 bg-amber-400" />
       </div>
-    </motion.button>
+    </motion.div>
   );
 }
 
@@ -207,7 +231,7 @@ export default function ResultsIndex({ results }: Props) {
         </section>
 
         {/* Grid */}
-        <section className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
+        <section className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
           {results.length === 0 ? (
             <div className="text-center py-24">
               <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
@@ -219,7 +243,7 @@ export default function ResultsIndex({ results }: Props) {
               <p className="text-gray-400 font-medium">No results yet. Check back soon.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="flex flex-col gap-16 sm:gap-24">
               {results.map((result, i) => (
                 <ResultCard key={result.id} result={result} index={i} onOpen={openLightbox} />
               ))}

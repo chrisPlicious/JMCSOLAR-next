@@ -16,7 +16,9 @@ export async function createResultAction(
 
   const beforeFile = formData.get('before_image') as File;
   const afterFile = formData.get('after_image') as File;
+  const description = formData.get('description') as string | null;
 
+  if (!description || description.trim() === '') return { error: 'Description is required.' };
   if (!beforeFile || beforeFile.size === 0) return { error: 'Before image is required.' };
   if (!afterFile || afterFile.size === 0) return { error: 'After image is required.' };
 
@@ -42,6 +44,7 @@ export async function createResultAction(
       id: resultId,
       before_image_path: beforePath,
       after_image_path: afterPath,
+      description: description || null,
       display_order: displayOrder,
       created_at: new Date().toISOString(),
     });
@@ -64,9 +67,14 @@ export async function updateResultAction(
 
   const existingBeforePath = formData.get('existing_before_path') as string;
   const existingAfterPath = formData.get('existing_after_path') as string;
+  const description = formData.get('description') as string | null;
+
+  if (!description || description.trim() === '') return { error: 'Description is required.' };
 
   try {
-    const updates: Record<string, unknown> = {};
+    const updates: Record<string, unknown> = {
+      description: description.trim(),
+    };
 
     const beforeFile = formData.get('before_image') as File;
     if (beforeFile && beforeFile.size > 0) {
