@@ -40,6 +40,14 @@ export default function Hero() {
     }
   };
 
+  const scrollToContact = () => {
+    const el = document.querySelector("#contact");
+    if (el) {
+      const top = el.getBoundingClientRect().top + window.scrollY - 72;
+      window.scrollTo({ top, behavior: "smooth" });
+    }
+  };
+
   return (
     <section
       id="hero"
@@ -145,18 +153,18 @@ export default function Hero() {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-4 mb-16">
-              <Link
-                href="/#contact"
+              <button
+                onClick={scrollToContact}
                 className={buttonVariants({ variant: "default", size: "lg" })}
               >
                 Get a Free Quote
                 <ArrowRight size={18} />
-              </Link>
+              </button>
               <Link
-                href="/projects"
+                href="/booking"
                 className={buttonVariants({ variant: "outline", size: "lg" })}
               >
-                View Our Projects
+                Book Now
               </Link>
             </div>
           </div>

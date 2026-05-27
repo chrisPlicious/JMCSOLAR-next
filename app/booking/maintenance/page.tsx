@@ -1,0 +1,533 @@
+'use client';
+
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+import {
+  Check,
+  ChevronLeft,
+  ArrowRight,
+  Loader2,
+  Calendar,
+  Clock,
+} from 'lucide-react';
+import { LOCATIONS } from '@/data/locations';
+import BookingSplitLayout from '../_components/BookingSplitLayout';
+import Link from 'next/link';
+import { createBookingAction, type MaintenanceFormData } from '../actions';
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const STEPS = ['Personal Info', 'System & Issue', 'Schedule'];
+
+const ISSUE_CATEGORIES = [
+  'Panel cleaning',
+  'Underperformance / low output',
+  'Inverter issue',
+  'Wiring / electrical issue',
+  'Preventive maintenance',
+  'Other',
+];
+
+const currentYear = new Date().getFullYear();
+const INSTALL_YEARS = Array.from({ length: currentYear - 2009 }, (_, i) =>
+  String(currentYear - i),
+);
+
+const TIME_SLOTS = [
+  { label: '9:00 AM', group: 'Morning' },
+  { label: '10:00 AM', group: 'Morning' },
+  { label: '11:00 AM', group: 'Morning' },
+  { label: '1:00 PM', group: 'Afternoon' },
+  { label: '2:00 PM', group: 'Afternoon' },
+  { label: '3:00 PM', group: 'Afternoon' },
+  { label: '4:00 PM', group: 'Afternoon' },
+];
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
+const inputClass =
+  'w-full py-3 border-0 border-b border-slate-300 bg-transparent text-navy-900 placeholder-slate-400 focus:outline-none focus:ring-0 focus:border-solar-400 transition-colors text-base min-h-[52px] px-0 rounded-none';
+
+const selectClass =
+  'w-full py-3 pr-8 border-0 border-b border-slate-300 bg-transparent text-navy-900 focus:outline-none focus:ring-0 focus:border-solar-400 transition-colors text-base appearance-none min-h-[52px] cursor-pointer px-0 rounded-none';
+
+// ─── Derived data ─────────────────────────────────────────────────────────────
+
+const cities = LOCATIONS.filter((l) => l.tier === 'municipality').sort((a, b) =>
+  a.name.localeCompare(b.name),
+);
+
+const tomorrow = new Date();
+tomorrow.setDate(tomorrow.getDate() + 1);
+const minDate = tomorrow.toISOString().split('T')[0];
+const maxDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+// ─── Animation ────────────────────────────────────────────────────────────────
+
+const variants = {
+  enter: (d: number) => ({ x: d > 0 ? 48 : -48, opacity: 0 }),
+  center: { x: 0, opacity: 1 },
+  exit: (d: number) => ({ x: d > 0 ? -48 : 48, opacity: 0 }),
+};
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function FormField({
+  label,
+  htmlFor,
+  error,
+  optional,
+  children,
+}: {
+  label: string;
+  htmlFor: string;
+  error?: string;
+  optional?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col">
+      <div className="flex justify-between items-baseline mb-1">
+        <label htmlFor={htmlFor} className="block text-xs font-bold tracking-widest uppercase text-navy-950">
+          {label}
+        </label>
+        {optional && <span className="text-xs italic text-slate-400">optional</span>}
+      </div>
+      {children}
+      {error && <p className="text-red-500 text-xs mt-1.5" role="alert">{error}</p>}
+    </div>
+  );
+}
+
+function SelectWrapper({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="relative">
+      {children}
+      <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center">
+        <svg width="12" height="8" viewBox="0 0 12 8" fill="none" className="text-slate-400">
+          <path d="M1 1L6 7L11 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+// ─── Steps ────────────────────────────────────────────────────────────────────
+
+type StepProps = {
+  formData: MaintenanceFormData;
+  errors: Partial<Record<keyof MaintenanceFormData, string>>;
+  update: (field: keyof MaintenanceFormData, value: string) => void;
+};
+
+function Step1({ formData, errors, update }: StepProps) {
+  const handleCityChange = (slug: string) => {
+    const loc = cities.find((c) => c.slug === slug);
+    update('city', slug);
+    update('city_name', loc?.name ?? slug);
+  };
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <p className="text-xs font-bold tracking-widest text-solar-500 uppercase mb-3">Step 1 of 3 · MAINTENANCE</p>
+        <h2 className="font-serif text-5xl text-navy-950 tracking-tight">Personal Information.</h2>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+        <FormField label="Full Name *" htmlFor="name" error={errors.name}>
+          <input
+            id="name"
+            type="text"
+            autoComplete="name"
+            placeholder="Juan Dela Cruz"
+            value={formData.name}
+            onChange={(e) => update('name', e.target.value)}
+            className={inputClass}
+          />
+        </FormField>
+        <FormField label="Phone Number *" htmlFor="phone" error={errors.phone}>
+          <input
+            id="phone"
+            type="tel"
+            autoComplete="tel"
+            placeholder="09XX XXX XXXX"
+            value={formData.phone}
+            onChange={(e) => update('phone', e.target.value)}
+            className={inputClass}
+          />
+        </FormField>
+      </div>
+
+      <FormField label="Email Address" htmlFor="email" error={errors.email} optional>
+        <input
+          id="email"
+          type="email"
+          autoComplete="email"
+          placeholder="juan@email.com "
+          value={formData.email}
+          onChange={(e) => update('email', e.target.value)}
+          className={inputClass}
+        />
+      </FormField>
+
+      <FormField label="City / Municipality *" htmlFor="city" error={errors.city}>
+        <SelectWrapper>
+          <select
+            id="city"
+            value={formData.city}
+            onChange={(e) => handleCityChange(e.target.value)}
+            className={selectClass}
+          >
+            <option value="">Select your city...</option>
+            {cities.map((c) => (
+              <option key={c.slug} value={c.slug}>
+                {c.name}{c.province ? ` — ${c.province}` : ''}
+              </option>
+            ))}
+          </select>
+        </SelectWrapper>
+      </FormField>
+
+      <FormField label="Street Address" htmlFor="address" error={errors.address} optional>
+        <textarea
+          id="address"
+          placeholder="Barangay, Street, Building "
+          value={formData.address}
+          onChange={(e) => update('address', e.target.value)}
+          rows={2}
+          className={`${inputClass} min-h-[76px] resize-none`}
+        />
+      </FormField>
+    </div>
+  );
+}
+
+function Step2({ formData, errors, update }: StepProps) {
+  return (
+    <div className="space-y-8">
+      <div>
+        <p className="text-xs font-bold tracking-widest text-solar-500 uppercase mb-3">Step 2 of 3 · MAINTENANCE</p>
+        <h2 className="font-serif text-5xl text-navy-950 tracking-tight">System & Issue.</h2>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+        <FormField label="System Size (kW)" htmlFor="system_size_kw" error={errors.system_size_kw} optional>
+          <input
+            id="system_size_kw"
+            type="text"
+            inputMode="decimal"
+            placeholder="e.g. 5, 10.5 "
+            value={formData.system_size_kw}
+            onChange={(e) => update('system_size_kw', e.target.value)}
+            className={inputClass}
+          />
+        </FormField>
+
+        <FormField label="Installation Year" htmlFor="installation_year" error={errors.installation_year} optional>
+          <SelectWrapper>
+            <select
+              id="installation_year"
+              value={formData.installation_year}
+              onChange={(e) => update('installation_year', e.target.value)}
+              className={selectClass}
+            >
+              <option value="">Select year ...</option>
+              {INSTALL_YEARS.map((y) => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+          </SelectWrapper>
+        </FormField>
+      </div>
+
+      <FormField label="Issue Category *" htmlFor="issue_category" error={errors.issue_category}>
+        <SelectWrapper>
+          <select
+            id="issue_category"
+            value={formData.issue_category}
+            onChange={(e) => update('issue_category', e.target.value)}
+            className={selectClass}
+          >
+            <option value="">Select issue type...</option>
+            {ISSUE_CATEGORIES.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        </SelectWrapper>
+      </FormField>
+
+      <FormField label="Issue Description *" htmlFor="issue_description" error={errors.issue_description}>
+        <textarea
+          id="issue_description"
+          placeholder="Describe the problem or what you'd like serviced. Include any error codes, symptoms, or observations..."
+          value={formData.issue_description}
+          onChange={(e) => update('issue_description', e.target.value)}
+          rows={4}
+          className={`${inputClass} min-h-[100px] resize-none`}
+        />
+      </FormField>
+    </div>
+  );
+}
+
+function Step3({ formData, errors, update }: StepProps) {
+  const morningSlots = TIME_SLOTS.filter((t) => t.group === 'Morning');
+  const afternoonSlots = TIME_SLOTS.filter((t) => t.group === 'Afternoon');
+
+  const renderSlotGroup = (label: string, slots: typeof TIME_SLOTS) => (
+    <div>
+      <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">{label}</p>
+      <div className="flex flex-wrap gap-3">
+        {slots.map(({ label: time }) => {
+          const active = formData.preferred_time === time;
+          return (
+            <button
+              key={time}
+              type="button"
+              onClick={() => update('preferred_time', time)}
+              aria-pressed={active}
+              className={`px-6 py-3 rounded-full border border-slate-300 text-sm font-semibold tracking-wide transition-all duration-200 min-h-[52px] ${
+                active ? 'border-navy-950 bg-navy-950 text-white' : 'bg-transparent text-navy-800 hover:border-navy-950'
+              }`}
+            >
+              {time}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <p className="text-xs font-bold tracking-widest text-solar-500 uppercase mb-3">Step 3 of 3 · MAINTENANCE</p>
+        <h2 className="font-serif text-5xl text-navy-950 tracking-tight">Preferred Schedule.</h2>
+      </div>
+
+      <FormField label="Preferred Date *" htmlFor="preferred_date" error={errors.preferred_date}>
+        <div className="relative">
+          <Calendar size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          <input
+            id="preferred_date"
+            type="date"
+            min={minDate}
+            max={maxDate}
+            value={formData.preferred_date}
+            onChange={(e) => update('preferred_date', e.target.value)}
+            className={`${inputClass} pl-10`}
+          />
+        </div>
+      </FormField>
+
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <Clock size={16} className="text-slate-400" />
+          <span className="block text-xs font-bold tracking-widest uppercase text-navy-950">Preferred Time *</span>
+        </div>
+        <div className="space-y-4">
+          {renderSlotGroup('Morning', morningSlots)}
+          {renderSlotGroup('Afternoon', afternoonSlots)}
+        </div>
+        {errors.preferred_time && (
+          <p className="text-red-500 text-xs mt-2" role="alert">{errors.preferred_time}</p>
+        )}
+      </div>
+
+      {/* Summary */}
+      <div className="bg-white border border-slate-200 p-8 mt-12">
+        <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Summary</p>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-4 text-base">
+          <SummaryRow label="Name" value={formData.name} />
+          <SummaryRow label="Phone" value={formData.phone} />
+          <SummaryRow label="City" value={formData.city_name} />
+          {formData.issue_category && <SummaryRow label="Issue" value={formData.issue_category} />}
+          {formData.system_size_kw && <SummaryRow label="System Size" value={`${formData.system_size_kw} kW`} />}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-slate-400 text-xs uppercase tracking-wider mb-1">{label}</p>
+      <p className="text-navy-950 font-medium truncate">{value || '—'}</p>
+    </div>
+  );
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
+
+export default function MaintenanceBookingPage() {
+  const router = useRouter();
+  const [step, setStep] = useState(0);
+  const [direction, setDirection] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [errors, setErrors] = useState<Partial<Record<keyof MaintenanceFormData, string>>>({});
+  const [formData, setFormData] = useState<MaintenanceFormData>({
+    name: '',
+    phone: '',
+    email: '',
+    city: '',
+    city_name: '',
+    address: '',
+    system_size_kw: '',
+    installation_year: '',
+    issue_category: '',
+    issue_description: '',
+    preferred_date: '',
+    preferred_time: '',
+  });
+
+  const update = (field: keyof MaintenanceFormData, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => ({ ...prev, [field]: '' }));
+  };
+
+  const validateStep = (): boolean => {
+    const next: Partial<Record<keyof MaintenanceFormData, string>> = {};
+    if (step === 0) {
+      if (!formData.name.trim()) next.name = 'Full name is required.';
+      if (!formData.phone.trim()) next.phone = 'Phone number is required.';
+      if (!formData.city) next.city = 'Please select your city.';
+    } else if (step === 1) {
+      if (!formData.issue_category) next.issue_category = 'Please select an issue type.';
+      if (!formData.issue_description.trim()) next.issue_description = 'Please describe the issue.';
+    } else if (step === 2) {
+      if (!formData.preferred_date) next.preferred_date = 'Please select a date.';
+      if (!formData.preferred_time) next.preferred_time = 'Please select a time slot.';
+    }
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
+  const goNext = () => {
+    if (!validateStep()) return;
+    setDirection(1);
+    setStep((s) => s + 1);
+  };
+
+  const goBack = () => {
+    setDirection(-1);
+    setStep((s) => s - 1);
+  };
+
+  const handleSubmit = async () => {
+    if (!validateStep()) return;
+    setIsSubmitting(true);
+    setSubmitError('');
+    const result = await createBookingAction({ ...formData, booking_type: 'maintenance' });
+    setIsSubmitting(false);
+    if ('error' in result) {
+      setSubmitError(result.error);
+      return;
+    }
+    router.push(`/booking/confirmation?id=${result.bookingId}&name=${encodeURIComponent(formData.name)}`);
+  };
+
+  const progressPercent = (step / (STEPS.length - 1)) * 100;
+
+  return (
+    <BookingSplitLayout
+      leftTag="O&M SERVICE"
+      leftTitle="Maintenance."
+    >
+      <div className="flex-1 p-6 sm:p-12 lg:p-16 xl:p-24 max-w-3xl w-full mx-auto lg:mx-0 flex flex-col">
+        <Link href="/booking" className="inline-flex items-center gap-2 text-slate-400 hover:text-navy-950 transition-colors text-sm font-medium mb-12 w-fit">
+          <ChevronLeft size={16} />
+          Back to index
+        </Link>
+
+        {/* Progress Indicator */}
+        <div className="flex items-center justify-between mb-16 relative">
+          <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-px bg-slate-200" />
+          {STEPS.map((label, i) => {
+            const done = i < step;
+            const active = i === step;
+            return (
+              <div key={i} className={`relative bg-[#FBF9F6] px-3 sm:px-4 flex items-center gap-2 transition-colors ${active ? 'text-navy-950' : done ? 'text-slate-400' : 'text-slate-300'}`}>
+                <span className="font-serif text-base">0{i + 1}</span>
+                <span className="text-sm font-semibold hidden sm:inline-block tracking-wide">{label}</span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Step Content */}
+        <div className="mb-auto min-h-[400px]">
+          <AnimatePresence mode="wait" custom={direction}>
+            <motion.div
+              key={step}
+              custom={direction}
+              variants={variants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+            >
+              {step === 0 && <Step1 formData={formData} errors={errors} update={update} />}
+              {step === 1 && <Step2 formData={formData} errors={errors} update={update} />}
+              {step === 2 && <Step3 formData={formData} errors={errors} update={update} />}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Navigation */}
+        <div className="pt-12 mt-12 border-t border-slate-200">
+          {submitError && (
+            <p className="text-red-500 text-sm mb-6 text-center bg-red-50 px-4 py-3" role="alert">
+              {submitError}
+            </p>
+          )}
+          <div className={`flex gap-4 items-center ${step > 0 ? 'justify-between' : 'justify-end'}`}>
+            {step > 0 && (
+              <button
+                type="button"
+                onClick={goBack}
+                disabled={isSubmitting}
+                className="flex items-center gap-2 text-slate-400 hover:text-navy-950 font-semibold text-base transition-colors disabled:opacity-50"
+              >
+                <ChevronLeft size={16} />
+                Back
+              </button>
+            )}
+            {step < STEPS.length - 1 ? (
+              <button
+                type="button"
+                onClick={goNext}
+                className="flex items-center gap-3 px-10 py-4 rounded-full bg-navy-950 text-white font-bold text-sm tracking-widest hover:bg-navy-800 transition-colors min-h-[52px]"
+              >
+                CONTINUE
+                <ArrowRight size={16} />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                className="flex items-center gap-3 px-10 py-4 rounded-full bg-navy-950 text-white font-bold text-sm tracking-widest hover:bg-navy-800 transition-colors min-h-[52px] disabled:opacity-60 disabled:cursor-not-allowed uppercase"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    SUBMITTING…
+                  </>
+                ) : (
+                  <>
+                    CONFIRM BOOKING
+                    <ArrowRight size={16} />
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </BookingSplitLayout>
+  );
+}

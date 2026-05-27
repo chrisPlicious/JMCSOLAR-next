@@ -90,3 +90,42 @@ export type DbServiceDetail = {
 };
 
 export type WithId<T> = T & { id: string }
+
+export type DbBookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed';
+export type DbBookingPaymentStatus = 'not_required' | 'pending' | 'paid' | 'failed';
+export type DbBookingType = 'consultation' | 'maintenance' | 'site_assessment';
+
+export type DbBooking = {
+  id: string;
+  booking_type: DbBookingType;
+  name: string;
+  phone: string;
+  email: string | null;
+  city: string;
+  city_name: string;
+  address: string | null;
+  // consultation
+  service_type: string | null;
+  property_type: 'residential' | 'commercial' | 'industrial' | 'agricultural' | null;
+  monthly_bill: string | null;
+  notes: string | null;
+  // maintenance
+  system_size_kw: string | null;
+  installation_year: string | null;
+  issue_category: string | null;
+  issue_description: string | null;
+  // site assessment
+  roof_type: string | null;
+  property_age_years: string | null;
+  roof_area_sqm: string | null;
+  // schedule
+  preferred_date: string;
+  preferred_time: string;
+  status: DbBookingStatus;
+  // PayMongo — Phase 3
+  payment_status: DbBookingPaymentStatus;
+  payment_reference: string | null;
+  payment_amount: number | null;
+  created_at: string;
+  updated_at: string | null;
+};
