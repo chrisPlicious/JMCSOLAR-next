@@ -97,7 +97,7 @@ export default function Hero() {
               }`}
           >
             {/* Badge */}
-            <motion.div
+            {/* <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, duration: 0.6 }}
@@ -107,7 +107,7 @@ export default function Hero() {
               <span className="text-white/80 text-sm font-medium">
                 Renewable Energy Advocates
               </span>
-            </motion.div>
+            </motion.div> */}
 
             {/* Tagline — demoted for SEO; H1 holds primary keyword */}
             <p

@@ -44,22 +44,22 @@ export default function BookingSelectionPage() {
       leftTag={`BOOKING · ${new Date().getFullYear()}`}
       leftTitle={
         <>
-          Sunlight,
+          Book a
           <br />
-          engineered.
+          Service
         </>
       }
       leftDescription="A licensed engineering team that designs solar systems specifically for your roof, your bill, and your future."
     >
       <div className="p-8 lg:p-16 max-w-7xl xl:ml-12 lg:min-h-screen flex flex-col">
-        <div className="mb-12 pt-8 lg:pt-16">
-          <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase mb-4">Index</p>
+        <div className="mb-12 pt-8 lg:pt-24">
+          {/* <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase mb-4">Index</p>
           <h2 className="text-4xl sm:text-7xl font-light text-navy-950 mb-4 tracking-tight" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            Three ways to begin.
+            Book a Service.
           </h2>
-          <p className="text-slate-500 text-sm sm:text-xl leading-relaxed max-w-lg">
+          <p className="text-slate-500 text-sm sm:text-lg leading-relaxed max-w-lg">
             Each is staffed by the same licensed engineering team. Pick whichever matches where you are in your solar journey.
-          </p>
+          </p> */}
         </div>
 
         <div className="space-y-5 mb-auto">
@@ -67,17 +67,17 @@ export default function BookingSelectionPage() {
             <Link
               key={href}
               href={href}
-              className="group flex flex-col sm:flex-row sm:items-center gap-8 bg-white p-8 sm:p-10 border border-slate-200 transition-all duration-300 hover:border-solar-300 hover:shadow-lg hover:-translate-y-1"
+              className="group flex flex-col sm:flex-row sm:items-center gap-8 bg-white p-6 sm:p-8 border border-slate-200 transition-all duration-300 hover:border-solar-300 hover:shadow-lg hover:-translate-y-1"
             >
-              <div className="text-slate-300 font-serif text-5xl font-light shrink-0 w-10 sm:w-14 text-left sm:text-center transition-colors group-hover:text-solar-300">
+              <div className="text-slate-300 font-serif text-3xl font-light shrink-0 w-10 sm:w-14 text-left sm:text-center transition-colors group-hover:text-solar-300">
                 0{idx + 1}
               </div>
               <div className="w-16 h-16 flex items-center justify-center shrink-0">
-                <Icon size={38} strokeWidth={1.5} className="text-navy-950 transition-transform duration-300 group-hover:scale-110" />
+                <Icon size={38} strokeWidth={1.5} className="text-navy-950 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12" />
               </div>
               <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-3 mb-3">
-                  <h3 className="text-2xl sm:text-5xl text-navy-950 font-bold tracking-tight" style={{ fontFamily: 'Poppins, sans-serif' }}>{title}</h3>
+                  <h3 className="text-2xl sm:text-6xl text-navy-950 font-bold tracking-tight" style={{ fontFamily: 'Poppins, sans-serif' }}>{title}</h3>
                   <span className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-sm ${tagStyle}`}>
                     {tag}
                   </span>
