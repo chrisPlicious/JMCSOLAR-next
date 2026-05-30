@@ -21,6 +21,7 @@ export interface Project {
   system_size: string | null;
   description: string | null;
   location: string | null;
+  city_slug?: string | null;
   facebook_url: string | null;
   cover_image_path: string | null;
   created_at: string;
@@ -82,4 +83,13 @@ export interface ClientType {
   description: string;
   image: string;
   badge: 'residential' | 'commercial' | 'agricultural' | 'industrial';
+}
+
+export interface BillResult {
+  id: string;
+  before_image_path: string;
+  after_image_path: string;
+  description?: string | null;
+  display_order: number;
+  created_at: string;
 }

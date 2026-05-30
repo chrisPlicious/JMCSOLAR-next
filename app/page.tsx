@@ -1,8 +1,9 @@
 import HomePage from '@/page-components/home/HomePage';
 import { adminDb } from '@/lib/firebase/admin';
-import type { DbReview } from '@/lib/firebase/types';
+import type { DbReview, DbService } from '@/lib/firebase/types';
 import type { Review } from '@/types';
 import { SITE_URL } from '@/lib/seo/site';
+import { buildAreaServedArray } from '@/lib/seo/serviceArea';
 
 const baseJsonLd = {
   '@context': 'https://schema.org',
@@ -35,11 +36,17 @@ const baseJsonLd = {
   },
   sameAs: ['https://www.facebook.com/JMCSolarPH'],
   priceRange: '$$',
-  areaServed: {
-    '@type': 'GeoCircle',
-    geoMidpoint: { '@type': 'GeoCoordinates', latitude: 11.016443, longitude: 124.606008 },
-    geoRadius: '100000',
-  },
+  slogan: 'Future is Electric',
+  knowsAbout: [
+    'Solar Panel Installation',
+    'Hybrid Solar Systems',
+    'On-Grid Solar',
+    'Net Metering',
+    'Battery Energy Storage Systems',
+    'EV Charging',
+    'Solar Water Pumping',
+  ],
+  areaServed: buildAreaServedArray(),
 };
 
 // H1: fetch approved reviews server-side; Firestore rules can now deny public reads
@@ -72,8 +79,20 @@ async function fetchApprovedReviews(): Promise<Review[]> {
   }
 }
 
+async function fetchServices(): Promise<DbService[]> {
+  try {
+    const snap = await adminDb.collection('services').orderBy('display_order').get();
+    return snap.docs.map((d) => d.data() as DbService);
+  } catch {
+    return [];
+  }
+}
+
 export default async function Home() {
-  const reviews = await fetchApprovedReviews();
+  const [reviews, services] = await Promise.all([
+    fetchApprovedReviews(),
+    fetchServices(),
+  ]);
 
   const ratings = reviews.filter((r) => typeof r.rating === 'number');
   const aggregateRating =
@@ -87,7 +106,22 @@ export default async function Home() {
         }
       : undefined;
 
-  const jsonLd = { ...baseJsonLd, ...(aggregateRating && { aggregateRating }) };
+  const hasOfferCatalog = services.length > 0
+    ? {
+        '@type': 'OfferCatalog',
+        name: 'Solar Energy Services',
+        itemListElement: services.map((s) => ({
+          '@type': 'Offer',
+          itemOffered: { '@type': 'Service', name: s.title, url: `${SITE_URL}/services/${s.slug}` },
+        })),
+      }
+    : undefined;
+
+  const jsonLd = {
+    ...baseJsonLd,
+    ...(aggregateRating && { aggregateRating }),
+    ...(hasOfferCatalog && { hasOfferCatalog }),
+  };
 
   return (
     <>

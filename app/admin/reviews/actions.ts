@@ -19,6 +19,7 @@ export async function createReview(fd: FormData): Promise<void> {
     quote,
     source: fd.get('source') as string,
     rating: Number(fd.get('rating') ?? 5),
+    city_slug: (fd.get('city_slug') as string) || null,
     status: 'approved',
     created_at: new Date().toISOString(),
   });
@@ -43,6 +44,7 @@ export async function createReviewFromDialog(
       quote,
       source: fd.get('source') as string,
       rating: Number(fd.get('rating') ?? 5),
+      city_slug: (fd.get('city_slug') as string) || null,
       status: 'approved',
       created_at: new Date().toISOString(),
     });
@@ -64,6 +66,7 @@ export async function updateReview(id: string, fd: FormData): Promise<void> {
     quote,
     source: fd.get('source') as string,
     rating: Number(fd.get('rating') ?? 5),
+    city_slug: (fd.get('city_slug') as string) || null,
     updated_at: new Date().toISOString(),
   };
   const status = fd.get('status');
