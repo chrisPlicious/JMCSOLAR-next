@@ -1,6 +1,8 @@
 {
   "projects": {
-    "default": "jmc-web-392ef"
+    "default": "jmc-web-392ef",
+    "prod": "jmc-web-392ef",
+    "dev": "jmc-web-dev"
   },
   "targets": {},
   "etags": {}
