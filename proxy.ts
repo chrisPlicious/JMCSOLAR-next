@@ -6,11 +6,11 @@ function buildCsp(nonce: string): string {
   const isDev = process.env.NODE_ENV === 'development';
   return [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ''} https://*.firebaseio.com https://*.googleapis.com`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval' http://localhost:8400" : ''} https://*.firebaseio.com https://*.googleapis.com`,
     "img-src 'self' data: https://storage.googleapis.com https://firebasestorage.googleapis.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
-    "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com",
+    `connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com${isDev ? ' http://localhost:8400' : ''}`,
     "frame-src https://www.google.com",
     "frame-ancestors 'none'",
   ].join('; ');

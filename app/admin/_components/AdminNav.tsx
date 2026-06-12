@@ -103,6 +103,22 @@ const navItems = [
       </svg>
     ),
   },
+  {
+    label: 'Bookings',
+    href: '/admin/bookings',
+    exact: false,
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1.5" y="3" width="15" height="13" rx="2" stroke="currentColor" strokeWidth="1.5" fill="none" />
+        <line x1="1.5" y1="7.5" x2="16.5" y2="7.5" stroke="currentColor" strokeWidth="1.5" />
+        <line x1="5.5" y1="1.5" x2="5.5" y2="4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <line x1="12.5" y1="1.5" x2="12.5" y2="4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <circle cx="6" cy="12" r="1" fill="currentColor" />
+        <circle cx="9" cy="12" r="1" fill="currentColor" />
+        <circle cx="12" cy="12" r="1" fill="currentColor" />
+      </svg>
+    ),
+  },
 ];
 
 const SignOutIcon = () => (

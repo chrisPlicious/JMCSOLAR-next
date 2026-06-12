@@ -40,6 +40,14 @@ export default function Hero() {
     }
   };
 
+  const scrollToContact = () => {
+    const el = document.querySelector("#contact");
+    if (el) {
+      const top = el.getBoundingClientRect().top + window.scrollY - 72;
+      window.scrollTo({ top, behavior: "smooth" });
+    }
+  };
+
   return (
     <section
       id="hero"
@@ -89,7 +97,7 @@ export default function Hero() {
               }`}
           >
             {/* Badge */}
-            <motion.div
+            {/* <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, duration: 0.6 }}
@@ -99,7 +107,7 @@ export default function Hero() {
               <span className="text-white/80 text-sm font-medium">
                 Renewable Energy Advocates
               </span>
-            </motion.div>
+            </motion.div> */}
 
             {/* Tagline — demoted for SEO; H1 holds primary keyword */}
             <p
@@ -145,18 +153,18 @@ export default function Hero() {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-4 mb-16">
-              <Link
-                href="/#contact"
+              <button
+                onClick={scrollToContact}
                 className={buttonVariants({ variant: "default", size: "lg" })}
               >
                 Get a Free Quote
                 <ArrowRight size={18} />
-              </Link>
+              </button>
               <Link
-                href="/projects"
+                href="/booking"
                 className={buttonVariants({ variant: "outline", size: "lg" })}
               >
-                View Our Projects
+                Book Now
               </Link>
             </div>
           </div>

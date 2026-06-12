@@ -34,5 +34,13 @@ service cloud.firestore {
     match /contactSubmissions/{docId} {
       allow read, write: if false;
     }
+    // bookings: server only (Admin SDK bypasses these rules)
+    match /bookings/{docId} {
+      allow read, write: if false;
+    }
+    // processedWebhookEvents: server-only idempotency ledger
+    match /processedWebhookEvents/{docId} {
+      allow read, write: if false;
+    }
   }
 }

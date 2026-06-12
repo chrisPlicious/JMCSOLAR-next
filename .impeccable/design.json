@@ -1,0 +1,167 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-12T01:45:00Z",
+  "title": "Design System: JMC Solar PH",
+  "extensions": {
+    "colorMeta": {
+      "navy-midnight": {
+        "role": "primary",
+        "displayName": "Navy Midnight",
+        "canonical": "#0a1428",
+        "tonalRamp": ["#04090f", "#0a1428", "#0f1f40", "#162d5a", "#1e3a6e", "#3b4f8a", "#7a8db5", "#c7d2fe"]
+      },
+      "solar-ignition": {
+        "role": "secondary",
+        "displayName": "Solar Ignition",
+        "canonical": "#f59e0b",
+        "tonalRamp": ["#451a00", "#6b2d00", "#92400e", "#b45309", "#d97706", "#f59e0b", "#fbbf24", "#fef3c7"]
+      },
+      "green-field": {
+        "role": "tertiary",
+        "displayName": "Field Green",
+        "canonical": "#22c55e",
+        "tonalRamp": ["#052e16", "#14532d", "#166534", "#15803d", "#16a34a", "#22c55e", "#86efac", "#dcfce7"]
+      },
+      "surface-warm": {
+        "role": "neutral",
+        "displayName": "Surface Warm",
+        "canonical": "#fbf9f6",
+        "tonalRamp": ["#e2ddd7", "#e9e5df", "#f0ede8", "#f5f3ef", "#f8f6f3", "#fbf9f6", "#fdfcfb", "#ffffff"]
+      },
+      "ink-muted": {
+        "role": "neutral",
+        "displayName": "Ink Muted",
+        "canonical": "#64748b",
+        "tonalRamp": ["#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1", "#f1f5f9"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Hero headlines. One per section. Poppins 900 weight is the brand's architectural signature." },
+      "headline": { "displayName": "Headline", "purpose": "Section headings, booking step headings, feature titles." },
+      "title": { "displayName": "Title", "purpose": "Card headings, service names, form section labels." },
+      "body": { "displayName": "Body", "purpose": "All prose. Max 65ch. Plus Jakarta Sans reads with humanist warmth." },
+      "label": { "displayName": "Label", "purpose": "Tags, form labels, nav logo wordmark. Montserrat at small size." }
+    },
+    "shadows": [
+      { "name": "shadow-soft", "value": "0 2px 16px rgba(15, 31, 64, 0.06)", "purpose": "Subtle resting lift for cards on white backgrounds." },
+      { "name": "shadow-card", "value": "0 4px 24px 0 rgb(0 0 0 / 0.06)", "purpose": "Default elevated card surface." },
+      { "name": "shadow-card-hover", "value": "0 12px 40px 0 rgb(0 0 0 / 0.12)", "purpose": "Hover state for interactive cards. 300ms transition." },
+      { "name": "shadow-elevated", "value": "0 16px 48px rgba(15, 31, 64, 0.10)", "purpose": "Navbar on scroll, dropdowns, dialogs. Definitively above-page surfaces." },
+      { "name": "shadow-glow-solar", "value": "0 8px 32px rgba(245, 158, 11, 0.18)", "purpose": "Amber glow for primary CTA buttons on hover. Exclusive to solar-amber elements." }
+    ],
+    "motion": [
+      { "name": "ease-standard", "value": "cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Default easing for all state transitions." },
+      { "name": "ease-out-quart", "value": "cubic-bezier(0.25, 1, 0.5, 1)", "purpose": "Entrance animations — dropdown open, modal appear." },
+      { "name": "duration-fast", "value": "150ms", "purpose": "Micro-interactions: hover color change, opacity flicker." },
+      { "name": "duration-default", "value": "300ms", "purpose": "Card hover shadows, button background transitions." },
+      { "name": "duration-slow", "value": "500ms", "purpose": "Page transitions, navbar scroll state change." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button (Solar CTA)",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main call-to-action. Solar amber bg, navy text. Pill-shaped. Used for 'Book Now', 'Get Quote', primary flow advancement.",
+      "html": "<button class=\"ds-btn-primary\">Book a Consultation</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: #f59e0b; color: #0f1f40; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1rem; font-weight: 700; padding: 12px 28px; border-radius: 9999px; border: none; cursor: pointer; transition: background 300ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1), transform 150ms cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 12px rgba(0,0,0,0.08); } .ds-btn-primary:hover { background: #fbbf24; box-shadow: 0 8px 32px rgba(245, 158, 11, 0.28); } .ds-btn-primary:focus-visible { outline: 2px solid #f59e0b; outline-offset: 3px; } .ds-btn-primary:active { transform: scale(0.97); }"
+    },
+    {
+      "name": "Secondary Button (Navy)",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Confirmatory actions. Navy bg, white text. Used for form submits, secondary flows.",
+      "html": "<button class=\"ds-btn-secondary\">Schedule Appointment</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: #0f1f40; color: #ffffff; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1rem; font-weight: 700; padding: 12px 28px; border-radius: 9999px; border: none; cursor: pointer; transition: background 300ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1), transform 150ms; box-shadow: 0 4px 12px rgba(0,0,0,0.08); } .ds-btn-secondary:hover { background: #162d5a; box-shadow: 0 16px 48px rgba(15, 31, 64, 0.20); } .ds-btn-secondary:focus-visible { outline: 2px solid #3b4f8a; outline-offset: 3px; } .ds-btn-secondary:active { transform: scale(0.97); }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Tertiary actions. No background, no border. Text-only interactive.",
+      "html": "<button class=\"ds-btn-ghost\">Learn More</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: transparent; color: #1e3a6e; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1rem; font-weight: 500; padding: 12px 28px; border-radius: 9999px; border: none; cursor: pointer; transition: color 200ms, background 200ms; } .ds-btn-ghost:hover { color: #f59e0b; background: rgba(245, 158, 11, 0.06); } .ds-btn-ghost:focus-visible { outline: 2px solid #3b4f8a; outline-offset: 3px; } .ds-btn-ghost:active { transform: scale(0.97); }"
+    },
+    {
+      "name": "Service Card (Booking List Item)",
+      "kind": "card",
+      "refersTo": "card-service",
+      "description": "Flat, sharp-cornered booking service selector. No radius — the sharpness signals seriousness of a trade selection.",
+      "html": "<a class=\"ds-service-card\" href=\"#\">\n  <span class=\"ds-service-card__index\">01</span>\n  <div class=\"ds-service-card__icon\">\n    <svg width=\"38\" height=\"38\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"><circle cx=\"12\" cy=\"12\" r=\"5\"/><line x1=\"12\" y1=\"1\" x2=\"12\" y2=\"3\"/><line x1=\"12\" y1=\"21\" x2=\"12\" y2=\"23\"/><line x1=\"4.22\" y1=\"4.22\" x2=\"5.64\" y2=\"5.64\"/><line x1=\"18.36\" y1=\"18.36\" x2=\"19.78\" y2=\"19.78\"/><line x1=\"1\" y1=\"12\" x2=\"3\" y2=\"12\"/><line x1=\"21\" y1=\"12\" x2=\"23\" y2=\"12\"/><line x1=\"4.22\" y1=\"19.78\" x2=\"5.64\" y2=\"18.36\"/><line x1=\"18.36\" y1=\"5.64\" x2=\"19.78\" y2=\"4.22\"/></svg>\n  </div>\n  <div class=\"ds-service-card__body\">\n    <div class=\"ds-service-card__header\">\n      <h3>Consultation</h3>\n      <span class=\"ds-service-card__tag\">FREE · 60 MIN</span>\n    </div>\n    <p>Sit down with our licensed engineers. We assess your property and recommend the right solar system.</p>\n  </div>\n</a>",
+      "css": ".ds-service-card { display: flex; align-items: center; gap: 32px; background: #ffffff; padding: 24px 32px; border: 1px solid #e2e8f0; text-decoration: none; color: #0a1428; transition: border-color 300ms, box-shadow 300ms, transform 300ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-service-card:hover { border-color: #fcd34d; box-shadow: 0 12px 40px 0 rgb(0 0 0 / 0.12); transform: translateY(-4px); } .ds-service-card__index { font-size: 1.875rem; font-weight: 300; color: #cbd5e1; width: 3.5rem; text-align: center; flex-shrink: 0; transition: color 300ms; font-family: Georgia, serif; } .ds-service-card:hover .ds-service-card__index { color: #fcd34d; } .ds-service-card__icon { width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #0a1428; transition: transform 300ms; } .ds-service-card:hover .ds-service-card__icon { transform: scale(1.1) rotate(12deg); } .ds-service-card__body { flex: 1; } .ds-service-card__header { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; } .ds-service-card__header h3 { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; font-size: 1.125rem; color: #0a1428; margin: 0; } .ds-service-card__tag { font-family: 'Montserrat', sans-serif; font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.06em; padding: 3px 10px; border-radius: 9999px; background: #fffbeb; color: #d97706; border: 1px solid #fde68a; } .ds-service-card p { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.9375rem; color: #64748b; line-height: 1.6; margin: 0; }"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Standard form input. Clean, bordered, gently rounded. Focus shifts to navy.",
+      "html": "<div class=\"ds-input-wrap\"><label class=\"ds-input-label\">Monthly Electricity Bill</label><input class=\"ds-input\" type=\"text\" placeholder=\"e.g. ₱3,500\"/></div>",
+      "css": ".ds-input-wrap { display: flex; flex-direction: column; gap: 6px; } .ds-input-label { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.875rem; font-weight: 500; color: #0f1f40; } .ds-input { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1rem; font-weight: 400; color: #0a1428; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; width: 100%; transition: border-color 200ms, box-shadow 200ms; box-sizing: border-box; } .ds-input::placeholder { color: #94a3b8; } .ds-input:focus { outline: none; border-color: #3b4f8a; box-shadow: 0 0 0 3px rgba(59, 79, 138, 0.12); } .ds-input:disabled { background: #f8fafc; color: #94a3b8; cursor: not-allowed; }"
+    },
+    {
+      "name": "Navbar (Scrolled)",
+      "kind": "nav",
+      "refersTo": null,
+      "description": "Fixed top navigation in scrolled/opaque state. Frosted glass over white. Logo + links + CTA.",
+      "html": "<nav class=\"ds-nav\">\n  <div class=\"ds-nav__inner\">\n    <a class=\"ds-nav__logo\" href=\"#\">\n      <span class=\"ds-nav__logo-jmc\">JMC</span>\n      <span class=\"ds-nav__logo-solar\">SOLAR</span>\n    </a>\n    <div class=\"ds-nav__links\">\n      <a class=\"ds-nav__link\" href=\"#\">Home</a>\n      <a class=\"ds-nav__link ds-nav__link--active\" href=\"#\">Services</a>\n      <a class=\"ds-nav__link\" href=\"#\">Projects</a>\n      <a class=\"ds-nav__link\" href=\"#\">About</a>\n    </div>\n    <a class=\"ds-nav__cta\" href=\"#\">Book Now</a>\n  </div>\n</nav>",
+      "css": ".ds-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 50; background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); box-shadow: 0 1px 20px rgba(15, 31, 64, 0.08); padding: 12px 0; } .ds-nav__inner { max-width: 1280px; margin: 0 auto; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; } .ds-nav__logo { display: flex; align-items: baseline; gap: 4px; text-decoration: none; } .ds-nav__logo-jmc { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 1.5rem; color: #0f1f40; } .ds-nav__logo-solar { font-family: 'Montserrat', sans-serif; font-weight: 500; font-size: 1.5rem; color: #3b4f8a; } .ds-nav__links { display: flex; gap: 4px; } .ds-nav__link { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.875rem; font-weight: 600; color: #0f1f40; text-decoration: none; padding: 8px 16px; border-radius: 9999px; transition: color 200ms, background 200ms; } .ds-nav__link:hover { color: #d97706; background: #eef2ff; } .ds-nav__link--active { color: #f59e0b; background: rgba(245, 158, 11, 0.1); } .ds-nav__cta { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.875rem; font-weight: 700; background: #f59e0b; color: #0f1f40; padding: 10px 22px; border-radius: 9999px; text-decoration: none; transition: background 200ms, box-shadow 200ms; } .ds-nav__cta:hover { background: #fbbf24; box-shadow: 0 4px 16px rgba(245, 158, 11, 0.25); }"
+    },
+    {
+      "name": "Service Tag / Chip",
+      "kind": "chip",
+      "refersTo": null,
+      "description": "Categorical label chips on booking cards and service listings. Color-coded by service type.",
+      "html": "<span class=\"ds-chip ds-chip--solar\">FREE · 60 MIN</span>\n<span class=\"ds-chip ds-chip--blue\">O&amp;M SERVICE</span>\n<span class=\"ds-chip ds-chip--emerald\">ON-SITE SURVEY</span>",
+      "css": ".ds-chip { display: inline-flex; align-items: center; font-family: 'Montserrat', sans-serif; font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.06em; padding: 4px 10px; border-radius: 9999px; border: 1px solid; white-space: nowrap; } .ds-chip--solar { color: #d97706; background: #fffbeb; border-color: #fde68a; } .ds-chip--blue { color: #2563eb; background: #eff6ff; border-color: #bfdbfe; } .ds-chip--emerald { color: #059669; background: #ecfdf5; border-color: #a7f3d0; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Sun Contractor",
+    "overview": "A licensed expert who works in the field, not a showroom. The design system holds two registers in deliberate tension: the institutional weight of a proven trade business and the electric confidence of a brand pushing its region toward the energy transition. Deep navy provides structural bedrock — it communicates that JMC has been at this long enough to know what they're doing. Solar amber is the activation signal — it fires when there's a decision to make, a button to press, an appointment to book.\n\nThis is not a wellness brand. It is not a SaaS startup. It is a Filipino engineering firm operating at the frontier of energy transition in the Visayas. Every visual decision passes one test: would a licensed engineer from Ormoc City approve of this? Not as ornamentation — as a craft decision made with purpose.\n\nThe site's job is to earn trust fast enough to get a booking. That means typography that reads with authority, color that signals expertise over hype, and components that feel tactile and confident — like tools, not toys.",
+    "keyCharacteristics": [
+      "Navy midnight as brand bedrock; solar amber as ignition and action",
+      "Pill-shaped buttons with genuine tactile feedback (scale-down on press)",
+      "Poppins headlines at heavy weight with tight tracking — engineered, not decorative",
+      "Shadows are diffuse and navy-tinted; they describe depth, not drama",
+      "Backdrop-blur navbar that earns its effect through genuine layering",
+      "Booking flows feel inevitable: each step is visually clear, never cluttered",
+      "Framer Motion for purposeful micro-interactions, not ambient choreography"
+    ],
+    "rules": [
+      { "name": "The Ignition Rule", "body": "Solar amber is used on ≤15% of any given screen. A CTA button, an active nav item, a hover border. Never as a background for full sections. Its rarity is the point — when amber fires, it means act now.", "section": "colors" },
+      { "name": "The Navy Bedrock Rule", "body": "Navy is not a background color of last resort. It is the brand's primary expression. Use navy full-bleed sections with white type as a deliberate choice, not as decoration.", "section": "colors" },
+      { "name": "The Navy Tint Rule", "body": "Prefer navy-tinted shadow values — rgba(15, 31, 64, ...) — over generic black. This keeps shadows reading as part of the same color system.", "section": "elevation" },
+      { "name": "The State-Triggered Shadow Rule", "body": "Surfaces are flat or softly raised at rest. The heavier shadows (card-hover, elevated) exist only as state responses: hover, active, dialog-open.", "section": "elevation" },
+      { "name": "The Poppins Weight Rule", "body": "Display and headline headings use 700 or 900 weight only. 400 or 500 weight Poppins is prohibited. The font earns its keep when pushed.", "section": "typography" },
+      { "name": "The Tight Heading Floor", "body": "Display letter-spacing floor is -0.02em. Headline floor is -0.015em. Never loosen tracking on heavy display type.", "section": "typography" }
+    ],
+    "dos": [
+      "Do use solar amber exclusively for CTAs, active states, and interactive signals.",
+      "Do use Poppins at 700 or 900 weight for all headings.",
+      "Do use navy-tinted shadow values (rgba(15, 31, 64, ...)) over generic black.",
+      "Do keep body text at #0a1428 (Navy Midnight) on light surfaces.",
+      "Do include @media (prefers-reduced-motion: reduce) on every animation.",
+      "Do use the split-layout (navy left / content right) pattern for all booking flows.",
+      "Do maintain 65ch max line length for all body copy.",
+      "Do use text-wrap: balance on display and headline headings.",
+      "Do verify placeholder text contrast at 4.5:1 before shipping any form."
+    ],
+    "donts": [
+      "Don't use generic green eco-brand aesthetics: leaf icons, soft sage, nonprofit warmth.",
+      "Don't use loud solar stock-photo visual language: neon yellow CTAs, clip-art imagery, star/burst badges.",
+      "Don't produce generic AI slop: eyebrow labels on every section, identical card grids, gradient text, hero-metric templates, non-sequential numbered section markers.",
+      "Don't use western minimalism that reads as foreign to a Filipino local business.",
+      "Don't use border-left or border-right greater than 1px as a colored accent stripe.",
+      "Don't use the warm-neutral background band (cream, sand, paper) — #fbf9f6 is the approved barely-there warm surface.",
+      "Don't use bounce or elastic easing on any animation.",
+      "Don't nest cards within cards.",
+      "Don't use purple, lavender, or blue-purple anywhere in the UI."
+    ]
+  }
+}
