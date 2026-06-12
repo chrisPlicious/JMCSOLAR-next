@@ -19,6 +19,11 @@ import {
 import { LOCATIONS } from '@/data/locations';
 import { createBookingAction, type ConsultationFormData } from '../actions';
 import BookingSplitLayout from '../_components/BookingSplitLayout';
+import {
+  CONSULTATION_DURATION_OPTIONS,
+  CONSULTATION_HOURLY_CENTAVOS,
+  formatCentavos,
+} from '@/lib/bookings/pricing';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -65,7 +70,7 @@ const TIME_SLOTS = [
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const inputClass =
-  'w-full py-3 border-0 border-b border-slate-300 bg-transparent text-navy-900 placeholder-slate-400 focus:outline-none focus:ring-0 focus:border-solar-400 transition-colors text-base min-h-[52px] px-0 rounded-none';
+  'w-full py-3 border-0 border-b border-slate-300 bg-transparent text-navy-900 placeholder-slate-500 focus:outline-none focus:ring-0 focus:border-solar-400 transition-colors text-base min-h-[52px] px-0 rounded-none';
 
 const selectClass =
   'w-full py-3 pr-8 border-0 border-b border-slate-300 bg-transparent text-navy-900 focus:outline-none focus:ring-0 focus:border-solar-400 transition-colors text-base appearance-none min-h-[52px] cursor-pointer px-0 rounded-none';
@@ -107,7 +112,7 @@ function FormField({
   return (
     <div className="flex flex-col">
       <div className="flex justify-between items-baseline mb-1">
-        <label htmlFor={htmlFor} className="block text-xs font-bold tracking-widest uppercase text-navy-950">
+        <label htmlFor={htmlFor} className="block text-sm font-semibold text-navy-800">
           {label}
         </label>
         {optional && <span className="text-xs italic text-slate-400">optional</span>}
@@ -149,8 +154,7 @@ function Step1({ formData, errors, update }: StepProps) {
   return (
     <div className="space-y-8">
       <div className="mb-8">
-        <p className="text-xs font-bold tracking-widest text-solar-500 uppercase mb-3">Step 1 of 3 · Consultation</p>
-        <h2 className="font-serif text-5xl text-navy-950 tracking-tight">Your details.</h2>
+        <h2 className="text-[2.25rem] font-black text-navy-950 tracking-tight text-wrap-balance" style={{ fontFamily: 'Poppins, sans-serif' }}>Your details.</h2>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
@@ -227,8 +231,7 @@ function Step2({ formData, errors, update }: StepProps) {
   return (
     <div className="space-y-8">
       <div className="mb-8">
-        <p className="text-xs font-bold tracking-widest text-solar-500 uppercase mb-3">Step 2 of 3 · Consultation</p>
-        <h2 className="font-serif text-5xl text-navy-950 tracking-tight">Project details.</h2>
+        <h2 className="text-[2.25rem] font-black text-navy-950 tracking-tight text-wrap-balance" style={{ fontFamily: 'Poppins, sans-serif' }}>Project details.</h2>
       </div>
 
       <FormField label="Service Type" htmlFor="service_type" error={errors.service_type}>
@@ -248,7 +251,7 @@ function Step2({ formData, errors, update }: StepProps) {
       </FormField>
 
       <div>
-        <p className="block text-xs font-bold tracking-widest uppercase text-navy-950 mb-3">Property Type</p>
+        <p className="block text-sm font-semibold text-navy-800 mb-3">Property type</p>
         <div className="grid grid-cols-2 gap-4">
           {PROPERTY_TYPES.map(({ value, label, desc, Icon }) => {
             const active = formData.property_type === value;
@@ -316,7 +319,7 @@ function Step3({ formData, errors, update }: StepProps) {
 
   const renderSlotGroup = (label: string, slots: typeof TIME_SLOTS) => (
     <div>
-      <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">{label}</p>
+      <p className="text-xs font-semibold text-slate-400 mb-3">{label}</p>
       <div className="flex flex-wrap gap-3">
         {slots.map(({ label: time }) => {
           const active = formData.preferred_time === time;
@@ -343,8 +346,7 @@ function Step3({ formData, errors, update }: StepProps) {
   return (
     <div className="space-y-8">
       <div className="mb-8">
-        <p className="text-xs font-bold tracking-widest text-solar-500 uppercase mb-3">Step 3 of 3 · Consultation</p>
-        <h2 className="font-serif text-5xl text-navy-950 tracking-tight">Schedule.</h2>
+        <h2 className="text-[2.25rem] font-black text-navy-950 tracking-tight text-wrap-balance" style={{ fontFamily: 'Poppins, sans-serif' }}>Schedule.</h2>
       </div>
 
       <FormField label="Preferred Date" htmlFor="preferred_date" error={errors.preferred_date}>
@@ -363,9 +365,38 @@ function Step3({ formData, errors, update }: StepProps) {
       </FormField>
 
       <div>
+        <p className="block text-sm font-semibold text-navy-800 mb-3">Session length</p>
+        <div className="grid grid-cols-3 gap-4">
+          {CONSULTATION_DURATION_OPTIONS.map((hrs) => {
+            const active = formData.duration_hours === String(hrs);
+            return (
+              <button
+                key={hrs}
+                type="button"
+                onClick={() => update('duration_hours', String(hrs))}
+                aria-pressed={active}
+                className={`flex flex-col items-center gap-1 p-5 border-2 transition-all duration-200 min-h-[52px] ${
+                  active ? 'border-solar-400 bg-white' : 'border-slate-200/60 bg-transparent hover:border-slate-300'
+                }`}
+              >
+                <span className={`text-3xl font-black ${active ? 'text-navy-950' : 'text-slate-300'}`} style={{ fontFamily: 'Poppins, sans-serif' }}>{hrs}</span>
+                <span className="text-xs text-slate-400">{hrs === 1 ? 'hour' : 'hours'}</span>
+                <span className={`text-sm font-semibold mt-1 ${active ? 'text-navy-900' : 'text-slate-400'}`}>
+                  {formatCentavos(CONSULTATION_HOURLY_CENTAVOS * hrs)}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        <p className="text-xs text-slate-400 mt-2 italic">
+          Paid online consultation at {formatCentavos(CONSULTATION_HOURLY_CENTAVOS)}/hour. Your slot is confirmed after payment.
+        </p>
+      </div>
+
+      <div>
         <div className="flex items-center gap-2 mb-4">
           <Clock size={16} className="text-slate-400" />
-          <span className="block text-xs font-bold tracking-widest uppercase text-navy-950">Preferred Time</span>
+          <span className="block text-sm font-semibold text-navy-800">Preferred time</span>
         </div>
         <div className="space-y-6">
           {renderSlotGroup('Morning', morningSlots)}
@@ -378,7 +409,7 @@ function Step3({ formData, errors, update }: StepProps) {
 
       {/* Summary review */}
       <div className="bg-white border border-slate-200 p-8 mt-12">
-        <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Summary</p>
+        <p className="text-sm font-semibold text-slate-500 mb-4">Summary</p>
         <div className="grid grid-cols-2 gap-x-6 gap-y-4 text-base">
           <SummaryRow label="Name" value={formData.name} />
           <SummaryRow label="Phone" value={formData.phone} />
@@ -391,6 +422,13 @@ function Step3({ formData, errors, update }: StepProps) {
           {formData.monthly_bill && (
             <SummaryRow label="Monthly Bill" value={formData.monthly_bill} />
           )}
+          <SummaryRow label="Session" value={`${formData.duration_hours} ${formData.duration_hours === '1' ? 'hour' : 'hours'}`} />
+        </div>
+        <div className="flex items-center justify-between mt-6 pt-6 border-t border-slate-200">
+          <span className="text-xs font-semibold text-slate-400">Total due</span>
+          <span className="text-2xl font-black text-navy-950" style={{ fontFamily: 'Poppins, sans-serif' }}>
+            {formatCentavos(CONSULTATION_HOURLY_CENTAVOS * Number(formData.duration_hours || 1))}
+          </span>
         </div>
       </div>
     </div>
@@ -400,7 +438,7 @@ function Step3({ formData, errors, update }: StepProps) {
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-slate-400 text-xs uppercase tracking-wider mb-1">{label}</p>
+      <p className="text-slate-400 text-xs mb-1">{label}</p>
       <p className="text-navy-950 font-medium truncate">{value || '—'}</p>
     </div>
   );
@@ -428,6 +466,7 @@ export default function ConsultationBookingPage() {
     notes: '',
     preferred_date: '',
     preferred_time: '',
+    duration_hours: '1',
   });
 
   const update = (field: keyof ConsultationFormData, value: string) => {
@@ -468,11 +507,18 @@ export default function ConsultationBookingPage() {
     setIsSubmitting(true);
     setSubmitError('');
     const result = await createBookingAction({ ...formData, booking_type: 'consultation' });
-    setIsSubmitting(false);
     if ('error' in result) {
+      setIsSubmitting(false);
       setSubmitError(result.error);
       return;
     }
+    // Paid consultation → send to checkout (PayMongo or stub). Keep the
+    // spinner on during the redirect so the button can't be double-fired.
+    if (result.checkoutUrl) {
+      window.location.assign(result.checkoutUrl);
+      return;
+    }
+    setIsSubmitting(false);
     router.push(`/booking/confirmation?id=${result.bookingId}&name=${encodeURIComponent(formData.name)}`);
   };
 
@@ -487,16 +533,21 @@ export default function ConsultationBookingPage() {
           Back to index
         </Link>
 
-        {/* Progress Indicator */}
-        <div className="flex items-center justify-between mb-16 relative">
-          <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-px bg-slate-200" />
+        {/* Progress */}
+        <div className="flex gap-2 mb-14">
           {STEPS.map((label, i) => {
             const done = i < step;
             const active = i === step;
             return (
-              <div key={i} className={`relative bg-[#FBF9F6] px-3 sm:px-4 flex items-center gap-2 transition-colors ${active ? 'text-navy-950' : done ? 'text-slate-400' : 'text-slate-300'}`}>
-                <span className="font-serif text-base">0{i + 1}</span>
-                <span className="text-sm font-semibold hidden sm:inline-block tracking-wide">{label}</span>
+              <div key={i} className="flex-1 flex flex-col gap-2.5">
+                <div className={`h-[3px] rounded-sm transition-all duration-300 ${
+                  done ? 'bg-solar-400' : active ? 'bg-navy-950' : 'bg-slate-200'
+                }`} />
+                <span className={`text-[11px] font-semibold transition-colors ${
+                  active ? 'text-navy-950' : done ? 'text-solar-500' : 'text-slate-300'
+                }`}>
+                  {label}
+                </span>
               </div>
             );
           })}
@@ -544,7 +595,7 @@ export default function ConsultationBookingPage() {
               <button
                 type="button"
                 onClick={goNext}
-                className="flex items-center gap-3 px-10 py-4 rounded-full bg-navy-950 text-white font-bold text-sm tracking-widest hover:bg-navy-800 transition-colors min-h-[52px]"
+                className="flex items-center gap-3 px-10 py-4 rounded-full bg-solar-500 text-navy-950 font-bold text-sm tracking-wide hover:bg-solar-400 transition-colors min-h-[52px]"
               >
                 CONTINUE
                 <ArrowRight size={16} />
@@ -554,16 +605,16 @@ export default function ConsultationBookingPage() {
                 type="button"
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="flex items-center gap-3 px-10 py-4 rounded-full bg-navy-950 text-white font-bold text-sm tracking-widest hover:bg-navy-800 transition-colors min-h-[52px] disabled:opacity-60 disabled:cursor-not-allowed uppercase"
+                className="flex items-center gap-3 px-10 py-4 rounded-full bg-solar-500 text-navy-950 font-bold text-sm tracking-wide hover:bg-solar-400 transition-colors min-h-[52px] disabled:opacity-60 disabled:cursor-not-allowed uppercase"
               >
                 {isSubmitting ? (
                   <>
                     <Loader2 size={16} className="animate-spin" />
-                    SUBMITTING…
+                    REDIRECTING…
                   </>
                 ) : (
                   <>
-                    CONFIRM BOOKING
+                    PROCEED TO PAYMENT
                     <ArrowRight size={16} />
                   </>
                 )}

@@ -1,6 +1,13 @@
 'use server';
 
+import { headers } from 'next/headers';
 import { adminDb } from '@/lib/firebase/admin';
+import { getPaymentProvider } from '@/lib/payments';
+import {
+  getBookingAmount,
+  clampDuration,
+  formatCentavos,
+} from '@/lib/bookings/pricing';
 
 export type ConsultationFormData = {
   name: string;
@@ -15,6 +22,7 @@ export type ConsultationFormData = {
   notes: string;
   preferred_date: string;
   preferred_time: string;
+  duration_hours: string;
 };
 
 export type MaintenanceFormData = {
@@ -53,7 +61,18 @@ type BookingInput =
   | (MaintenanceFormData & { booking_type: 'maintenance' })
   | (SiteAssessmentFormData & { booking_type: 'site_assessment' });
 
-export type CreateBookingResult = { bookingId: string } | { error: string };
+export type CreateBookingResult =
+  | { bookingId: string; checkoutUrl?: string }
+  | { error: string };
+
+async function originUrl(): Promise<string> {
+  const h = await headers();
+  const origin = h.get('origin');
+  if (origin) return origin;
+  const host = h.get('host') ?? 'localhost:3000';
+  const proto = host.startsWith('localhost') ? 'http' : 'https';
+  return `${proto}://${host}`;
+}
 
 export async function createBookingAction(data: BookingInput): Promise<CreateBookingResult> {
   if (!data.name || !data.phone || !data.city || !data.preferred_date || !data.preferred_time) {
@@ -63,6 +82,15 @@ export async function createBookingAction(data: BookingInput): Promise<CreateBoo
   try {
     const ref = adminDb.collection('bookings').doc();
     const now = new Date().toISOString();
+
+    const isConsultation = data.booking_type === 'consultation';
+    const durationHours = isConsultation
+      ? clampDuration(Number((data as ConsultationFormData).duration_hours))
+      : null;
+    const amount = getBookingAmount(data.booking_type, {
+      durationHours: durationHours ?? undefined,
+    });
+    const requiresPayment = amount !== null;
 
     const base = {
       booking_type: data.booking_type,
@@ -74,10 +102,13 @@ export async function createBookingAction(data: BookingInput): Promise<CreateBoo
       address: data.address.trim() || null,
       preferred_date: data.preferred_date,
       preferred_time: data.preferred_time,
+      duration_hours: durationHours,
       status: 'pending',
-      payment_status: 'not_required',
+      payment_status: requiresPayment ? 'pending' : 'not_required',
+      payment_amount: amount,
       payment_reference: null,
-      payment_amount: null,
+      payment_session_id: null,
+      paid_at: null,
       created_at: now,
       updated_at: null,
     };
@@ -130,9 +161,73 @@ export async function createBookingAction(data: BookingInput): Promise<CreateBoo
 
     await ref.set({ ...base, ...typeFields });
 
-    return { bookingId: ref.id };
+    // Free intake types (maintenance, site assessment until priced) end here.
+    if (!requiresPayment || amount === null) {
+      return { bookingId: ref.id };
+    }
+
+    // Pay-first: create a checkout session, persist its id, send customer to pay.
+    const origin = await originUrl();
+    const provider = getPaymentProvider();
+    const session = await provider.createCheckoutSession({
+      bookingId: ref.id,
+      amount,
+      description: `Solar consultation — ${durationHours}hr (${formatCentavos(amount)})`,
+      lineItems: [
+        {
+          name: `Solar Consultation (${durationHours}hr)`,
+          amount,
+          quantity: 1,
+        },
+      ],
+      customer: {
+        name: data.name.trim(),
+        email: data.email.trim() || null,
+        phone: data.phone.trim(),
+      },
+      successUrl: `${origin}/booking/confirmation?id=${ref.id}&name=${encodeURIComponent(data.name.trim())}`,
+      cancelUrl: `${origin}/booking/consultation`,
+    });
+
+    await ref.update({
+      payment_session_id: session.sessionId,
+      updated_at: new Date().toISOString(),
+    });
+
+    return { bookingId: ref.id, checkoutUrl: session.checkoutUrl };
   } catch (e) {
     console.error('[createBookingAction]', e);
     return { error: 'Failed to submit booking. Please try again.' };
+  }
+}
+
+/**
+ * Stub-only: simulates a successful payment for local/dev testing.
+ * Guarded so it can never flip a booking paid when a real provider is active.
+ */
+export async function simulatePaymentAction(
+  bookingId: string,
+): Promise<{ success: true } | { error: string }> {
+  const provider = (process.env.PAYMENT_PROVIDER ?? 'stub').toLowerCase();
+  if (provider !== 'stub') {
+    return { error: 'Simulated payment is disabled when a real provider is active.' };
+  }
+  if (!bookingId) return { error: 'Missing booking id.' };
+
+  try {
+    const ref = adminDb.collection('bookings').doc(bookingId);
+    const snap = await ref.get();
+    if (!snap.exists) return { error: 'Booking not found.' };
+
+    await ref.update({
+      payment_status: 'paid',
+      payment_reference: `stub_${crypto.randomUUID()}`,
+      paid_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+    return { success: true };
+  } catch (e) {
+    console.error('[simulatePaymentAction]', e);
+    return { error: 'Failed to confirm payment.' };
   }
 }

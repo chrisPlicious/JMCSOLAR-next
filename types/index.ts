@@ -124,11 +124,14 @@ export interface Booking {
   // schedule
   preferred_date: string;
   preferred_time: string;
+  duration_hours: number | null; // consultation only — drives price
   status: BookingStatus;
-  // PayMongo ready — Phase 3
+  // Payment (PayMongo)
   payment_status: BookingPaymentStatus;
-  payment_reference: string | null;
-  payment_amount: number | null;
+  payment_amount: number | null; // total in centavos (₱500 = 50000)
+  payment_reference: string | null; // PayMongo payment id once paid
+  payment_session_id: string | null; // PayMongo checkout_session id
+  paid_at: string | null;
   created_at: string;
   updated_at: string | null;
 }

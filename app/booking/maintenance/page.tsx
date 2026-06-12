@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import {
-  Check,
   ChevronLeft,
   ArrowRight,
   Loader2,
@@ -47,7 +46,7 @@ const TIME_SLOTS = [
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const inputClass =
-  'w-full py-3 border-0 border-b border-slate-300 bg-transparent text-navy-900 placeholder-slate-400 focus:outline-none focus:ring-0 focus:border-solar-400 transition-colors text-base min-h-[52px] px-0 rounded-none';
+  'w-full py-3 border-0 border-b border-slate-300 bg-transparent text-navy-900 placeholder-slate-500 focus:outline-none focus:ring-0 focus:border-solar-400 transition-colors text-base min-h-[52px] px-0 rounded-none';
 
 const selectClass =
   'w-full py-3 pr-8 border-0 border-b border-slate-300 bg-transparent text-navy-900 focus:outline-none focus:ring-0 focus:border-solar-400 transition-colors text-base appearance-none min-h-[52px] cursor-pointer px-0 rounded-none';
@@ -89,7 +88,7 @@ function FormField({
   return (
     <div className="flex flex-col">
       <div className="flex justify-between items-baseline mb-1">
-        <label htmlFor={htmlFor} className="block text-xs font-bold tracking-widest uppercase text-navy-950">
+        <label htmlFor={htmlFor} className="block text-sm font-semibold text-navy-800">
           {label}
         </label>
         {optional && <span className="text-xs italic text-slate-400">optional</span>}
@@ -104,7 +103,7 @@ function SelectWrapper({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative">
       {children}
-      <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center">
+      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center">
         <svg width="12" height="8" viewBox="0 0 12 8" fill="none" className="text-slate-400">
           <path d="M1 1L6 7L11 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
@@ -130,13 +129,12 @@ function Step1({ formData, errors, update }: StepProps) {
 
   return (
     <div className="space-y-8">
-      <div>
-        <p className="text-xs font-bold tracking-widest text-solar-500 uppercase mb-3">Step 1 of 3 · MAINTENANCE</p>
-        <h2 className="font-serif text-5xl text-navy-950 tracking-tight">Personal Information.</h2>
+      <div className="mb-8">
+        <h2 className="text-[2.25rem] font-black text-navy-950 tracking-tight text-wrap-balance" style={{ fontFamily: 'Poppins, sans-serif' }}>Personal info.</h2>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-        <FormField label="Full Name *" htmlFor="name" error={errors.name}>
+        <FormField label="Full Name" htmlFor="name" error={errors.name}>
           <input
             id="name"
             type="text"
@@ -147,7 +145,7 @@ function Step1({ formData, errors, update }: StepProps) {
             className={inputClass}
           />
         </FormField>
-        <FormField label="Phone Number *" htmlFor="phone" error={errors.phone}>
+        <FormField label="Phone Number" htmlFor="phone" error={errors.phone}>
           <input
             id="phone"
             type="tel"
@@ -165,14 +163,14 @@ function Step1({ formData, errors, update }: StepProps) {
           id="email"
           type="email"
           autoComplete="email"
-          placeholder="juan@email.com "
+          placeholder="juan@email.com"
           value={formData.email}
           onChange={(e) => update('email', e.target.value)}
           className={inputClass}
         />
       </FormField>
 
-      <FormField label="City / Municipality *" htmlFor="city" error={errors.city}>
+      <FormField label="City / Municipality" htmlFor="city" error={errors.city}>
         <SelectWrapper>
           <select
             id="city"
@@ -180,7 +178,7 @@ function Step1({ formData, errors, update }: StepProps) {
             onChange={(e) => handleCityChange(e.target.value)}
             className={selectClass}
           >
-            <option value="">Select your city...</option>
+            <option value="">Select your city</option>
             {cities.map((c) => (
               <option key={c.slug} value={c.slug}>
                 {c.name}{c.province ? ` — ${c.province}` : ''}
@@ -193,7 +191,7 @@ function Step1({ formData, errors, update }: StepProps) {
       <FormField label="Street Address" htmlFor="address" error={errors.address} optional>
         <textarea
           id="address"
-          placeholder="Barangay, Street, Building "
+          placeholder="Barangay, street, building"
           value={formData.address}
           onChange={(e) => update('address', e.target.value)}
           rows={2}
@@ -207,9 +205,8 @@ function Step1({ formData, errors, update }: StepProps) {
 function Step2({ formData, errors, update }: StepProps) {
   return (
     <div className="space-y-8">
-      <div>
-        <p className="text-xs font-bold tracking-widest text-solar-500 uppercase mb-3">Step 2 of 3 · MAINTENANCE</p>
-        <h2 className="font-serif text-5xl text-navy-950 tracking-tight">System & Issue.</h2>
+      <div className="mb-8">
+        <h2 className="text-[2.25rem] font-black text-navy-950 tracking-tight text-wrap-balance" style={{ fontFamily: 'Poppins, sans-serif' }}>System & issue.</h2>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
@@ -218,7 +215,7 @@ function Step2({ formData, errors, update }: StepProps) {
             id="system_size_kw"
             type="text"
             inputMode="decimal"
-            placeholder="e.g. 5, 10.5 "
+            placeholder="e.g. 5, 10.5"
             value={formData.system_size_kw}
             onChange={(e) => update('system_size_kw', e.target.value)}
             className={inputClass}
@@ -233,7 +230,7 @@ function Step2({ formData, errors, update }: StepProps) {
               onChange={(e) => update('installation_year', e.target.value)}
               className={selectClass}
             >
-              <option value="">Select year ...</option>
+              <option value="">Select year</option>
               {INSTALL_YEARS.map((y) => (
                 <option key={y} value={y}>{y}</option>
               ))}
@@ -242,7 +239,7 @@ function Step2({ formData, errors, update }: StepProps) {
         </FormField>
       </div>
 
-      <FormField label="Issue Category *" htmlFor="issue_category" error={errors.issue_category}>
+      <FormField label="Issue Category" htmlFor="issue_category" error={errors.issue_category}>
         <SelectWrapper>
           <select
             id="issue_category"
@@ -250,7 +247,7 @@ function Step2({ formData, errors, update }: StepProps) {
             onChange={(e) => update('issue_category', e.target.value)}
             className={selectClass}
           >
-            <option value="">Select issue type...</option>
+            <option value="">Select issue type</option>
             {ISSUE_CATEGORIES.map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}
@@ -258,7 +255,7 @@ function Step2({ formData, errors, update }: StepProps) {
         </SelectWrapper>
       </FormField>
 
-      <FormField label="Issue Description *" htmlFor="issue_description" error={errors.issue_description}>
+      <FormField label="Issue Description" htmlFor="issue_description" error={errors.issue_description}>
         <textarea
           id="issue_description"
           placeholder="Describe the problem or what you'd like serviced. Include any error codes, symptoms, or observations..."
@@ -278,7 +275,7 @@ function Step3({ formData, errors, update }: StepProps) {
 
   const renderSlotGroup = (label: string, slots: typeof TIME_SLOTS) => (
     <div>
-      <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">{label}</p>
+      <p className="text-xs font-semibold text-slate-400 mb-3">{label}</p>
       <div className="flex flex-wrap gap-3">
         {slots.map(({ label: time }) => {
           const active = formData.preferred_time === time;
@@ -302,14 +299,13 @@ function Step3({ formData, errors, update }: StepProps) {
 
   return (
     <div className="space-y-8">
-      <div>
-        <p className="text-xs font-bold tracking-widest text-solar-500 uppercase mb-3">Step 3 of 3 · MAINTENANCE</p>
-        <h2 className="font-serif text-5xl text-navy-950 tracking-tight">Preferred Schedule.</h2>
+      <div className="mb-8">
+        <h2 className="text-[2.25rem] font-black text-navy-950 tracking-tight text-wrap-balance" style={{ fontFamily: 'Poppins, sans-serif' }}>Schedule.</h2>
       </div>
 
-      <FormField label="Preferred Date *" htmlFor="preferred_date" error={errors.preferred_date}>
+      <FormField label="Preferred Date" htmlFor="preferred_date" error={errors.preferred_date}>
         <div className="relative">
-          <Calendar size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          <Calendar size={16} className="absolute left-0 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
           <input
             id="preferred_date"
             type="date"
@@ -317,17 +313,17 @@ function Step3({ formData, errors, update }: StepProps) {
             max={maxDate}
             value={formData.preferred_date}
             onChange={(e) => update('preferred_date', e.target.value)}
-            className={`${inputClass} pl-10`}
+            className={`${inputClass} pl-8`}
           />
         </div>
       </FormField>
 
       <div>
-        <div className="flex items-center gap-2 mb-3">
+        <div className="flex items-center gap-2 mb-4">
           <Clock size={16} className="text-slate-400" />
-          <span className="block text-xs font-bold tracking-widest uppercase text-navy-950">Preferred Time *</span>
+          <span className="block text-sm font-semibold text-navy-800">Preferred time</span>
         </div>
-        <div className="space-y-4">
+        <div className="space-y-6">
           {renderSlotGroup('Morning', morningSlots)}
           {renderSlotGroup('Afternoon', afternoonSlots)}
         </div>
@@ -338,7 +334,7 @@ function Step3({ formData, errors, update }: StepProps) {
 
       {/* Summary */}
       <div className="bg-white border border-slate-200 p-8 mt-12">
-        <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Summary</p>
+        <p className="text-sm font-semibold text-slate-500 mb-4">Summary</p>
         <div className="grid grid-cols-2 gap-x-6 gap-y-4 text-base">
           <SummaryRow label="Name" value={formData.name} />
           <SummaryRow label="Phone" value={formData.phone} />
@@ -354,7 +350,7 @@ function Step3({ formData, errors, update }: StepProps) {
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-slate-400 text-xs uppercase tracking-wider mb-1">{label}</p>
+      <p className="text-slate-400 text-xs mb-1">{label}</p>
       <p className="text-navy-950 font-medium truncate">{value || '—'}</p>
     </div>
   );
@@ -430,8 +426,6 @@ export default function MaintenanceBookingPage() {
     router.push(`/booking/confirmation?id=${result.bookingId}&name=${encodeURIComponent(formData.name)}`);
   };
 
-  const progressPercent = (step / (STEPS.length - 1)) * 100;
-
   return (
     <BookingSplitLayout
       leftTag="O&M SERVICE"
@@ -443,16 +437,21 @@ export default function MaintenanceBookingPage() {
           Back to index
         </Link>
 
-        {/* Progress Indicator */}
-        <div className="flex items-center justify-between mb-16 relative">
-          <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-px bg-slate-200" />
+        {/* Progress */}
+        <div className="flex gap-2 mb-14">
           {STEPS.map((label, i) => {
             const done = i < step;
             const active = i === step;
             return (
-              <div key={i} className={`relative bg-[#FBF9F6] px-3 sm:px-4 flex items-center gap-2 transition-colors ${active ? 'text-navy-950' : done ? 'text-slate-400' : 'text-slate-300'}`}>
-                <span className="font-serif text-base">0{i + 1}</span>
-                <span className="text-sm font-semibold hidden sm:inline-block tracking-wide">{label}</span>
+              <div key={i} className="flex-1 flex flex-col gap-2.5">
+                <div className={`h-[3px] rounded-sm transition-all duration-300 ${
+                  done ? 'bg-solar-400' : active ? 'bg-navy-950' : 'bg-slate-200'
+                }`} />
+                <span className={`text-[11px] font-semibold transition-colors ${
+                  active ? 'text-navy-950' : done ? 'text-solar-500' : 'text-slate-300'
+                }`}>
+                  {label}
+                </span>
               </div>
             );
           })}
@@ -500,7 +499,7 @@ export default function MaintenanceBookingPage() {
               <button
                 type="button"
                 onClick={goNext}
-                className="flex items-center gap-3 px-10 py-4 rounded-full bg-navy-950 text-white font-bold text-sm tracking-widest hover:bg-navy-800 transition-colors min-h-[52px]"
+                className="flex items-center gap-3 px-10 py-4 rounded-full bg-solar-500 text-navy-950 font-bold text-sm tracking-wide hover:bg-solar-400 transition-colors min-h-[52px]"
               >
                 CONTINUE
                 <ArrowRight size={16} />
@@ -510,7 +509,7 @@ export default function MaintenanceBookingPage() {
                 type="button"
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="flex items-center gap-3 px-10 py-4 rounded-full bg-navy-950 text-white font-bold text-sm tracking-widest hover:bg-navy-800 transition-colors min-h-[52px] disabled:opacity-60 disabled:cursor-not-allowed uppercase"
+                className="flex items-center gap-3 px-10 py-4 rounded-full bg-solar-500 text-navy-950 font-bold text-sm tracking-wide hover:bg-solar-400 transition-colors min-h-[52px] disabled:opacity-60 disabled:cursor-not-allowed uppercase"
               >
                 {isSubmitting ? (
                   <>
