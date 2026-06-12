@@ -14,6 +14,7 @@ import { LOCATIONS } from '@/data/locations';
 import BookingSplitLayout from '../_components/BookingSplitLayout';
 import Link from 'next/link';
 import { createBookingAction, type MaintenanceFormData } from '../actions';
+import { MAINTENANCE_KW_OPTIONS, MAINTENANCE_PER_KW_CENTAVOS, formatCentavos } from '@/lib/bookings/pricing';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -210,16 +211,25 @@ function Step2({ formData, errors, update }: StepProps) {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-        <FormField label="System Size (kW)" htmlFor="system_size_kw" error={errors.system_size_kw} optional>
-          <input
-            id="system_size_kw"
-            type="text"
-            inputMode="decimal"
-            placeholder="e.g. 5, 10.5"
-            value={formData.system_size_kw}
-            onChange={(e) => update('system_size_kw', e.target.value)}
-            className={inputClass}
-          />
+        <FormField label="System Size (kW)" htmlFor="system_size_kw" error={errors.system_size_kw}>
+          <SelectWrapper>
+            <select
+              id="system_size_kw"
+              value={formData.system_size_kw}
+              onChange={(e) => update('system_size_kw', e.target.value)}
+              className={selectClass}
+            >
+              <option value="">Select system size</option>
+              {MAINTENANCE_KW_OPTIONS.map((kw) => (
+                <option key={kw} value={String(kw)}>{kw} kW</option>
+              ))}
+            </select>
+          </SelectWrapper>
+          {formData.system_size_kw && (
+            <p className="text-sm font-semibold text-solar-500 mt-2">
+              {formatCentavos(MAINTENANCE_PER_KW_CENTAVOS * Number(formData.system_size_kw))} total
+            </p>
+          )}
         </FormField>
 
         <FormField label="Installation Year" htmlFor="installation_year" error={errors.installation_year} optional>
@@ -341,6 +351,12 @@ function Step3({ formData, errors, update }: StepProps) {
           <SummaryRow label="City" value={formData.city_name} />
           {formData.issue_category && <SummaryRow label="Issue" value={formData.issue_category} />}
           {formData.system_size_kw && <SummaryRow label="System Size" value={`${formData.system_size_kw} kW`} />}
+          {formData.system_size_kw && (
+            <SummaryRow
+              label="Amount Due"
+              value={formatCentavos(MAINTENANCE_PER_KW_CENTAVOS * Number(formData.system_size_kw))}
+            />
+          )}
         </div>
       </div>
     </div>
@@ -392,6 +408,7 @@ export default function MaintenanceBookingPage() {
       if (!formData.phone.trim()) next.phone = 'Phone number is required.';
       if (!formData.city) next.city = 'Please select your city.';
     } else if (step === 1) {
+      if (!formData.system_size_kw) next.system_size_kw = 'Please select your system size.';
       if (!formData.issue_category) next.issue_category = 'Please select an issue type.';
       if (!formData.issue_description.trim()) next.issue_description = 'Please describe the issue.';
     } else if (step === 2) {
@@ -423,7 +440,11 @@ export default function MaintenanceBookingPage() {
       setSubmitError(result.error);
       return;
     }
-    router.push(`/booking/confirmation?id=${result.bookingId}&name=${encodeURIComponent(formData.name)}`);
+    if (result.checkoutUrl) {
+      window.location.href = result.checkoutUrl;
+    } else {
+      router.push(`/booking/confirmation?id=${result.bookingId}&name=${encodeURIComponent(formData.name)}`);
+    }
   };
 
   return (
@@ -518,7 +539,7 @@ export default function MaintenanceBookingPage() {
                   </>
                 ) : (
                   <>
-                    CONFIRM BOOKING
+                    PROCEED TO PAYMENT
                     <ArrowRight size={16} />
                   </>
                 )}
