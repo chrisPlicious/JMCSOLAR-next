@@ -2,7 +2,9 @@ import { adminDb } from '@/lib/firebase/admin';
 import { requireAdminAuth } from '@/lib/auth';
 import type { DbBooking, DbBookingStatus, DbBookingType } from '@/lib/firebase/types';
 import Link from 'next/link';
-import { Calendar, Clock, Phone, User, Zap, Wrench, MapPinned, Lightbulb } from 'lucide-react';
+import { Calendar, Clock, Phone, User, Zap, Wrench, MapPinned, Lightbulb, CreditCard } from 'lucide-react';
+import type { DbBookingPaymentStatus } from '@/lib/firebase/types';
+import { formatCentavos } from '@/lib/bookings/pricing';
 
 export const metadata = { title: 'Bookings — Admin' };
 
@@ -23,6 +25,20 @@ const BOOKING_TYPE_LABELS: Record<DbBookingType, string> = {
   consultation: 'Consultation',
   maintenance: 'Maintenance',
   site_assessment: 'Site Assessment',
+};
+
+const PAYMENT_STATUS_STYLES: Record<DbBookingPaymentStatus, string> = {
+  not_required: 'bg-slate-100 text-slate-500 border-slate-200',
+  pending: 'bg-amber-50 text-amber-700 border-amber-200',
+  paid: 'bg-green-50 text-green-700 border-green-200',
+  failed: 'bg-red-50 text-red-600 border-red-200',
+};
+
+const PAYMENT_STATUS_LABELS: Record<DbBookingPaymentStatus, string> = {
+  not_required: 'Free',
+  pending: 'Unpaid',
+  paid: 'Paid',
+  failed: 'Failed',
 };
 
 const BOOKING_TYPE_ICONS: Record<DbBookingType, React.ReactNode> = {
@@ -161,6 +177,17 @@ function BookingCard({ booking: b }: { booking: DbBooking }) {
               >
                 {b.status.charAt(0).toUpperCase() + b.status.slice(1)}
               </span>
+              {b.payment_status && b.payment_status !== 'not_required' && (
+                <span
+                  className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full border ${PAYMENT_STATUS_STYLES[b.payment_status]}`}
+                >
+                  <CreditCard size={10} />
+                  {PAYMENT_STATUS_LABELS[b.payment_status]}
+                  {b.payment_status === 'paid' && b.payment_amount != null
+                    ? ` · ${formatCentavos(b.payment_amount)}`
+                    : ''}
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-4 mt-1 flex-wrap">
               <span className="flex items-center gap-1.5 text-sm text-slate-500">

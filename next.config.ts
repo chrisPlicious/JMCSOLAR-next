@@ -38,6 +38,9 @@ const nextConfig: NextConfig = {
     ];
   },
   images: {
+    // Uploaded images live at unique (timestamped) paths, so optimized
+    // variants can be cached long: browser + CDN + .next/cache/images.
+    minimumCacheTTL: 2592000, // 30 days
     remotePatterns: [
       {
         protocol: 'https',

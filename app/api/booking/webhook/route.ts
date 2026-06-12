@@ -109,18 +109,26 @@ async function notifyPaid(bookingId: string): Promise<void> {
     const amount = b.payment_amount != null ? formatCentavos(b.payment_amount) : '—';
     const when = `${b.preferred_date} ${b.preferred_time}`;
 
+    const isMaintenance = b.booking_type === 'maintenance';
+    const serviceLabel = isMaintenance ? 'maintenance service' : 'consultation';
+    const scheduleDetail = isMaintenance
+      ? (b.system_size_kw ? ` · ${b.system_size_kw}kW system` : '')
+      : (b.duration_hours ? ` (${b.duration_hours}hr)` : '');
+
     if (b.email) {
       await sendMail({
         to: b.email,
-        subject: 'Your JMC Solar consultation is confirmed',
+        subject: `Your JMC Solar ${serviceLabel} is confirmed`,
         text: [
           `Hi ${b.name},`,
           ``,
-          `We've received your payment of ${amount} — your consultation slot is reserved.`,
-          `Requested time: ${when}${b.duration_hours ? ` (${b.duration_hours}hr)` : ''}`,
+          `We've received your payment of ${amount} — your ${serviceLabel} slot is reserved.`,
+          `Requested time: ${when}${scheduleDetail}`,
           `Reference: JMC-${bookingId.slice(0, 8).toUpperCase()}`,
           ``,
-          `We'll email your video call link before the scheduled time.`,
+          isMaintenance
+            ? `Our technician will contact you before the scheduled visit.`
+            : `We'll email your video call link before the scheduled time.`,
           ``,
           `— JMC Solar PH`,
         ].join('\n'),
@@ -130,15 +138,15 @@ async function notifyPaid(bookingId: string): Promise<void> {
     if (admin) {
       await sendMail({
         to: admin,
-        subject: `PAID consultation — ${b.name} (${amount})`,
+        subject: `PAID ${serviceLabel} — ${b.name} (${amount})`,
         text: [
-          `A consultation booking was paid.`,
+          `A ${serviceLabel} booking was paid.`,
           ``,
           `Name: ${b.name}`,
           `Phone: ${b.phone}`,
           `Email: ${b.email ?? 'n/a'}`,
           `City: ${b.city_name}`,
-          `Requested: ${when}${b.duration_hours ? ` (${b.duration_hours}hr)` : ''}`,
+          `Requested: ${when}${scheduleDetail}`,
           `Amount: ${amount}`,
           `Booking: /admin/bookings/${bookingId}`,
         ].join('\n'),

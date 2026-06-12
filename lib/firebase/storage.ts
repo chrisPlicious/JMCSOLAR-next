@@ -2,6 +2,11 @@ import { adminStorage } from './admin'
 
 const BUCKET = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || ''
 
+// Files are uploaded to unique (timestamped) paths, so they can be cached
+// aggressively. Without this Firebase serves `private, max-age=0` and every
+// view re-downloads the original from storage.
+export const IMMUTABLE_CACHE = 'public, max-age=2592000, immutable'
+
 // New-generation buckets (*.firebasestorage.app) require the v0 REST URL.
 // Legacy buckets (*.appspot.com) use the storage.googleapis.com CDN URL.
 function buildStorageUrl(storagePath: string): string {
@@ -18,7 +23,11 @@ export async function uploadFile(
 ): Promise<string> {
   const bucket = adminStorage.bucket(BUCKET)
   const file = bucket.file(path)
-  await file.save(buffer, { contentType, public: true })
+  await file.save(buffer, {
+    contentType,
+    public: true,
+    metadata: { cacheControl: IMMUTABLE_CACHE },
+  })
   return buildStorageUrl(path)
 }
 

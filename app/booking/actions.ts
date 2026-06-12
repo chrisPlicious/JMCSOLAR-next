@@ -84,11 +84,16 @@ export async function createBookingAction(data: BookingInput): Promise<CreateBoo
     const now = new Date().toISOString();
 
     const isConsultation = data.booking_type === 'consultation';
+    const isMaintenance = data.booking_type === 'maintenance';
     const durationHours = isConsultation
       ? clampDuration(Number((data as ConsultationFormData).duration_hours))
       : null;
+    const systemSizeKw = isMaintenance
+      ? Number((data as MaintenanceFormData).system_size_kw) || undefined
+      : undefined;
     const amount = getBookingAmount(data.booking_type, {
       durationHours: durationHours ?? undefined,
+      systemSizeKw,
     });
     const requiresPayment = amount !== null;
 
@@ -169,24 +174,34 @@ export async function createBookingAction(data: BookingInput): Promise<CreateBoo
     // Pay-first: create a checkout session, persist its id, send customer to pay.
     const origin = await originUrl();
     const provider = getPaymentProvider();
+
+    let description: string;
+    let lineItems: { name: string; amount: number; quantity: number }[];
+    let cancelUrl: string;
+
+    if (isConsultation) {
+      description = `Solar consultation — ${durationHours}hr (${formatCentavos(amount)})`;
+      lineItems = [{ name: `Solar Consultation (${durationHours}hr)`, amount, quantity: 1 }];
+      cancelUrl = `${origin}/booking/consultation`;
+    } else {
+      // maintenance
+      description = `Solar system maintenance — ${systemSizeKw}kW (${formatCentavos(amount)})`;
+      lineItems = [{ name: `Solar Maintenance (${systemSizeKw}kW)`, amount, quantity: 1 }];
+      cancelUrl = `${origin}/booking/maintenance`;
+    }
+
     const session = await provider.createCheckoutSession({
       bookingId: ref.id,
       amount,
-      description: `Solar consultation — ${durationHours}hr (${formatCentavos(amount)})`,
-      lineItems: [
-        {
-          name: `Solar Consultation (${durationHours}hr)`,
-          amount,
-          quantity: 1,
-        },
-      ],
+      description,
+      lineItems,
       customer: {
         name: data.name.trim(),
         email: data.email.trim() || null,
         phone: data.phone.trim(),
       },
       successUrl: `${origin}/booking/confirmation?id=${ref.id}&name=${encodeURIComponent(data.name.trim())}`,
-      cancelUrl: `${origin}/booking/consultation`,
+      cancelUrl,
     });
 
     await ref.update({
