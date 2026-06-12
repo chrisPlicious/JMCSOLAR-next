@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, ChevronDown, LayoutGrid, Package, Calculator, MapPin } from 'lucide-react';
+import { Menu, X, ChevronDown, LayoutGrid, Package, Calculator, MapPin, CalendarCheck } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { db } from '@/lib/firebase/client';
 import { collection, getDocs, orderBy, query } from 'firebase/firestore';
@@ -124,6 +124,22 @@ export default function Navbar() {
                       Overview
                     </p>
                     <Link
+                      href="/booking"
+                      className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                        pathname.startsWith('/booking')
+                          ? 'text-solar-600 bg-solar-500/8'
+                          : 'text-navy-900 hover:bg-solar-500/8 hover:text-solar-600'
+                      }`}
+                    >
+                      <div className="w-8 h-8 bg-solar-400 rounded-lg flex items-center justify-center">
+                        <CalendarCheck size={15} className="text-navy-950" />
+                      </div>
+                      Book a Service
+                    </Link>
+
+                    <div className="h-px bg-slate-100 mx-1 my-2" />
+
+                    <Link
                       href="/services"
                       className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold text-navy-900 hover:bg-solar-500/8 hover:text-solar-600 transition-all duration-200"
                     >
@@ -213,7 +229,7 @@ export default function Navbar() {
         {/* Desktop CTA */}
         <div className="hidden lg:flex items-center gap-3">
           <a
-            href="/#contact"
+            href="/booking"
             className={`font-bold text-sm px-6 py-2.5 rounded-full transition-all duration-300 shadow-sm hover:shadow-md ${
               isTransparent
                 ? 'bg-white text-navy-900 hover:bg-white/90'
@@ -311,6 +327,20 @@ export default function Navbar() {
                     >
                       <div className="pl-3 pb-3 flex flex-col gap-0.5 mt-1">
                         <Link
+                          href="/booking"
+                          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                            pathname.startsWith('/booking')
+                              ? 'text-solar-400 bg-white/5'
+                              : 'text-white/80 hover:text-solar-400 hover:bg-white/5'
+                          }`}
+                        >
+                          <CalendarCheck size={14} />
+                          Book a Service
+                        </Link>
+
+                        <div className="h-px bg-white/10 my-1 mx-3" />
+
+                        <Link
                           href="/services"
                           className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-solar-400 hover:bg-white/5 transition-colors"
                         >
@@ -392,7 +422,7 @@ export default function Navbar() {
               </Link>
 
               <a
-                href="/#contact"
+                href="/booking"
                 className="mt-3 w-full block bg-solar-500 hover:bg-solar-400 text-navy-900 font-bold text-base px-5 py-3.5 rounded-xl transition-all duration-200 text-center"
               >
                 Get a Free Quote

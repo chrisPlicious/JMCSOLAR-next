@@ -90,3 +90,45 @@ export type DbServiceDetail = {
 };
 
 export type WithId<T> = T & { id: string }
+
+export type DbBookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed';
+export type DbBookingPaymentStatus = 'not_required' | 'pending' | 'paid' | 'failed';
+export type DbBookingType = 'consultation' | 'maintenance' | 'site_assessment';
+
+export type DbBooking = {
+  id: string;
+  booking_type: DbBookingType;
+  name: string;
+  phone: string;
+  email: string | null;
+  city: string;
+  city_name: string;
+  address: string | null;
+  // consultation
+  service_type: string | null;
+  property_type: 'residential' | 'commercial' | 'industrial' | 'agricultural' | null;
+  monthly_bill: string | null;
+  notes: string | null;
+  // maintenance
+  system_size_kw: string | null;
+  installation_year: string | null;
+  issue_category: string | null;
+  issue_description: string | null;
+  // site assessment
+  roof_type: string | null;
+  property_age_years: string | null;
+  roof_area_sqm: string | null;
+  // schedule
+  preferred_date: string;
+  preferred_time: string;
+  duration_hours: number | null; // consultation only — drives price
+  status: DbBookingStatus;
+  // Payment (PayMongo)
+  payment_status: DbBookingPaymentStatus;
+  payment_amount: number | null; // total in centavos (₱500 = 50000)
+  payment_reference: string | null; // PayMongo payment id once paid
+  payment_session_id: string | null; // PayMongo checkout_session id
+  paid_at: string | null;
+  created_at: string;
+  updated_at: string | null;
+};

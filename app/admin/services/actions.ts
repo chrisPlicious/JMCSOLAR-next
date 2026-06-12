@@ -219,9 +219,9 @@ export async function updateService(
       sources.length > 0;
 
     if (hasDetail) {
-      await adminDb.collection('serviceDetails').doc(id).set(
-        {
-          service_id: id,
+      const detailQuery = await adminDb.collection('serviceDetails').where('service_id', '==', id).limit(1).get();
+      if (!detailQuery.empty) {
+        await detailQuery.docs[0].ref.update({
           tagline,
           overview,
           what_is_it,
@@ -231,9 +231,22 @@ export async function updateService(
           use_cases,
           sources,
           updated_at: new Date().toISOString(),
-        },
-        { merge: true }
-      );
+        });
+      } else {
+        await adminDb.collection('serviceDetails').add({
+          service_id: id,
+          tagline,
+          overview,
+          what_is_it,
+          how_it_works,
+          benefits,
+          specs,
+          use_cases,
+          sources,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+      }
     }
   } catch (e) {
     console.error('[updateService]', e);
@@ -248,7 +261,12 @@ export async function updateService(
 
 export async function deleteService(id: string): Promise<void> {
   await requireAdminAuth();
-  await adminDb.collection('serviceDetails').doc(id).delete();
+  
+  const detailQuery = await adminDb.collection('serviceDetails').where('service_id', '==', id).get();
+  for (const doc of detailQuery.docs) {
+    await doc.ref.delete();
+  }
+  
   await adminDb.collection('services').doc(id).delete();
   revalidatePath('/admin/services');
 }
