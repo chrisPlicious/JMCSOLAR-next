@@ -181,15 +181,31 @@ function BookingCard({ booking: b }: { booking: DbBooking }) {
                 {b.status.charAt(0).toUpperCase() + b.status.slice(1)}
               </span>
               {b.payment_status && b.payment_status !== 'not_required' && (
-                <span
-                  className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full border ${PAYMENT_STATUS_STYLES[b.payment_status]}`}
-                >
-                  <CreditCard size={10} />
-                  {PAYMENT_STATUS_LABELS[b.payment_status]}
-                  {b.payment_status === 'paid' && b.payment_amount != null
-                    ? ` · ${formatCentavos(b.payment_amount)}`
-                    : ''}
-                </span>
+                b.payment_reference ? (
+                  <a
+                    href={`https://dashboard.paymongo.com/payments/${b.payment_reference}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="View payment in PayMongo dashboard"
+                    className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full border hover:underline ${PAYMENT_STATUS_STYLES[b.payment_status]}`}
+                  >
+                    <CreditCard size={10} />
+                    {PAYMENT_STATUS_LABELS[b.payment_status]}
+                    {b.payment_status === 'paid' && b.payment_amount != null
+                      ? ` · ${formatCentavos(b.payment_amount)}`
+                      : ''}
+                  </a>
+                ) : (
+                  <span
+                    className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full border ${PAYMENT_STATUS_STYLES[b.payment_status]}`}
+                  >
+                    <CreditCard size={10} />
+                    {PAYMENT_STATUS_LABELS[b.payment_status]}
+                    {b.payment_status === 'paid' && b.payment_amount != null
+                      ? ` · ${formatCentavos(b.payment_amount)}`
+                      : ''}
+                  </span>
+                )
               )}
             </div>
             <div className="flex items-center gap-4 mt-1 flex-wrap">
