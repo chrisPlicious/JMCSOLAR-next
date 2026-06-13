@@ -2,7 +2,7 @@ import { adminDb } from '@/lib/firebase/admin';
 import { requireAdminAuth } from '@/lib/auth';
 import type { DbBooking, DbBookingStatus, DbBookingType } from '@/lib/firebase/types';
 import Link from 'next/link';
-import { Calendar, Clock, Phone, User, Zap, Wrench, MapPinned, Lightbulb, CreditCard } from 'lucide-react';
+import { Calendar, Clock, Phone, User, Zap, Wrench, MapPinned, Lightbulb, CreditCard, ExternalLink } from 'lucide-react';
 import type { DbBookingPaymentStatus } from '@/lib/firebase/types';
 import { formatCentavos } from '@/lib/bookings/pricing';
 import { RefundButton } from './_components/RefundButton';
@@ -181,31 +181,27 @@ function BookingCard({ booking: b }: { booking: DbBooking }) {
                 {b.status.charAt(0).toUpperCase() + b.status.slice(1)}
               </span>
               {b.payment_status && b.payment_status !== 'not_required' && (
-                b.payment_reference ? (
-                  <a
-                    href={`https://dashboard.paymongo.com/payments/${b.payment_reference}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title="View payment in PayMongo dashboard"
-                    className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full border hover:underline ${PAYMENT_STATUS_STYLES[b.payment_status]}`}
-                  >
-                    <CreditCard size={10} />
-                    {PAYMENT_STATUS_LABELS[b.payment_status]}
-                    {b.payment_status === 'paid' && b.payment_amount != null
-                      ? ` · ${formatCentavos(b.payment_amount)}`
-                      : ''}
-                  </a>
-                ) : (
-                  <span
-                    className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full border ${PAYMENT_STATUS_STYLES[b.payment_status]}`}
-                  >
-                    <CreditCard size={10} />
-                    {PAYMENT_STATUS_LABELS[b.payment_status]}
-                    {b.payment_status === 'paid' && b.payment_amount != null
-                      ? ` · ${formatCentavos(b.payment_amount)}`
-                      : ''}
-                  </span>
-                )
+                <span
+                  className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full border ${PAYMENT_STATUS_STYLES[b.payment_status]}`}
+                >
+                  <CreditCard size={10} />
+                  {PAYMENT_STATUS_LABELS[b.payment_status]}
+                  {b.payment_status === 'paid' && b.payment_amount != null
+                    ? ` · ${formatCentavos(b.payment_amount)}`
+                    : ''}
+                </span>
+              )}
+              {b.payment_reference && (
+                <a
+                  href={`https://dashboard.paymongo.com/payments/${b.payment_reference}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="View payment in PayMongo dashboard"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-slate-600 border border-slate-200 bg-white hover:bg-slate-50 px-2.5 py-0.5 rounded-full transition-colors"
+                >
+                  <ExternalLink size={10} />
+                  PayMongo
+                </a>
               )}
             </div>
             <div className="flex items-center gap-4 mt-1 flex-wrap">
