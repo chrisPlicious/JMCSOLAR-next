@@ -98,6 +98,7 @@ export async function refundBookingAction(
   try {
     await ref.update({
       payment_status: 'refunded',
+      status: 'cancelled', // refund implies the job is off
       refund_id: refundId,
       refunded_at: new Date().toISOString(),
       refund_amount: amount,
