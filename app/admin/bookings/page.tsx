@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Calendar, Clock, Phone, User, Zap, Wrench, MapPinned, Lightbulb, CreditCard } from 'lucide-react';
 import type { DbBookingPaymentStatus } from '@/lib/firebase/types';
 import { formatCentavos } from '@/lib/bookings/pricing';
+import { RefundButton } from './_components/RefundButton';
 
 export const metadata = { title: 'Bookings — Admin' };
 
@@ -32,6 +33,7 @@ const PAYMENT_STATUS_STYLES: Record<DbBookingPaymentStatus, string> = {
   pending: 'bg-amber-50 text-amber-700 border-amber-200',
   paid: 'bg-green-50 text-green-700 border-green-200',
   failed: 'bg-red-50 text-red-600 border-red-200',
+  refunded: 'bg-purple-50 text-purple-700 border-purple-200',
 };
 
 const PAYMENT_STATUS_LABELS: Record<DbBookingPaymentStatus, string> = {
@@ -39,6 +41,7 @@ const PAYMENT_STATUS_LABELS: Record<DbBookingPaymentStatus, string> = {
   pending: 'Unpaid',
   paid: 'Paid',
   failed: 'Failed',
+  refunded: 'Refunded',
 };
 
 const BOOKING_TYPE_ICONS: Record<DbBookingType, React.ReactNode> = {
@@ -210,6 +213,14 @@ function BookingCard({ booking: b }: { booking: DbBooking }) {
           </div>
           <p className="text-xs text-slate-400">Ref: {refNumber}</p>
           <p className="text-xs text-slate-400">Submitted {createdDisplay}</p>
+          {b.payment_status === 'paid' && b.payment_reference && b.payment_amount != null && (
+            <div className="mt-2">
+              <RefundButton
+                bookingId={b.id}
+                paymentAmount={b.payment_amount}
+              />
+            </div>
+          )}
         </div>
       </div>
 

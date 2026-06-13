@@ -114,6 +114,9 @@ export async function createBookingAction(data: BookingInput): Promise<CreateBoo
       payment_reference: null,
       payment_session_id: null,
       paid_at: null,
+      refund_id: null,
+      refunded_at: null,
+      refund_amount: null,
       created_at: now,
       updated_at: null,
     };
