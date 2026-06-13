@@ -92,7 +92,7 @@ export type DbServiceDetail = {
 export type WithId<T> = T & { id: string }
 
 export type DbBookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed';
-export type DbBookingPaymentStatus = 'not_required' | 'pending' | 'paid' | 'failed';
+export type DbBookingPaymentStatus = 'not_required' | 'pending' | 'paid' | 'failed' | 'refunded';
 export type DbBookingType = 'consultation' | 'maintenance' | 'site_assessment';
 
 export type DbBooking = {
@@ -129,6 +129,10 @@ export type DbBooking = {
   payment_reference: string | null; // PayMongo payment id once paid
   payment_session_id: string | null; // PayMongo checkout_session id
   paid_at: string | null;
+  // Refund (PayMongo)
+  refund_id: string | null; // PayMongo refund id (ref_xxx)
+  refunded_at: string | null; // ISO timestamp when refunded
+  refund_amount: number | null; // amount refunded in centavos
   created_at: string;
   updated_at: string | null;
 };

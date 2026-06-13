@@ -30,6 +30,19 @@ export async function POST(request: Request) {
   const eventId = eventIdFromBody(rawBody);
   const event = provider.parseWebhookEvent(rawBody);
 
+  // Check for refund events before the provider's event parser (which only knows
+  // payment events and returns 'ignored' for refund events). The dashboard exposes
+  // payment.refunded / payment.refund.updated; the docs events page describes
+  // refund.succeeded — handle all three.
+  const rawEventType = rawEventTypeFromBody(rawBody);
+  if (
+    rawEventType === 'refund.succeeded' ||
+    rawEventType === 'payment.refunded' ||
+    rawEventType === 'payment.refund.updated'
+  ) {
+    return handleRefundEvent(rawEventType, rawBody, eventId);
+  }
+
   if (event.type === 'ignored' || !eventId) {
     // Acknowledge so PayMongo doesn't retry events we don't act on.
     return NextResponse.json({ received: true });
@@ -95,6 +108,129 @@ export async function POST(request: Request) {
       console.error('[webhook] failed to mark booking failed', e);
     }
     return NextResponse.json({ received: true });
+  }
+
+  return NextResponse.json({ received: true });
+}
+
+function rawEventTypeFromBody(rawBody: string): string | null {
+  try {
+    const json = JSON.parse(rawBody) as { data?: { attributes?: { type?: string } } };
+    return json.data?.attributes?.type ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function handleRefundEvent(
+  eventType: string,
+  rawBody: string,
+  eventId: string | null,
+): Promise<NextResponse> {
+  if (!eventId) return NextResponse.json({ received: true });
+
+  // data.attributes.data is either a refund resource (ref_xxx, with
+  // attributes.payment_id) or a payment resource (pay_xxx) depending on event type.
+  let paymentId: string;
+  let refundId: string | null;
+  let refundAmount: number;
+  try {
+    const json = JSON.parse(rawBody) as {
+      data?: {
+        attributes?: {
+          data?: {
+            id?: string;
+            attributes?: { payment_id?: string; amount?: number; status?: string };
+          };
+        };
+      };
+    };
+    const resource = json.data?.attributes?.data;
+    const attrs = resource?.attributes;
+    const resourceId = resource?.id ?? '';
+
+    if (resourceId.startsWith('ref_')) {
+      // Refund resource — only act on a succeeded refund (payment.refund.updated
+      // also fires for failed/pending refunds).
+      if (attrs?.status && attrs.status !== 'succeeded') {
+        return NextResponse.json({ received: true });
+      }
+      paymentId = attrs?.payment_id ?? '';
+      refundId = resourceId;
+      refundAmount = attrs?.amount ?? 0;
+    } else if (resourceId.startsWith('pay_')) {
+      // Payment resource (payment.refunded) — refund id not included in payload.
+      paymentId = resourceId;
+      refundId = null;
+      refundAmount = attrs?.amount ?? 0;
+    } else {
+      console.error('[webhook] unrecognized refund event resource', eventType, resourceId);
+      return NextResponse.json({ received: true });
+    }
+
+    if (!paymentId) {
+      console.error('[webhook] refund event missing payment id', eventType);
+      return NextResponse.json({ received: true });
+    }
+  } catch (e) {
+    console.error('[webhook] failed to parse refund event body', e);
+    return NextResponse.json({ received: true });
+  }
+
+  // Idempotency claim
+  const eventRef = adminDb.collection('processedWebhookEvents').doc(eventId);
+  try {
+    const claimed = await adminDb.runTransaction(async (tx) => {
+      const existing = await tx.get(eventRef);
+      if (existing.exists) return false;
+      tx.set(eventRef, {
+        id: eventId,
+        type: eventType,
+        refund_id: refundId,
+        payment_id: paymentId,
+        processed_at: new Date().toISOString(),
+      });
+      return true;
+    });
+    if (!claimed) {
+      return NextResponse.json({ received: true, duplicate: true });
+    }
+  } catch (e) {
+    console.error('[webhook] refund idempotency claim failed', e);
+    return NextResponse.json({ error: 'Internal error.' }, { status: 500 });
+  }
+
+  // Find the booking whose payment_reference matches the payment_id from the refund
+  try {
+    const snap = await adminDb
+      .collection('bookings')
+      .where('payment_reference', '==', paymentId)
+      .limit(1)
+      .get();
+
+    if (snap.empty) {
+      console.error('[webhook] refund event: no booking found for payment_id', paymentId);
+      return NextResponse.json({ received: true });
+    }
+
+    const bookingDoc = snap.docs[0];
+    const b = bookingDoc.data() as DbBooking;
+
+    // Idempotent: if already refunded, no-op
+    if (b.payment_status === 'refunded') {
+      return NextResponse.json({ received: true });
+    }
+
+    await bookingDoc.ref.update({
+      payment_status: 'refunded',
+      refund_id: refundId,
+      refunded_at: new Date().toISOString(),
+      refund_amount: refundAmount,
+      updated_at: new Date().toISOString(),
+    });
+  } catch (e) {
+    console.error('[webhook] failed to update booking for refund event', e);
+    return NextResponse.json({ error: 'Failed to update booking.' }, { status: 500 });
   }
 
   return NextResponse.json({ received: true });
