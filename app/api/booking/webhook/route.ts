@@ -230,6 +230,7 @@ async function handleRefundEvent(
 
     await bookingDoc.ref.update({
       payment_status: 'refunded',
+      status: 'cancelled', // refund implies the job is off
       refund_id: refundId,
       refunded_at: new Date().toISOString(),
       refund_amount: refundAmount,
