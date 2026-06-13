@@ -126,16 +126,29 @@ export const paymongoProvider: PaymentProvider = {
       const attrs = resource?.attributes;
       const bookingId =
         attrs?.metadata?.booking_id ?? attrs?.reference_number ?? '';
-      const sessionId = resource?.id ?? '';
-      const paymentId = attrs?.payments?.[0]?.id ?? attrs?.payment_intent?.id ?? '';
 
       if (!bookingId) return { type: 'ignored' };
 
-      if (type === 'checkout_session.payment.paid' || type === 'payment.paid') {
-        return { type: 'payment.paid', bookingId, paymentId, sessionId };
+      if (type === 'checkout_session.payment.paid') {
+        // Resource is the checkout session (cs_xxx); payment id lives in payments[].
+        return {
+          type: 'payment.paid',
+          bookingId,
+          paymentId: attrs?.payments?.[0]?.id ?? '',
+          sessionId: resource?.id ?? '',
+        };
+      }
+      if (type === 'payment.paid') {
+        // Resource IS the payment (pay_xxx) — its own id is the payment id.
+        return {
+          type: 'payment.paid',
+          bookingId,
+          paymentId: resource?.id ?? '',
+          sessionId: '',
+        };
       }
       if (type === 'payment.failed') {
-        return { type: 'payment.failed', bookingId, sessionId };
+        return { type: 'payment.failed', bookingId, sessionId: '' };
       }
       return { type: 'ignored' };
     } catch {

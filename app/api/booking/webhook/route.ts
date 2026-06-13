@@ -177,9 +177,41 @@ async function handleRefundEvent(
     return NextResponse.json({ received: true });
   }
 
-  // Idempotency claim
-  const eventRef = adminDb.collection('processedWebhookEvents').doc(eventId);
+  // Find the booking whose payment_reference matches the payment_id from the refund.
+  // Look up the booking BEFORE claiming the event id — claiming first would burn the
+  // event id on a failed lookup and make a manual resend no-op as a duplicate.
   try {
+    let snap = await adminDb
+      .collection('bookings')
+      .where('payment_reference', '==', paymentId)
+      .limit(1)
+      .get();
+
+    if (snap.empty) {
+      // Fallback for bookings written by the old parser, which stored the payment id
+      // in payment_session_id and left payment_reference empty.
+      snap = await adminDb
+        .collection('bookings')
+        .where('payment_session_id', '==', paymentId)
+        .limit(1)
+        .get();
+    }
+
+    if (snap.empty) {
+      console.error('[webhook] refund event: no booking found for payment_id', paymentId);
+      return NextResponse.json({ received: true });
+    }
+
+    const bookingDoc = snap.docs[0];
+    const b = bookingDoc.data() as DbBooking;
+
+    // Idempotent: if already refunded, no-op
+    if (b.payment_status === 'refunded') {
+      return NextResponse.json({ received: true });
+    }
+
+    // Idempotency claim
+    const eventRef = adminDb.collection('processedWebhookEvents').doc(eventId);
     const claimed = await adminDb.runTransaction(async (tx) => {
       const existing = await tx.get(eventRef);
       if (existing.exists) return false;
@@ -194,31 +226,6 @@ async function handleRefundEvent(
     });
     if (!claimed) {
       return NextResponse.json({ received: true, duplicate: true });
-    }
-  } catch (e) {
-    console.error('[webhook] refund idempotency claim failed', e);
-    return NextResponse.json({ error: 'Internal error.' }, { status: 500 });
-  }
-
-  // Find the booking whose payment_reference matches the payment_id from the refund
-  try {
-    const snap = await adminDb
-      .collection('bookings')
-      .where('payment_reference', '==', paymentId)
-      .limit(1)
-      .get();
-
-    if (snap.empty) {
-      console.error('[webhook] refund event: no booking found for payment_id', paymentId);
-      return NextResponse.json({ received: true });
-    }
-
-    const bookingDoc = snap.docs[0];
-    const b = bookingDoc.data() as DbBooking;
-
-    // Idempotent: if already refunded, no-op
-    if (b.payment_status === 'refunded') {
-      return NextResponse.json({ received: true });
     }
 
     await bookingDoc.ref.update({
