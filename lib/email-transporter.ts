@@ -30,6 +30,7 @@ type SendMailArgs = {
   to: string;
   subject: string;
   text: string;
+  html?: string;
   replyTo?: string;
 };
 
@@ -37,7 +38,7 @@ type SendMailArgs = {
  * Sends an email if SMTP is configured. Never throws — returns whether it
  * sent, so callers (e.g. webhooks) won't fail on transient mail errors.
  */
-export async function sendMail({ to, subject, text, replyTo }: SendMailArgs): Promise<boolean> {
+export async function sendMail({ to, subject, text, html, replyTo }: SendMailArgs): Promise<boolean> {
   const mailer = getMailer();
   const user = smtpUser();
   if (!mailer || !user) return false;
@@ -48,6 +49,7 @@ export async function sendMail({ to, subject, text, replyTo }: SendMailArgs): Pr
       replyTo,
       subject,
       text,
+      html,
     });
     return true;
   } catch (err) {
