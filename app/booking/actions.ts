@@ -5,6 +5,7 @@ import { adminDb } from '@/lib/firebase/admin';
 import { getPaymentProvider } from '@/lib/payments';
 import {
   getBookingAmount,
+  getSiteAssessmentTier,
   clampDuration,
   formatCentavos,
 } from '@/lib/bookings/pricing';
@@ -47,6 +48,7 @@ export type SiteAssessmentFormData = {
   city: string;
   city_name: string;
   address: string;
+  location_tier: string;
   property_type: string;
   roof_type: string;
   property_age_years: string;
@@ -85,15 +87,19 @@ export async function createBookingAction(data: BookingInput): Promise<CreateBoo
 
     const isConsultation = data.booking_type === 'consultation';
     const isMaintenance = data.booking_type === 'maintenance';
+    const isSiteAssessment = data.booking_type === 'site_assessment';
     const durationHours = isConsultation
       ? clampDuration(Number((data as ConsultationFormData).duration_hours))
       : null;
     const systemSizeKw = isMaintenance
       ? Number((data as MaintenanceFormData).system_size_kw) || undefined
       : undefined;
+    const siteAssessmentData = isSiteAssessment ? (data as SiteAssessmentFormData) : undefined;
     const amount = getBookingAmount(data.booking_type, {
       durationHours: durationHours ?? undefined,
       systemSizeKw,
+      citySlug: siteAssessmentData?.city,
+      locationTier: siteAssessmentData?.location_tier,
     });
     const requiresPayment = amount !== null;
 
@@ -186,11 +192,17 @@ export async function createBookingAction(data: BookingInput): Promise<CreateBoo
       description = `Solar consultation — ${durationHours}hr (${formatCentavos(amount)})`;
       lineItems = [{ name: `Solar Consultation (${durationHours}hr)`, amount, quantity: 1 }];
       cancelUrl = `${origin}/booking/consultation`;
-    } else {
-      // maintenance
+    } else if (isMaintenance) {
       description = `Solar system maintenance — ${systemSizeKw}kW (${formatCentavos(amount)})`;
       lineItems = [{ name: `Solar Maintenance (${systemSizeKw}kW)`, amount, quantity: 1 }];
       cancelUrl = `${origin}/booking/maintenance`;
+    } else {
+      // site assessment
+      const tier = getSiteAssessmentTier(siteAssessmentData!.city, siteAssessmentData!.location_tier);
+      const tierLabel = tier === 'ormoc_far' ? 'Ormoc far barangay' : tier === 'ormoc_city' ? 'Ormoc City' : 'Outside Ormoc';
+      description = `Site assessment — ${tierLabel} (${formatCentavos(amount)})`;
+      lineItems = [{ name: `Site Assessment (${tierLabel})`, amount, quantity: 1 }];
+      cancelUrl = `${origin}/booking/site-assessment`;
     }
 
     const session = await provider.createCheckoutSession({

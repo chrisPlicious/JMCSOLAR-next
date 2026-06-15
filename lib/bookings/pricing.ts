@@ -9,13 +9,27 @@ export const MAINTENANCE_PER_KW_CENTAVOS = 100000; // ₱1,000 / kW
 export const MAINTENANCE_KW_OPTIONS = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16] as const;
 export type MaintenanceSystemSize = (typeof MAINTENANCE_KW_OPTIONS)[number];
 
+// Site assessment tiers (centavos)
+export const SITE_ASSESSMENT_TIERS = {
+  ormoc_city: 50000,   // ₱500 — Ormoc City proper
+  ormoc_far: 100000,  // ₱1,000 — Ormoc far barangay
+  other: 200000,       // ₱2,000 — outside Ormoc
+} as const;
+export type SiteAssessmentTier = keyof typeof SITE_ASSESSMENT_TIERS;
+
+export function getSiteAssessmentTier(citySlug: string, locationTier?: string): SiteAssessmentTier {
+  if (citySlug !== 'ormoc-city') return 'other';
+  if (locationTier === 'ormoc_far') return 'ormoc_far';
+  return 'ormoc_city';
+}
+
 /**
  * Total price for a booking, in centavos.
- * Returns null for site_assessment (free intake) or when required opts are missing.
+ * Returns null when required opts are missing.
  */
 export function getBookingAmount(
   bookingType: BookingType,
-  opts?: { durationHours?: number; systemSizeKw?: number },
+  opts?: { durationHours?: number; systemSizeKw?: number; citySlug?: string; locationTier?: string },
 ): number | null {
   if (bookingType === 'consultation') {
     const hours = clampDuration(opts?.durationHours);
@@ -25,6 +39,11 @@ export function getBookingAmount(
     const kw = opts?.systemSizeKw;
     if (!kw || !(MAINTENANCE_KW_OPTIONS as readonly number[]).includes(kw)) return null;
     return MAINTENANCE_PER_KW_CENTAVOS * kw;
+  }
+  if (bookingType === 'site_assessment') {
+    if (!opts?.citySlug) return null;
+    const tier = getSiteAssessmentTier(opts.citySlug, opts.locationTier);
+    return SITE_ASSESSMENT_TIERS[tier];
   }
   return null;
 }

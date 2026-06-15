@@ -18,6 +18,11 @@ import { LOCATIONS } from '@/data/locations';
 import BookingSplitLayout from '../_components/BookingSplitLayout';
 import Link from 'next/link';
 import { createBookingAction, type SiteAssessmentFormData } from '../actions';
+import {
+  SITE_ASSESSMENT_TIERS,
+  getSiteAssessmentTier,
+  formatCentavos,
+} from '@/lib/bookings/pricing';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -141,11 +146,18 @@ type StepProps = {
   update: (field: keyof SiteAssessmentFormData, value: string) => void;
 };
 
+const ORMOC_TIER_OPTIONS = [
+  { value: 'ormoc_city', label: 'Ormoc City (main area)', price: SITE_ASSESSMENT_TIERS.ormoc_city },
+  { value: 'ormoc_far', label: 'Ormoc City (far barangay)', price: SITE_ASSESSMENT_TIERS.ormoc_far },
+];
+
 function Step1({ formData, errors, update }: StepProps) {
   const handleCityChange = (slug: string) => {
     const loc = cities.find((c) => c.slug === slug);
     update('city', slug);
     update('city_name', loc?.name ?? slug);
+    // Reset location_tier when city changes
+    update('location_tier', slug === 'ormoc-city' ? 'ormoc_city' : 'other');
   };
 
   return (
@@ -208,6 +220,31 @@ function Step1({ formData, errors, update }: StepProps) {
           </select>
         </SelectWrapper>
       </FormField>
+
+      {formData.city === 'ormoc-city' && (
+        <div>
+          <p className="block text-sm font-semibold text-navy-800 mb-3">Area type</p>
+          <div className="grid grid-cols-2 gap-4">
+            {ORMOC_TIER_OPTIONS.map(({ value, label, price }) => {
+              const active = formData.location_tier === value;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => update('location_tier', value)}
+                  aria-pressed={active}
+                  className={`flex flex-col gap-1 p-5 border-2 text-left transition-all duration-200 ${
+                    active ? 'border-solar-400 bg-white' : 'border-slate-200/60 bg-transparent hover:border-slate-300'
+                  }`}
+                >
+                  <span className={`text-sm font-semibold ${active ? 'text-navy-900' : 'text-slate-600'}`}>{label}</span>
+                  <span className={`text-base font-black ${active ? 'text-navy-950' : 'text-slate-400'}`} style={{ fontFamily: 'Poppins, sans-serif' }}>{formatCentavos(price)}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <FormField label="Street Address" htmlFor="address" error={errors.address} optional>
         <textarea
@@ -405,6 +442,12 @@ function Step3({ formData, errors, update }: StepProps) {
           {formData.roof_type && <SummaryRow label="Roof" value={formData.roof_type} />}
           {formData.monthly_bill && <SummaryRow label="Monthly Bill" value={formData.monthly_bill} />}
         </div>
+        <div className="flex items-center justify-between mt-6 pt-6 border-t border-slate-200">
+          <span className="text-xs font-semibold text-slate-400">Assessment fee</span>
+          <span className="text-2xl font-black text-navy-950" style={{ fontFamily: 'Poppins, sans-serif' }}>
+            {formatCentavos(SITE_ASSESSMENT_TIERS[getSiteAssessmentTier(formData.city, formData.location_tier)])}
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -435,6 +478,7 @@ export default function SiteAssessmentBookingPage() {
     city: '',
     city_name: '',
     address: '',
+    location_tier: '',
     property_type: '',
     roof_type: '',
     property_age_years: '',
@@ -481,11 +525,16 @@ export default function SiteAssessmentBookingPage() {
     setIsSubmitting(true);
     setSubmitError('');
     const result = await createBookingAction({ ...formData, booking_type: 'site_assessment' });
-    setIsSubmitting(false);
     if ('error' in result) {
+      setIsSubmitting(false);
       setSubmitError(result.error);
       return;
     }
+    if (result.checkoutUrl) {
+      window.location.assign(result.checkoutUrl);
+      return;
+    }
+    setIsSubmitting(false);
     router.push(`/booking/confirmation?id=${result.bookingId}&name=${encodeURIComponent(formData.name)}`);
   };
 
@@ -577,11 +626,11 @@ export default function SiteAssessmentBookingPage() {
                 {isSubmitting ? (
                   <>
                     <Loader2 size={16} className="animate-spin" />
-                    SUBMITTING…
+                    REDIRECTING…
                   </>
                 ) : (
                   <>
-                    CONFIRM BOOKING
+                    PROCEED TO PAYMENT
                     <ArrowRight size={16} />
                   </>
                 )}
