@@ -1,4 +1,7 @@
 import { adminDb } from '@/lib/firebase/admin';
+import { requireAdminAuth } from '@/lib/auth';
+import { formatCentavos } from '@/lib/bookings/pricing';
+import type { DbBookingType } from '@/lib/firebase/types';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
@@ -13,48 +16,97 @@ function getRelativeTime(dateStr: string): string {
   return `${days}d ago`;
 }
 
+const BOOKING_TYPE_LABELS: Record<DbBookingType, string> = {
+  consultation: 'Consultation',
+  maintenance: 'Maintenance',
+  site_assessment: 'Site Assessment',
+};
+
 function StatCard({
   count,
   label,
   accent,
   secondary,
+  secondaryClass = 'text-slate-400',
+  href,
 }: {
   count: number;
   label: string;
   accent: string;
   secondary: string;
+  secondaryClass?: string;
+  href?: string;
 }) {
-  return (
-    <div className="col-span-1 bg-white rounded-2xl border border-slate-100 shadow-card overflow-hidden">
+  const inner = (
+    <div className="col-span-1 bg-white rounded-2xl border border-slate-100 shadow-card overflow-hidden h-full hover:border-slate-200 transition-colors">
       <div className={`h-1 w-full ${accent}`} />
       <div className="p-5">
         <p className="text-5xl font-black text-navy-950 leading-none">{count}</p>
         <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mt-2">{label}</p>
-        <p className="text-xs text-slate-400 mt-1">{secondary}</p>
+        <p className={`text-xs mt-1 ${secondaryClass}`}>{secondary}</p>
       </div>
     </div>
   );
+  return href ? (
+    <Link href={href} className="col-span-1">
+      {inner}
+    </Link>
+  ) : (
+    inner
+  );
 }
 
+type ActivityType = 'project' | 'product' | 'booking' | 'result';
+
+const ACTIVITY_STYLES: Record<ActivityType, { dot: string; badge: string }> = {
+  project: { dot: 'bg-navy-950', badge: 'bg-navy-50 text-navy-700' },
+  product: { dot: 'bg-solar-500', badge: 'bg-solar-50 text-solar-700' },
+  booking: { dot: 'bg-emerald-500', badge: 'bg-emerald-50 text-emerald-700' },
+  result: { dot: 'bg-cyan-500', badge: 'bg-cyan-50 text-cyan-700' },
+};
+
+const ACTIVITY_HREF: Record<ActivityType, string> = {
+  project: '/admin/projects',
+  product: '/admin/products',
+  booking: '/admin/bookings',
+  result: '/admin/results',
+};
+
 export default async function AdminDashboard() {
+  await requireAdminAuth();
+
   const [
     projectCountAgg,
     productCountAgg,
     serviceCountAgg,
     reviewCountAgg,
+    bookingCountAgg,
+    resultCountAgg,
+    pendingBookingCountAgg,
     featuredServicesSnap,
     recentProjectsSnap,
     recentProductsSnap,
+    recentBookingsSnap,
+    recentResultsSnap,
+    pendingBookingsSnap,
+    paidBookingsSnap,
     reviewStatsSnap,
   ] = await Promise.all([
     adminDb.collection('projects').count().get(),
     adminDb.collection('products').count().get(),
     adminDb.collection('services').count().get(),
     adminDb.collection('reviews').count().get(),
+    adminDb.collection('bookings').count().get(),
+    adminDb.collection('results').count().get(),
+    adminDb.collection('bookings').where('status', '==', 'pending').count().get(),
     adminDb.collection('services').where('highlight', '==', true).get(),
     adminDb.collection('projects').orderBy('created_at', 'desc').limit(5).get(),
     adminDb.collection('products').orderBy('created_at', 'desc').limit(5).get(),
-    // M4: replaced full collection scan with aggregate count + limited rating query
+    adminDb.collection('bookings').orderBy('created_at', 'desc').limit(6).get(),
+    adminDb.collection('results').orderBy('created_at', 'desc').limit(5).get(),
+    // equality-only filter — no composite index required; sorted in JS below
+    adminDb.collection('bookings').where('status', '==', 'pending').limit(5).get(),
+    adminDb.collection('bookings').where('payment_status', '==', 'paid').select('payment_amount').get(),
     adminDb.collection('reviews').where('status', '==', 'approved').get(),
   ]);
 
@@ -62,38 +114,73 @@ export default async function AdminDashboard() {
   const productCount = productCountAgg.data().count;
   const serviceCount = serviceCountAgg.data().count;
   const reviewCount = reviewCountAgg.data().count;
+  const bookingCount = bookingCountAgg.data().count;
+  const resultCount = resultCountAgg.data().count;
+  const pendingBookingCount = pendingBookingCountAgg.data().count;
 
-  const featuredServices = featuredServicesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  const featuredServices = featuredServicesSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
-  const recentProjects = recentProjectsSnap.docs.map(doc => {
+  const recentProjects = recentProjectsSnap.docs.map((doc) => {
     const d = doc.data() as { title: string; created_at: string };
     return { id: doc.id, title: d.title, created_at: d.created_at };
   });
 
-  const recentProducts = recentProductsSnap.docs.map(doc => {
+  const recentProducts = recentProductsSnap.docs.map((doc) => {
     const d = doc.data() as { name: string; created_at: string };
     return { id: doc.id, name: d.name, created_at: d.created_at };
   });
 
-  const reviewStats = reviewStatsSnap.docs.map(doc => {
-    const d = doc.data() as { rating: number };
-    return { rating: d.rating };
+  const recentBookings = recentBookingsSnap.docs.map((doc) => {
+    const d = doc.data() as { name: string; booking_type: DbBookingType; created_at: string };
+    return { id: doc.id, name: d.name, booking_type: d.booking_type, created_at: d.created_at };
   });
 
+  const recentResults = recentResultsSnap.docs.map((doc) => {
+    const d = doc.data() as { created_at: string };
+    return { id: doc.id, created_at: d.created_at };
+  });
+
+  const pendingBookings = pendingBookingsSnap.docs
+    .map((doc) => {
+      const d = doc.data() as {
+        name: string;
+        booking_type: DbBookingType;
+        preferred_date: string;
+        created_at: string;
+      };
+      return { id: doc.id, name: d.name, booking_type: d.booking_type, preferred_date: d.preferred_date, created_at: d.created_at };
+    })
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+  const revenueCentavos = paidBookingsSnap.docs.reduce((sum, doc) => {
+    const d = doc.data() as { payment_amount: number | null };
+    return sum + (d.payment_amount ?? 0);
+  }, 0);
+  const paidCount = paidBookingsSnap.size;
+
   const recentActivity = [
-    ...recentProjects.map((p) => ({ title: p.title, created_at: p.created_at, type: 'project' as const })),
-    ...recentProducts.map((p) => ({ title: p.name, created_at: p.created_at, type: 'product' as const })),
+    ...recentProjects.map((p) => ({ title: p.title, created_at: p.created_at, type: 'project' as ActivityType })),
+    ...recentProducts.map((p) => ({ title: p.name, created_at: p.created_at, type: 'product' as ActivityType })),
+    ...recentBookings.map((b) => ({
+      title: `${b.name} · ${BOOKING_TYPE_LABELS[b.booking_type ?? 'consultation']}`,
+      created_at: b.created_at,
+      type: 'booking' as ActivityType,
+    })),
+    ...recentResults.map((r) => ({ title: 'Before/After result', created_at: r.created_at, type: 'result' as ActivityType })),
   ]
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    .slice(0, 5);
+    .slice(0, 6);
 
   const avgRating =
-    reviewStats && reviewStats.length > 0
-      ? (reviewStats.reduce((sum, r) => sum + r.rating, 0) / reviewStats.length).toFixed(1)
+    reviewStatsSnap.docs.length > 0
+      ? (
+          reviewStatsSnap.docs.reduce((sum, doc) => sum + ((doc.data() as { rating: number }).rating ?? 0), 0) /
+          reviewStatsSnap.docs.length
+        ).toFixed(1)
       : null;
 
   return (
-    <div className="flex items-center justify-center ">
+    <div className="flex items-center justify-center">
       <div className="grid grid-cols-6 gap-4 flex-1">
         {/* Welcome banner: col-span-2 row-span-2 */}
         <div
@@ -139,36 +226,96 @@ export default async function AdminDashboard() {
             </a>
           </div>
         </div>
-        {/* Projects stat */}
+
+        {/* Stat cards — ordered by importance */}
+        <StatCard
+          count={bookingCount ?? 0}
+          label="Bookings"
+          accent="bg-emerald-500"
+          secondary={pendingBookingCount > 0 ? `${pendingBookingCount} pending` : 'none pending'}
+          secondaryClass={pendingBookingCount > 0 ? 'text-amber-600 font-semibold' : 'text-slate-400'}
+          href="/admin/bookings"
+        />
+        <StatCard
+          count={resultCount ?? 0}
+          label="Results"
+          accent="bg-cyan-500"
+          secondary="before / after gallery"
+          href="/admin/results"
+        />
         <StatCard
           count={projectCount ?? 0}
           label="Projects"
           accent="bg-solar-500"
           secondary="residential · commercial · more"
+          href="/admin/projects"
         />
-        {/* Products stat */}
         <StatCard
           count={productCount ?? 0}
           label="Products"
           accent="bg-blue-500"
           secondary="across multiple categories"
+          href="/admin/products"
         />
-        {/* Services stat */}
         <StatCard
           count={serviceCount ?? 0}
           label="Services"
-          accent="bg-emerald-500"
+          accent="bg-teal-500"
           secondary={`${featuredServices?.length ?? 0} featured`}
+          href="/admin/services"
         />
-        {/* Reviews stat */}
         <StatCard
           count={reviewCount ?? 0}
           label="Reviews"
           accent="bg-violet-500"
           secondary={avgRating ? `★ ${avgRating} avg rating` : 'no ratings yet'}
+          href="/admin/reviews"
         />
-        {/* Quick actions: col-span-2 */}
-        <div className="col-span-4 bg-white rounded-2xl border border-slate-100 shadow-card p-5">
+
+        {/* Revenue summary: col-span-2 (fills row 2, cols 5-6) */}
+        <div className="col-span-2 bg-white rounded-2xl border border-slate-100 shadow-card overflow-hidden">
+          <div className="h-1 w-full bg-green-500" />
+          <div className="p-5">
+            <p className="text-3xl font-black text-navy-950 leading-none">{formatCentavos(revenueCentavos)}</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mt-2">Revenue Collected</p>
+            <p className="text-xs text-slate-400 mt-1">
+              {paidCount} paid booking{paidCount !== 1 ? 's' : ''}
+            </p>
+          </div>
+        </div>
+
+        {/* Needs attention: pending bookings — col-span-4 */}
+        <div className="col-span-4 bg-amber-50/40 rounded-2xl border border-amber-100 shadow-card p-5">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-bold uppercase tracking-widest text-amber-700">Needs Attention</p>
+            <Link href="/admin/bookings" className="text-xs text-amber-700 hover:text-amber-600 transition-colors">
+              View all →
+            </Link>
+          </div>
+          {pendingBookings.length === 0 ? (
+            <p className="text-slate-400 text-sm text-center py-4">All caught up — no pending bookings.</p>
+          ) : (
+            <div className="space-y-2">
+              {pendingBookings.map((b) => (
+                <Link
+                  key={b.id}
+                  href="/admin/bookings"
+                  className="flex items-center gap-3 py-1.5 px-2 -mx-2 rounded-lg hover:bg-amber-100/50 transition-colors"
+                >
+                  <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+                  <span className="text-sm text-navy-900 font-medium flex-1 truncate">{b.name}</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium shrink-0">
+                    {BOOKING_TYPE_LABELS[b.booking_type ?? 'consultation']}
+                  </span>
+                  <span className="text-xs text-slate-400 shrink-0">{b.preferred_date || '—'}</span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Quick actions: col-span-2 (fills row 3, cols 5-6) */}
+        <div className="col-span-2 bg-white rounded-2xl border border-slate-100 shadow-card p-5">
           <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Quick Actions</p>
           <div className="space-y-1">
             {[
@@ -176,6 +323,8 @@ export default async function AdminDashboard() {
               { label: 'New Product', href: '/admin/products/new', icon: '📦' },
               { label: 'New Service', href: '/admin/services/new', icon: '⚙️' },
               { label: 'New Review', href: '/admin/reviews/new', icon: '★' },
+              { label: 'New Result', href: '/admin/results/new', icon: '🖼️' },
+              { label: 'View Bookings', href: '/admin/bookings', icon: '📅' },
             ].map(({ label, href, icon }) => (
               <Link
                 key={href}
@@ -185,7 +334,7 @@ export default async function AdminDashboard() {
                 <span className="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-solar-500/10 flex items-center justify-center text-sm transition-colors">
                   {icon}
                 </span>
-                <span className="text-sm font-medium flex-1">+ {label}</span>
+                <span className="text-sm font-medium flex-1">{label}</span>
                 <svg
                   width="14"
                   height="14"
@@ -205,37 +354,29 @@ export default async function AdminDashboard() {
             ))}
           </div>
         </div>
-        {/* Recent activity: col-span-4 */}
+
+        {/* Recent activity: col-span-6 */}
         <div className="col-span-6 bg-white rounded-2xl border border-slate-100 shadow-card p-5">
           <div className="flex items-center justify-between mb-4">
             <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Recent Activity</p>
-            <Link href="/admin/projects" className="text-xs text-solar-600 hover:text-solar-500 transition-colors">
-              View all →
-            </Link>
           </div>
           {recentActivity.length === 0 ? (
             <p className="text-slate-400 text-sm text-center py-4">No recent activity</p>
           ) : (
             <div className="space-y-2">
               {recentActivity.map((item, i) => (
-                <div key={i} className="flex items-center gap-3 py-1.5">
-                  <div
-                    className={`w-2 h-2 rounded-full shrink-0 ${
-                      item.type === 'project' ? 'bg-navy-950' : 'bg-solar-500'
-                    }`}
-                  />
-                  <span
-                    className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                      item.type === 'project'
-                        ? 'bg-navy-50 text-navy-700'
-                        : 'bg-solar-50 text-solar-700'
-                    }`}
-                  >
+                <Link
+                  key={i}
+                  href={ACTIVITY_HREF[item.type]}
+                  className="flex items-center gap-3 py-1.5 px-2 -mx-2 rounded-lg hover:bg-slate-50 transition-colors"
+                >
+                  <div className={`w-2 h-2 rounded-full shrink-0 ${ACTIVITY_STYLES[item.type].dot}`} />
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${ACTIVITY_STYLES[item.type].badge}`}>
                     {item.type}
                   </span>
-                  <span className="text-sm text-slate-700 font-medium flex-1">{item.title}</span>
-                  <span className="text-xs text-slate-400">{getRelativeTime(item.created_at)}</span>
-                </div>
+                  <span className="text-sm text-slate-700 font-medium flex-1 truncate">{item.title}</span>
+                  <span className="text-xs text-slate-400 shrink-0">{getRelativeTime(item.created_at)}</span>
+                </Link>
               ))}
             </div>
           )}
