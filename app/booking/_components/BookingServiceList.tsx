@@ -30,7 +30,7 @@ const BOOKING_TYPES = [
     tag: 'FROM ₱500',
     tagStyle: 'text-emerald-600 bg-emerald-50 border border-emerald-100',
     description:
-      'On-site property evaluation to determine solar potential, roof suitability, and system sizing before installation. Rates: ₱500 (Ormoc City), ₱1,000 (Ormoc far barangay), ₱2,000 (other areas).',
+      'On-site property evaluation to determine solar potential, roof suitability, and system sizing before installation. Rates: ₱500 (Ormoc City), ₱1,000 (Ormoc far barangay), ₱2,000 (other areas). REFUNDABLE if project is confirmed.',
   },
 ];
 
