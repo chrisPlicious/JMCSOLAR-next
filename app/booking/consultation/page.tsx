@@ -5,14 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  Check,
   ChevronLeft,
   ArrowRight,
   Loader2,
-  Home,
-  Building2,
-  Factory,
-  Leaf,
   Calendar,
   Clock,
 } from 'lucide-react';
@@ -27,35 +22,7 @@ import {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const STEPS = ['Your details', 'Project', 'Schedule'];
-
-const SERVICE_TYPES = [
-  'Hybrid Solar System',
-  'On-Grid / Net-Metered Solar',
-  'Battery Energy Storage (BESS)',
-  'Solar Pumping System',
-  'EV Charger Installation',
-  'UPS System',
-  'Solar Charge Controller',
-  'Inverter / Charger',
-  'Other',
-];
-
-const PROPERTY_TYPES = [
-  { value: 'residential', label: 'Residential', desc: 'Home or house', Icon: Home },
-  { value: 'commercial', label: 'Commercial', desc: 'Office, store, or resto', Icon: Building2 },
-  { value: 'industrial', label: 'Industrial', desc: 'Factory or warehouse', Icon: Factory },
-  { value: 'agricultural', label: 'Agricultural', desc: 'Farm or agricultural land', Icon: Leaf },
-];
-
-const MONTHLY_BILLS = [
-  'Below ₱2,000',
-  '₱2,000 – ₱5,000',
-  '₱5,000 – ₱10,000',
-  '₱10,000 – ₱20,000',
-  'Above ₱20,000',
-  'Not sure',
-];
+const STEPS = ['Your details', 'Schedule'];
 
 const TIME_SLOTS = [
   { label: '9:00 AM', group: 'Morning' },
@@ -227,92 +194,6 @@ function Step1({ formData, errors, update }: StepProps) {
   );
 }
 
-function Step2({ formData, errors, update }: StepProps) {
-  return (
-    <div className="space-y-8">
-      <div className="mb-8">
-        <h2 className="text-[2.25rem] font-black text-navy-950 tracking-tight text-wrap-balance" style={{ fontFamily: 'Poppins, sans-serif' }}>Project details.</h2>
-      </div>
-
-      <FormField label="Service Type" htmlFor="service_type" error={errors.service_type}>
-        <SelectWrapper>
-          <select
-            id="service_type"
-            value={formData.service_type}
-            onChange={(e) => update('service_type', e.target.value)}
-            className={selectClass}
-          >
-            <option value="">Select a service</option>
-            {SERVICE_TYPES.map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-        </SelectWrapper>
-      </FormField>
-
-      <div>
-        <p className="block text-sm font-semibold text-navy-800 mb-3">Property type</p>
-        <div className="grid grid-cols-2 gap-4">
-          {PROPERTY_TYPES.map(({ value, label, desc, Icon }) => {
-            const active = formData.property_type === value;
-            return (
-              <button
-                key={value}
-                type="button"
-                onClick={() => update('property_type', value)}
-                className={`flex items-start gap-4 p-6 border-2 text-left transition-all duration-200 min-h-[52px] ${
-                  active
-                    ? 'border-solar-400 bg-white'
-                    : 'border-slate-200/60 bg-transparent hover:border-slate-300'
-                }`}
-                aria-pressed={active}
-              >
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${active ? 'bg-solar-400 text-navy-950' : 'bg-slate-200/50 text-slate-500'}`}>
-                  <Icon size={16} />
-                </div>
-                <div>
-                  <p className={`text-base font-semibold ${active ? 'text-navy-900' : 'text-slate-600'}`}>{label}</p>
-                  <p className="text-sm text-slate-400 mt-1 leading-snug">{desc}</p>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-        {errors.property_type && (
-          <p className="text-red-500 text-xs mt-2" role="alert">{errors.property_type}</p>
-        )}
-      </div>
-
-      <FormField label="Approximate Monthly Electric Bill" htmlFor="monthly_bill" error={errors.monthly_bill} optional>
-        <SelectWrapper>
-          <select
-            id="monthly_bill"
-            value={formData.monthly_bill}
-            onChange={(e) => update('monthly_bill', e.target.value)}
-            className={selectClass}
-          >
-            <option value="">Select range</option>
-            {MONTHLY_BILLS.map((b) => (
-              <option key={b} value={b}>{b}</option>
-            ))}
-          </select>
-        </SelectWrapper>
-      </FormField>
-
-      <FormField label="Additional Notes" htmlFor="notes" error={errors.notes} optional>
-        <textarea
-          id="notes"
-          placeholder="Any other details about your project, site, or questions..."
-          value={formData.notes}
-          onChange={(e) => update('notes', e.target.value)}
-          rows={2}
-          className={`${inputClass} resize-none`}
-        />
-      </FormField>
-    </div>
-  );
-}
-
 function Step3({ formData, errors, update }: StepProps) {
   const morningSlots = TIME_SLOTS.filter((t) => t.group === 'Morning');
   const afternoonSlots = TIME_SLOTS.filter((t) => t.group === 'Afternoon');
@@ -414,14 +295,6 @@ function Step3({ formData, errors, update }: StepProps) {
           <SummaryRow label="Name" value={formData.name} />
           <SummaryRow label="Phone" value={formData.phone} />
           <SummaryRow label="City" value={formData.city_name} />
-          <SummaryRow label="Service" value={formData.service_type} />
-          <SummaryRow
-            label="Property"
-            value={formData.property_type ? formData.property_type.charAt(0).toUpperCase() + formData.property_type.slice(1) : '—'}
-          />
-          {formData.monthly_bill && (
-            <SummaryRow label="Monthly Bill" value={formData.monthly_bill} />
-          )}
           <SummaryRow label="Session" value={`${formData.duration_hours} ${formData.duration_hours === '1' ? 'hour' : 'hours'}`} />
         </div>
         <div className="flex items-center justify-between mt-6 pt-6 border-t border-slate-200">
@@ -481,9 +354,6 @@ export default function ConsultationBookingPage() {
       if (!formData.phone.trim()) next.phone = 'Phone number is required.';
       if (!formData.city) next.city = 'Please select your city.';
     } else if (step === 1) {
-      if (!formData.service_type) next.service_type = 'Please select a service type.';
-      if (!formData.property_type) next.property_type = 'Please select a property type.';
-    } else if (step === 2) {
       if (!formData.preferred_date) next.preferred_date = 'Please select a date.';
       if (!formData.preferred_time) next.preferred_time = 'Please select a time slot.';
     }
@@ -566,8 +436,7 @@ export default function ConsultationBookingPage() {
               transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
             >
               {step === 0 && <Step1 formData={formData} errors={errors} update={update} />}
-              {step === 1 && <Step2 formData={formData} errors={errors} update={update} />}
-              {step === 2 && <Step3 formData={formData} errors={errors} update={update} />}
+              {step === 1 && <Step3 formData={formData} errors={errors} update={update} />}
             </motion.div>
           </AnimatePresence>
         </div>
