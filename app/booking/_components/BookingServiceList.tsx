@@ -18,7 +18,7 @@ const BOOKING_TYPES = [
     href: '/booking/maintenance',
     Icon: Wrench,
     title: 'Maintenance',
-    tag: '₱1/kW',
+    tag: '₱1 per Watt',
     tagStyle: 'text-blue-600 bg-blue-50 border border-blue-100',
     description:
       'Panel cleaning, inverter diagnostics, performance audits, and troubleshooting for your installed solar system.',
