@@ -55,3 +55,8 @@ graphify-out
 .gemini
 jmc-review.diff
 .env*.local
+
+# code-review dumps (may contain secrets)
+CODE_REVIEW.md
+*_REVIEW.md
+*.review.md

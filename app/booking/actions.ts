@@ -3,8 +3,10 @@
 import { headers } from 'next/headers';
 import { adminDb } from '@/lib/firebase/admin';
 import { getPaymentProvider } from '@/lib/payments';
+import { notifyReceived } from '@/lib/bookings/notifications';
 import {
   getBookingAmount,
+  getSiteAssessmentTier,
   clampDuration,
   formatCentavos,
 } from '@/lib/bookings/pricing';
@@ -47,6 +49,7 @@ export type SiteAssessmentFormData = {
   city: string;
   city_name: string;
   address: string;
+  location_tier: string;
   property_type: string;
   roof_type: string;
   property_age_years: string;
@@ -85,15 +88,19 @@ export async function createBookingAction(data: BookingInput): Promise<CreateBoo
 
     const isConsultation = data.booking_type === 'consultation';
     const isMaintenance = data.booking_type === 'maintenance';
+    const isSiteAssessment = data.booking_type === 'site_assessment';
     const durationHours = isConsultation
       ? clampDuration(Number((data as ConsultationFormData).duration_hours))
       : null;
     const systemSizeKw = isMaintenance
       ? Number((data as MaintenanceFormData).system_size_kw) || undefined
       : undefined;
+    const siteAssessmentData = isSiteAssessment ? (data as SiteAssessmentFormData) : undefined;
     const amount = getBookingAmount(data.booking_type, {
       durationHours: durationHours ?? undefined,
       systemSizeKw,
+      citySlug: siteAssessmentData?.city,
+      locationTier: siteAssessmentData?.location_tier,
     });
     const requiresPayment = amount !== null;
 
@@ -171,6 +178,7 @@ export async function createBookingAction(data: BookingInput): Promise<CreateBoo
 
     // Free intake types (maintenance, site assessment until priced) end here.
     if (!requiresPayment || amount === null) {
+      await notifyReceived(ref.id); // best-effort "booking received" acknowledgement
       return { bookingId: ref.id };
     }
 
@@ -186,26 +194,37 @@ export async function createBookingAction(data: BookingInput): Promise<CreateBoo
       description = `Solar consultation — ${durationHours}hr (${formatCentavos(amount)})`;
       lineItems = [{ name: `Solar Consultation (${durationHours}hr)`, amount, quantity: 1 }];
       cancelUrl = `${origin}/booking/consultation`;
-    } else {
-      // maintenance
+    } else if (isMaintenance) {
       description = `Solar system maintenance — ${systemSizeKw}kW (${formatCentavos(amount)})`;
       lineItems = [{ name: `Solar Maintenance (${systemSizeKw}kW)`, amount, quantity: 1 }];
       cancelUrl = `${origin}/booking/maintenance`;
+    } else {
+      // site assessment
+      const tier = getSiteAssessmentTier(siteAssessmentData!.city, siteAssessmentData!.location_tier);
+      const tierLabel = tier === 'ormoc_far' ? 'Ormoc far barangay' : tier === 'ormoc_city' ? 'Ormoc City' : 'Outside Ormoc';
+      description = `Site assessment — ${tierLabel} (${formatCentavos(amount)})`;
+      lineItems = [{ name: `Site Assessment (${tierLabel})`, amount, quantity: 1 }];
+      cancelUrl = `${origin}/booking/site-assessment`;
     }
 
-    const session = await provider.createCheckoutSession({
-      bookingId: ref.id,
-      amount,
-      description,
-      lineItems,
-      customer: {
-        name: data.name.trim(),
-        email: data.email.trim() || null,
-        phone: data.phone.trim(),
-      },
-      successUrl: `${origin}/booking/confirmation?id=${ref.id}&name=${encodeURIComponent(data.name.trim())}`,
-      cancelUrl,
-    });
+    // Overlap the "complete your payment" email with the checkout-session call so
+    // it doesn't add latency before the redirect. notifyReceived never throws.
+    const [session] = await Promise.all([
+      provider.createCheckoutSession({
+        bookingId: ref.id,
+        amount,
+        description,
+        lineItems,
+        customer: {
+          name: data.name.trim(),
+          email: data.email.trim() || null,
+          phone: data.phone.trim(),
+        },
+        successUrl: `${origin}/booking/confirmation?id=${ref.id}&name=${encodeURIComponent(data.name.trim())}`,
+        cancelUrl,
+      }),
+      notifyReceived(ref.id),
+    ]);
 
     await ref.update({
       payment_session_id: session.sessionId,

@@ -86,11 +86,11 @@ export const paymongoProvider: PaymentProvider = {
     const timestamp = parts.t;
     if (!timestamp) return false;
 
-    // 5-minute replay window on the signed timestamp.
-    const tsSeconds = Number(timestamp);
-    if (!Number.isFinite(tsSeconds)) return false;
-    if (Math.abs(Date.now() / 1000 - tsSeconds) > 300) return false;
-
+    // No timestamp-age / replay window here: PayMongo retries a failed delivery
+    // up to 12 times over ~136 min (exponential backoff), and its own reference
+    // verifier performs NO timestamp check. Rejecting old timestamps would 401
+    // legitimate retries and lose the event. Replay protection is handled by the
+    // idempotency event-id claim in the webhook route, not by the clock.
     const expected = crypto
       .createHmac('sha256', secret)
       .update(`${timestamp}.${rawBody}`)

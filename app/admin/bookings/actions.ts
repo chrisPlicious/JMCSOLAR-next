@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { requireAdminAuth } from '@/lib/auth';
 import { adminDb } from '@/lib/firebase/admin';
+import { notifyRefunded } from '@/lib/bookings/notifications';
 import type { DbBooking } from '@/lib/firebase/types';
 
 type ActionResult = { error?: string; success?: boolean };
@@ -111,6 +112,11 @@ export async function refundBookingAction(
       error: `Refund issued (${refundId}) but failed to update booking record. Please refresh.`,
     };
   }
+
+  // Best-effort: email the customer that their refund was processed. The incoming
+  // payment.refunded webhook will short-circuit (status already 'refunded'), so this
+  // is the single send for admin-initiated refunds — no duplicate.
+  await notifyRefunded(bookingId, amount);
 
   revalidatePath('/admin/bookings');
   return { success: true };

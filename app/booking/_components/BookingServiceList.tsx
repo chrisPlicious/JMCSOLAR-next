@@ -9,7 +9,7 @@ const BOOKING_TYPES = [
     href: '/booking/consultation',
     Icon: Lightbulb,
     title: 'Consultation',
-    tag: 'FREE · 60 MIN',
+    tag: '₱500/HR',
     tagStyle: 'text-solar-600 bg-solar-50 border border-solar-100',
     description:
       'Sit down with our licensed engineers. We assess your property and recommend the right solar system for your needs.',
@@ -18,7 +18,7 @@ const BOOKING_TYPES = [
     href: '/booking/maintenance',
     Icon: Wrench,
     title: 'Maintenance',
-    tag: 'O&M SERVICE',
+    tag: '₱1 per Watt',
     tagStyle: 'text-blue-600 bg-blue-50 border border-blue-100',
     description:
       'Panel cleaning, inverter diagnostics, performance audits, and troubleshooting for your installed solar system.',
@@ -27,14 +27,14 @@ const BOOKING_TYPES = [
     href: '/booking/site-assessment',
     Icon: MapPinned,
     title: 'Site Assessment',
-    tag: 'ON-SITE SURVEY',
+    tag: 'FROM ₱500',
     tagStyle: 'text-emerald-600 bg-emerald-50 border border-emerald-100',
     description:
-      'On-site property evaluation to determine solar potential, roof suitability, and system sizing before installation.',
+      'On-site property evaluation to determine solar potential, roof suitability, and system sizing before installation. Rates: ₱500 (Ormoc City), ₱1,000 (Ormoc far barangay), ₱2,000 (other areas). REFUNDABLE if project is confirmed.',
   },
 ];
 
-const TRUST_SIGNALS = ['No upfront cost', 'Licensed EE engineers', '24-hour response'];
+const TRUST_SIGNALS = ['Transparent pricing', 'Licensed EE engineers', '24-hour response'];
 
 const easeExpo: [number, number, number, number] = [0.16, 1, 0.3, 1];
 const easeOut: [number, number, number, number] = [0.25, 1, 0.5, 1];
@@ -74,7 +74,7 @@ export default function BookingServiceList() {
                   >
                     {title}
                   </h3>
-                  <span className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-sm ${tagStyle}`}>
+                  <span className={`text-sm font-bold uppercase tracking-wider px-4 py-2 rounded-sm ${tagStyle}`}>
                     {tag}
                   </span>
                 </div>
