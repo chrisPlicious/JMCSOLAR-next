@@ -44,7 +44,7 @@ function getAdminApp(): admin.app.App {
   return admin.initializeApp(
     {
       credential: admin.credential.cert(loadServiceAccount()),
-      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET?.trim(),
     },
     APP_NAME,
   )

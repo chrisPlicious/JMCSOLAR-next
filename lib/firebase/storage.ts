@@ -1,6 +1,9 @@
 import { adminStorage } from './admin'
 
-const BUCKET = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || ''
+// trim() also strips a stray BOM (U+FEFF) or whitespace that can sneak into the
+// env value when pasted into a dashboard — a leading BOM yields a bad bucket host
+// (.../v0/b/%EF%BB%BFjmc-...) and 404s every image.
+const BUCKET = (process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || '').trim()
 
 // Files are uploaded to unique (timestamped) paths, so they can be cached
 // aggressively. Without this Firebase serves `private, max-age=0` and every
