@@ -31,11 +31,15 @@ export default function ServicesPage() {
 
   useEffect(() => {
     const q = query(collection(db, 'services'), orderBy('display_order', 'asc'));
-    getDocs(q).then((snap) => {
-      const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as DbService[];
-      setServices(data);
-      setLoading(false);
-    });
+    getDocs(q)
+      .then((snap) => {
+        const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as DbService[];
+        setServices(data);
+      })
+      .catch((err) => {
+        console.error('[services] failed to load services:', err);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   function onMouseDown(e: MouseEvent<HTMLDivElement>) {
