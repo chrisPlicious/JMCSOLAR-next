@@ -3,6 +3,7 @@
 import { headers } from 'next/headers';
 import { adminDb } from '@/lib/firebase/admin';
 import { getPaymentProvider } from '@/lib/payments';
+import { notifyReceived } from '@/lib/bookings/notifications';
 import {
   getBookingAmount,
   getSiteAssessmentTier,
@@ -177,6 +178,7 @@ export async function createBookingAction(data: BookingInput): Promise<CreateBoo
 
     // Free intake types (maintenance, site assessment until priced) end here.
     if (!requiresPayment || amount === null) {
+      await notifyReceived(ref.id); // best-effort "booking received" acknowledgement
       return { bookingId: ref.id };
     }
 
@@ -205,19 +207,24 @@ export async function createBookingAction(data: BookingInput): Promise<CreateBoo
       cancelUrl = `${origin}/booking/site-assessment`;
     }
 
-    const session = await provider.createCheckoutSession({
-      bookingId: ref.id,
-      amount,
-      description,
-      lineItems,
-      customer: {
-        name: data.name.trim(),
-        email: data.email.trim() || null,
-        phone: data.phone.trim(),
-      },
-      successUrl: `${origin}/booking/confirmation?id=${ref.id}&name=${encodeURIComponent(data.name.trim())}`,
-      cancelUrl,
-    });
+    // Overlap the "complete your payment" email with the checkout-session call so
+    // it doesn't add latency before the redirect. notifyReceived never throws.
+    const [session] = await Promise.all([
+      provider.createCheckoutSession({
+        bookingId: ref.id,
+        amount,
+        description,
+        lineItems,
+        customer: {
+          name: data.name.trim(),
+          email: data.email.trim() || null,
+          phone: data.phone.trim(),
+        },
+        successUrl: `${origin}/booking/confirmation?id=${ref.id}&name=${encodeURIComponent(data.name.trim())}`,
+        cancelUrl,
+      }),
+      notifyReceived(ref.id),
+    ]);
 
     await ref.update({
       payment_session_id: session.sessionId,

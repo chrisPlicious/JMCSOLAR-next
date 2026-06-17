@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase/admin';
 import { getPaymentProvider } from '@/lib/payments';
-import { sendMail, smtpUser } from '@/lib/email-transporter';
-import { formatCentavos } from '@/lib/bookings/pricing';
+import { notifyPaid, notifyFailed, notifyRefunded } from '@/lib/bookings/notifications';
 import type { DbBooking } from '@/lib/firebase/types';
 
 export const dynamic = 'force-dynamic';
@@ -48,45 +47,43 @@ export async function POST(request: Request) {
     return NextResponse.json({ received: true });
   }
 
-  // Idempotency: claim the event id first. If it already exists, this is a replay.
+  // Idempotency claim AND the booking mutation run in ONE transaction, so the
+  // event id is only burned when the booking is actually updated. A transient
+  // failure rolls back both — leaving the event un-claimed so a PayMongo retry
+  // can reprocess it. (Claiming first, separately, could burn the id while the
+  // update fails, making the retry a no-op duplicate and losing the payment.)
   const eventRef = adminDb.collection('processedWebhookEvents').doc(eventId);
-  try {
-    const claimed = await adminDb.runTransaction(async (tx) => {
-      const existing = await tx.get(eventRef);
-      if (existing.exists) return false;
-      tx.set(eventRef, {
-        id: eventId,
-        type: event.type,
-        booking_id: event.bookingId,
-        processed_at: new Date().toISOString(),
-      });
-      return true;
-    });
-    if (!claimed) {
-      return NextResponse.json({ received: true, duplicate: true });
-    }
-  } catch (e) {
-    console.error('[webhook] idempotency claim failed', e);
-    return NextResponse.json({ error: 'Internal error.' }, { status: 500 });
-  }
-
   const bookingRef = adminDb.collection('bookings').doc(event.bookingId);
 
   if (event.type === 'payment.paid') {
     try {
-      await adminDb.runTransaction(async (tx) => {
+      const claimed = await adminDb.runTransaction(async (tx) => {
+        // Reads must precede writes in a Firestore transaction.
+        const existing = await tx.get(eventRef);
+        if (existing.exists) return false; // replay
         const snap = await tx.get(bookingRef);
         if (!snap.exists) throw new Error(`booking ${event.bookingId} not found`);
         const b = snap.data() as DbBooking;
-        if (b.payment_status === 'paid') return; // already settled
-        tx.update(bookingRef, {
-          payment_status: 'paid',
-          payment_reference: event.paymentId,
-          payment_session_id: event.sessionId || b.payment_session_id,
-          paid_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+        if (b.payment_status !== 'paid') {
+          tx.update(bookingRef, {
+            payment_status: 'paid',
+            payment_reference: event.paymentId,
+            payment_session_id: event.sessionId || b.payment_session_id,
+            paid_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
+        }
+        tx.set(eventRef, {
+          id: eventId,
+          type: event.type,
+          booking_id: event.bookingId,
+          processed_at: new Date().toISOString(),
         });
+        return true;
       });
+      if (!claimed) {
+        return NextResponse.json({ received: true, duplicate: true });
+      }
     } catch (e) {
       console.error('[webhook] failed to mark booking paid', e);
       return NextResponse.json({ error: 'Failed to update booking.' }, { status: 500 });
@@ -100,13 +97,31 @@ export async function POST(request: Request) {
 
   if (event.type === 'payment.failed') {
     try {
-      await bookingRef.update({
-        payment_status: 'failed',
-        updated_at: new Date().toISOString(),
+      const claimed = await adminDb.runTransaction(async (tx) => {
+        const existing = await tx.get(eventRef);
+        if (existing.exists) return false;
+        tx.update(bookingRef, {
+          payment_status: 'failed',
+          updated_at: new Date().toISOString(),
+        });
+        tx.set(eventRef, {
+          id: eventId,
+          type: event.type,
+          booking_id: event.bookingId,
+          processed_at: new Date().toISOString(),
+        });
+        return true;
       });
+      if (!claimed) {
+        return NextResponse.json({ received: true, duplicate: true });
+      }
     } catch (e) {
       console.error('[webhook] failed to mark booking failed', e);
+      return NextResponse.json({ error: 'Failed to update booking.' }, { status: 500 });
     }
+
+    // Best-effort: tell the customer the payment didn't go through (no charge).
+    await notifyFailed(event.bookingId);
     return NextResponse.json({ received: true });
   }
 
@@ -236,143 +251,15 @@ async function handleRefundEvent(
       refund_amount: refundAmount,
       updated_at: new Date().toISOString(),
     });
+
+    // Best-effort: confirm the refund to the customer. Covers dashboard/externally
+    // initiated refunds; admin-initiated ones email from refundBookingAction (which
+    // sets 'refunded' first, so this handler short-circuits above — no double send).
+    await notifyRefunded(bookingDoc.id, refundAmount);
   } catch (e) {
     console.error('[webhook] failed to update booking for refund event', e);
     return NextResponse.json({ error: 'Failed to update booking.' }, { status: 500 });
   }
 
   return NextResponse.json({ received: true });
-}
-
-function emailWrap(body: string): string {
-  return `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f4f4f0;font-family:Arial,Helvetica,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f0;padding:40px 16px;">
-    <tr><td align="center">
-      <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
-        <!-- Header -->
-        <tr>
-          <td style="background:#0a1628;padding:28px 36px;border-radius:8px 8px 0 0;">
-            <p style="margin:0;color:#f5a623;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;">JMC Solar PH</p>
-          </td>
-        </tr>
-        <!-- Body -->
-        <tr>
-          <td style="background:#ffffff;padding:36px;border-radius:0 0 8px 8px;">
-            ${body}
-          </td>
-        </tr>
-        <!-- Footer -->
-        <tr>
-          <td style="padding:20px 0;text-align:center;">
-            <p style="margin:0;color:#999;font-size:12px;">JMC Solar PH · Cogon, Ormoc City, Leyte</p>
-          </td>
-        </tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`;
-}
-
-function row(label: string, value: string): string {
-  return `<tr>
-    <td style="padding:8px 0;color:#888;font-size:13px;width:130px;vertical-align:top;">${label}</td>
-    <td style="padding:8px 0;color:#0a1628;font-size:14px;font-weight:600;vertical-align:top;">${value}</td>
-  </tr>`;
-}
-
-async function notifyPaid(bookingId: string): Promise<void> {
-  try {
-    const snap = await adminDb.collection('bookings').doc(bookingId).get();
-    if (!snap.exists) return;
-    const b = snap.data() as DbBooking;
-    const admin = smtpUser();
-    const amount = b.payment_amount != null ? formatCentavos(b.payment_amount) : '—';
-    const when = `${b.preferred_date} ${b.preferred_time}`;
-    const ref = `JMC-${bookingId.slice(0, 8).toUpperCase()}`;
-
-    const isMaintenance = b.booking_type === 'maintenance';
-    const isSiteAssessment = b.booking_type === 'site_assessment';
-    const serviceLabel = isMaintenance ? 'maintenance service' : isSiteAssessment ? 'site assessment' : 'consultation';
-    const scheduleDetail = isMaintenance
-      ? (b.system_size_kw ? ` · ${b.system_size_kw}kW system` : '')
-      : (b.duration_hours ? ` (${b.duration_hours}hr)` : '');
-    const followUp = isMaintenance
-      ? 'Our technician will contact you before the scheduled visit.'
-      : isSiteAssessment
-      ? 'Our engineer will contact you to confirm your site visit.'
-      : "We'll send your video call link before the scheduled time.";
-
-    if (b.email) {
-      const customerHtml = emailWrap(`
-        <p style="margin:0 0 4px;font-size:22px;font-weight:700;color:#0a1628;">Booking Confirmed</p>
-        <p style="margin:0 0 28px;font-size:14px;color:#666;">Hi ${b.name}, your payment of <strong>${amount}</strong> has been received.</p>
-        <table cellpadding="0" cellspacing="0" width="100%" style="border-top:1px solid #eee;">
-          ${row('Service', serviceLabel.charAt(0).toUpperCase() + serviceLabel.slice(1) + scheduleDetail)}
-          ${row('Date & Time', when)}
-          ${row('Reference', ref)}
-        </table>
-        <div style="margin:28px 0 0;padding:16px;background:#f9f7f2;border-left:3px solid #f5a623;border-radius:2px;">
-          <p style="margin:0;font-size:13px;color:#555;">${followUp}</p>
-        </div>
-      `);
-
-      await sendMail({
-        to: b.email,
-        subject: `Your JMC Solar ${serviceLabel} is confirmed — ${ref}`,
-        text: [
-          `Hi ${b.name},`,
-          ``,
-          `We've received your payment of ${amount} — your ${serviceLabel} slot is reserved.`,
-          `Requested time: ${when}${scheduleDetail}`,
-          `Reference: ${ref}`,
-          ``,
-          followUp,
-          ``,
-          `— JMC Solar PH`,
-        ].join('\n'),
-        html: customerHtml,
-      });
-    }
-
-    if (admin) {
-      const adminHtml = emailWrap(`
-        <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#f5a623;">Payment Received</p>
-        <p style="margin:0 0 28px;font-size:22px;font-weight:700;color:#0a1628;">${b.name}</p>
-        <table cellpadding="0" cellspacing="0" width="100%" style="border-top:1px solid #eee;">
-          ${row('Service', serviceLabel.charAt(0).toUpperCase() + serviceLabel.slice(1) + scheduleDetail)}
-          ${row('Phone', b.phone)}
-          ${row('Email', b.email ?? 'n/a')}
-          ${row('City', b.city_name)}
-          ${row('Requested', when)}
-          ${row('Amount', `<span style="font-size:18px;color:#0a1628;">${amount}</span>`)}
-        </table>
-        <div style="margin:28px 0 0;">
-          <a href="/admin/bookings/${bookingId}" style="display:inline-block;padding:12px 24px;background:#0a1628;color:#f5a623;font-size:13px;font-weight:700;text-decoration:none;border-radius:4px;letter-spacing:1px;text-transform:uppercase;">View Booking</a>
-        </div>
-      `);
-
-      await sendMail({
-        to: admin,
-        subject: `PAID ${serviceLabel} — ${b.name} (${amount})`,
-        text: [
-          `A ${serviceLabel} booking was paid.`,
-          ``,
-          `Name: ${b.name}`,
-          `Phone: ${b.phone}`,
-          `Email: ${b.email ?? 'n/a'}`,
-          `City: ${b.city_name}`,
-          `Requested: ${when}${scheduleDetail}`,
-          `Amount: ${amount}`,
-          `Booking: /admin/bookings/${bookingId}`,
-        ].join('\n'),
-        html: adminHtml,
-      });
-    }
-  } catch (e) {
-    console.error('[webhook] notifyPaid failed', e);
-  }
 }
