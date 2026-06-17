@@ -9,7 +9,8 @@ import type {
 const API_BASE = 'https://api.paymongo.com/v1';
 
 function secretKey(): string {
-  const key = process.env.PAYMONGO_SECRET_KEY;
+  // trim() guards against a stray BOM/whitespace pasted into the env value.
+  const key = process.env.PAYMONGO_SECRET_KEY?.trim();
   if (!key) throw new Error('PAYMONGO_SECRET_KEY is not set');
   return key;
 }
@@ -17,6 +18,16 @@ function secretKey(): string {
 function authHeader(): string {
   // PayMongo uses HTTP Basic auth: base64("<secret_key>:")
   return `Basic ${Buffer.from(`${secretKey()}:`).toString('base64')}`;
+}
+
+// Enabled checkout payment methods. Configurable via PAYMONGO_PAYMENT_METHODS
+// (comma-separated, e.g. "qrph" or "gcash,paymaya,card") so a partial live
+// go-live works: PayMongo rejects the whole session if it lists a method that
+// isn't activated on the account. Defaults to the full set when unset.
+function paymentMethodTypes(): string[] {
+  const raw = (process.env.PAYMONGO_PAYMENT_METHODS ?? '').trim();
+  if (!raw) return ['gcash', 'paymaya', 'card'];
+  return raw.split(',').map((s) => s.trim()).filter(Boolean);
 }
 
 /**
@@ -43,7 +54,7 @@ export const paymongoProvider: PaymentProvider = {
               currency: 'PHP',
               quantity: li.quantity,
             })),
-            payment_method_types: ['gcash', 'paymaya', 'card'],
+            payment_method_types: paymentMethodTypes(),
             description: input.description,
             reference_number: input.bookingId,
             success_url: input.successUrl,
