@@ -10,6 +10,15 @@ type ActionResult = { error?: string; success?: boolean };
 
 const API_BASE = 'https://api.paymongo.com/v1';
 
+/** Fetch a single booking for the detail drawer. Admin-only. Returns null if missing. */
+export async function fetchBookingAction(bookingId: string): Promise<DbBooking | null> {
+  await requireAdminAuth();
+  if (!bookingId) return null;
+  const snap = await adminDb.collection('bookings').doc(bookingId).get();
+  if (!snap.exists) return null;
+  return { id: snap.id, ...snap.data() } as DbBooking;
+}
+
 function paymongoAuthHeader(): string {
   const key = process.env.PAYMONGO_SECRET_KEY;
   if (!key) throw new Error('PAYMONGO_SECRET_KEY is not set');

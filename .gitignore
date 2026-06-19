@@ -60,3 +60,6 @@ jmc-review.diff
 CODE_REVIEW.md
 *_REVIEW.md
 *.review.md
+
+# local smoke-test scripts
+/scripts/test-email.mjs

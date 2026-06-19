@@ -19,6 +19,22 @@ const navItems = [
     ),
   },
   {
+    label: 'Calendar',
+    href: '/admin/calendar',
+    exact: false,
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1.5" y="3" width="15" height="13" rx="2" stroke="currentColor" strokeWidth="1.5" fill="none" />
+        <line x1="1.5" y1="7.5" x2="16.5" y2="7.5" stroke="currentColor" strokeWidth="1.5" />
+        <line x1="5.5" y1="1.5" x2="5.5" y2="4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <line x1="12.5" y1="1.5" x2="12.5" y2="4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <circle cx="5.5" cy="10.5" r="1.2" fill="#f5a623" />
+        <circle cx="9" cy="10.5" r="1.2" fill="#3b82f6" />
+        <circle cx="12.5" cy="10.5" r="1.2" fill="#10b981" />
+      </svg>
+    ),
+  },
+  {
     label: 'Projects',
     href: '/admin/projects',
     exact: false,

@@ -1,8 +1,10 @@
 import { adminDb } from '@/lib/firebase/admin';
 import { requireAdminAuth } from '@/lib/auth';
 import { formatCentavos } from '@/lib/bookings/pricing';
-import type { DbBookingType } from '@/lib/firebase/types';
+import type { DbBooking, DbBookingType } from '@/lib/firebase/types';
 import Link from 'next/link';
+import { CalendarDays, Images, FolderOpen, Package, Wrench, Star, Wallet, ExternalLink } from 'lucide-react';
+import { CalendarView, type CalEvent } from './calendar/_components/CalendarView';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,26 +27,26 @@ const BOOKING_TYPE_LABELS: Record<DbBookingType, string> = {
 function StatCard({
   count,
   label,
-  accent,
+  icon,
+  tile,
   secondary,
   secondaryClass = 'text-slate-400',
   href,
 }: {
   count: number;
   label: string;
-  accent: string;
+  icon: React.ReactNode;
+  tile: string;
   secondary: string;
   secondaryClass?: string;
   href?: string;
 }) {
   const inner = (
-    <div className="col-span-1 bg-white rounded-2xl border border-slate-100 shadow-card overflow-hidden h-full hover:border-slate-200 transition-colors">
-      <div className={`h-1 w-full ${accent}`} />
-      <div className="p-5">
-        <p className="text-5xl font-black text-navy-950 leading-none">{count}</p>
-        <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mt-2">{label}</p>
-        <p className={`text-xs mt-1 ${secondaryClass}`}>{secondary}</p>
-      </div>
+    <div className="col-span-1 bg-white rounded-2xl border border-slate-100/80 shadow-soft h-full p-5 hover:shadow-card transition-shadow">
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${tile}`}>{icon}</div>
+      <p className="text-4xl font-black text-navy-950 leading-none mt-4">{count}</p>
+      <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mt-2">{label}</p>
+      <p className={`text-xs mt-1 ${secondaryClass}`}>{secondary}</p>
     </div>
   );
   return href ? (
@@ -91,6 +93,7 @@ export default async function AdminDashboard() {
     pendingBookingsSnap,
     paidBookingsSnap,
     reviewStatsSnap,
+    calendarBookingsSnap,
   ] = await Promise.all([
     adminDb.collection('projects').count().get(),
     adminDb.collection('products').count().get(),
@@ -108,7 +111,24 @@ export default async function AdminDashboard() {
     adminDb.collection('bookings').where('status', '==', 'pending').limit(5).get(),
     adminDb.collection('bookings').where('payment_status', '==', 'paid').select('payment_amount').get(),
     adminDb.collection('reviews').where('status', '==', 'approved').get(),
+    // preferred_date is "YYYY-MM-DD" — lexical order == chronological
+    adminDb.collection('bookings').orderBy('preferred_date', 'desc').limit(200).get(),
   ]);
+
+  const calEvents: CalEvent[] = calendarBookingsSnap.docs.map((doc) => {
+    const b = doc.data() as DbBooking;
+    return {
+      id: doc.id,
+      name: b.name,
+      booking_type: b.booking_type ?? 'consultation',
+      preferred_date: b.preferred_date,
+      preferred_time: b.preferred_time,
+      status: b.status,
+      city_name: b.city_name,
+      phone: b.phone,
+      payment_status: b.payment_status,
+    };
+  });
 
   const projectCount = projectCountAgg.data().count;
   const productCount = productCountAgg.data().count;
@@ -180,112 +200,38 @@ export default async function AdminDashboard() {
       : null;
 
   return (
-    <div className="flex items-center justify-center">
-      <div className="grid grid-cols-6 gap-4 flex-1">
-        {/* Welcome banner: col-span-2 row-span-2 */}
-        <div
-          className="col-span-2 row-span-2 bg-navy-950 rounded-2xl p-6 flex flex-col justify-between min-h-[200px]"
-          style={{
-            backgroundImage:
-              'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
-            backgroundSize: '32px 32px',
-          }}
-        >
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-2 h-2 rounded-full bg-solar-500" />
-              <span className="text-xs uppercase tracking-widest font-bold text-white/40">Admin Panel</span>
-            </div>
-            <h1 className="text-3xl font-black text-white leading-tight mb-1">JMC Solar PH</h1>
-            <p className="text-white/50 text-sm">Manage your content from here.</p>
+    <div>
+      {/* Header strip — no background */}
+      <div className="flex items-start justify-between gap-4 mb-6">
+        <div>
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="w-2 h-2 rounded-full bg-solar-500" />
+            <span className="text-xs uppercase tracking-widest font-bold text-slate-400">Admin Panel</span>
           </div>
-          <div className="flex items-end justify-between">
-            <p className="text-white/30 text-xs">
-              {new Date().toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
-            </p>
-            <a
-              href="/"
-              target="_blank"
-              className="text-solar-400/70 hover:text-solar-400 text-xs flex items-center gap-1 transition-colors"
-            >
-              View live site
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                <path
-                  d="M1 9L9 1M9 1H3M9 1V7"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </a>
-          </div>
+          <h1 className="text-2xl font-black text-navy-950 leading-tight" style={{ fontFamily: 'Poppins, sans-serif' }}>
+            JMC Solar PH
+          </h1>
+          <p className="text-slate-500 text-sm mt-0.5">Manage your content from here.</p>
         </div>
-
-        {/* Stat cards — ordered by importance */}
-        <StatCard
-          count={bookingCount ?? 0}
-          label="Bookings"
-          accent="bg-emerald-500"
-          secondary={pendingBookingCount > 0 ? `${pendingBookingCount} pending` : 'none pending'}
-          secondaryClass={pendingBookingCount > 0 ? 'text-amber-600 font-semibold' : 'text-slate-400'}
-          href="/admin/bookings"
-        />
-        <StatCard
-          count={resultCount ?? 0}
-          label="Results"
-          accent="bg-cyan-500"
-          secondary="before / after gallery"
-          href="/admin/results"
-        />
-        <StatCard
-          count={projectCount ?? 0}
-          label="Projects"
-          accent="bg-solar-500"
-          secondary="residential · commercial · more"
-          href="/admin/projects"
-        />
-        <StatCard
-          count={productCount ?? 0}
-          label="Products"
-          accent="bg-blue-500"
-          secondary="across multiple categories"
-          href="/admin/products"
-        />
-        <StatCard
-          count={serviceCount ?? 0}
-          label="Services"
-          accent="bg-teal-500"
-          secondary={`${featuredServices?.length ?? 0} featured`}
-          href="/admin/services"
-        />
-        <StatCard
-          count={reviewCount ?? 0}
-          label="Reviews"
-          accent="bg-violet-500"
-          secondary={avgRating ? `★ ${avgRating} avg rating` : 'no ratings yet'}
-          href="/admin/reviews"
-        />
-
-        {/* Revenue summary: col-span-2 (fills row 2, cols 5-6) */}
-        <div className="col-span-2 bg-white rounded-2xl border border-slate-100 shadow-card overflow-hidden">
-          <div className="h-1 w-full bg-green-500" />
-          <div className="p-5">
-            <p className="text-3xl font-black text-navy-950 leading-none">{formatCentavos(revenueCentavos)}</p>
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mt-2">Revenue Collected</p>
-            <p className="text-xs text-slate-400 mt-1">
-              {paidCount} paid booking{paidCount !== 1 ? 's' : ''}
-            </p>
-          </div>
+        <div className="flex items-center gap-4 shrink-0">
+          <span className="text-xs text-slate-400 hidden md:block">
+            {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          </span>
+          <a
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-navy-700 border border-slate-200 bg-white hover:bg-slate-50 px-4 py-2 rounded-xl shadow-soft transition-colors"
+          >
+            Visit live site
+            <ExternalLink size={14} />
+          </a>
         </div>
+      </div>
 
-        {/* Needs attention: pending bookings — col-span-4 */}
-        <div className="col-span-4 bg-amber-50/40 rounded-2xl border border-amber-100 shadow-card p-5">
+      <div className="grid grid-cols-6 gap-5">
+        {/* Needs attention: pending bookings — tall left card (col-span-2 row-span-2) */}
+        <div className="col-span-2 row-span-2 bg-amber-50/30 rounded-2xl border border-amber-100/70 shadow-soft p-5">
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs font-bold uppercase tracking-widest text-amber-700">Needs Attention</p>
             <Link href="/admin/bookings" className="text-xs text-amber-700 hover:text-amber-600 transition-colors">
@@ -314,49 +260,82 @@ export default async function AdminDashboard() {
           )}
         </div>
 
-        {/* Quick actions: col-span-2 (fills row 3, cols 5-6) */}
-        <div className="col-span-2 bg-white rounded-2xl border border-slate-100 shadow-card p-5">
-          <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Quick Actions</p>
-          <div className="space-y-1">
-            {[
-              { label: 'New Project', href: '/admin/projects/new', icon: '📁' },
-              { label: 'New Product', href: '/admin/products/new', icon: '📦' },
-              { label: 'New Service', href: '/admin/services/new', icon: '⚙️' },
-              { label: 'New Review', href: '/admin/reviews/new', icon: '★' },
-              { label: 'New Result', href: '/admin/results/new', icon: '🖼️' },
-              { label: 'View Bookings', href: '/admin/bookings', icon: '📅' },
-            ].map(({ label, href, icon }) => (
-              <Link
-                key={href}
-                href={href}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-solar-500/5 hover:text-solar-600 text-slate-700 transition-all group"
-              >
-                <span className="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-solar-500/10 flex items-center justify-center text-sm transition-colors">
-                  {icon}
-                </span>
-                <span className="text-sm font-medium flex-1">{label}</span>
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 14 14"
-                  fill="none"
-                  className="text-slate-300 group-hover:text-solar-500 transition-colors"
-                >
-                  <path
-                    d="M3 7h8M7.5 3.5L11 7l-3.5 3.5"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </Link>
-            ))}
+        {/* Stat cards — ordered by importance */}
+        <StatCard
+          count={bookingCount ?? 0}
+          label="Bookings"
+          icon={<CalendarDays size={18} />}
+          tile="bg-emerald-50 text-emerald-600"
+          secondary={pendingBookingCount > 0 ? `${pendingBookingCount} pending` : 'none pending'}
+          secondaryClass={pendingBookingCount > 0 ? 'text-amber-600 font-semibold' : 'text-slate-400'}
+          href="/admin/bookings"
+        />
+        <StatCard
+          count={resultCount ?? 0}
+          label="Results"
+          icon={<Images size={18} />}
+          tile="bg-cyan-50 text-cyan-600"
+          secondary="before / after gallery"
+          href="/admin/results"
+        />
+        <StatCard
+          count={projectCount ?? 0}
+          label="Projects"
+          icon={<FolderOpen size={18} />}
+          tile="bg-solar-400/15 text-solar-600"
+          secondary="residential · commercial · more"
+          href="/admin/projects"
+        />
+        <StatCard
+          count={productCount ?? 0}
+          label="Products"
+          icon={<Package size={18} />}
+          tile="bg-blue-50 text-blue-600"
+          secondary="across multiple categories"
+          href="/admin/products"
+        />
+        <StatCard
+          count={serviceCount ?? 0}
+          label="Services"
+          icon={<Wrench size={18} />}
+          tile="bg-teal-50 text-teal-600"
+          secondary={`${featuredServices?.length ?? 0} featured`}
+          href="/admin/services"
+        />
+        <StatCard
+          count={reviewCount ?? 0}
+          label="Reviews"
+          icon={<Star size={18} />}
+          tile="bg-violet-50 text-violet-600"
+          secondary={avgRating ? `★ ${avgRating} avg rating` : 'no ratings yet'}
+          href="/admin/reviews"
+        />
+
+        {/* Revenue summary: col-span-2 (fills row 2, cols 5-6) */}
+        <div className="col-span-2 bg-white rounded-2xl border border-slate-100/80 shadow-soft p-5">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-green-eco-bg text-green-eco">
+            <Wallet size={18} />
           </div>
+          <p className="text-3xl font-black text-navy-950 leading-none mt-4">{formatCentavos(revenueCentavos)}</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mt-2">Revenue Collected</p>
+          <p className="text-xs text-slate-400 mt-1">
+            {paidCount} paid booking{paidCount !== 1 ? 's' : ''}
+          </p>
+        </div>
+
+        {/* Scheduled services calendar: full width */}
+        <div className="col-span-6">
+          <div className="flex items-center justify-between mb-2 px-1">
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Scheduled Services</p>
+            <Link href="/admin/calendar" className="text-xs text-slate-500 hover:text-navy-900 transition-colors">
+              Full calendar →
+            </Link>
+          </div>
+          <CalendarView events={calEvents} />
         </div>
 
         {/* Recent activity: col-span-6 */}
-        <div className="col-span-6 bg-white rounded-2xl border border-slate-100 shadow-card p-5">
+        <div className="col-span-6 bg-white rounded-2xl border border-slate-100/80 shadow-soft p-5">
           <div className="flex items-center justify-between mb-4">
             <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Recent Activity</p>
           </div>

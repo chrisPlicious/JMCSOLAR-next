@@ -6,6 +6,10 @@ import type { DbBooking } from '@/lib/firebase/types';
 // Optional absolute base for links in emails (relative hrefs don't resolve in mail clients).
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? '').replace(/\/$/, '');
 
+// Operations inbox copied on every internal (admin) notification. The primary
+// recipient is the Zoho address (smtpUser()); this Gmail is CC'd alongside it.
+const ADMIN_CC = process.env.ADMIN_CC_EMAIL ?? 'jmcsolarph@gmail.com';
+
 function bookingPath(bookingType: DbBooking['booking_type']): string {
   if (bookingType === 'maintenance') return '/booking/maintenance';
   if (bookingType === 'site_assessment') return '/booking/site-assessment';
@@ -202,6 +206,7 @@ export async function notifyPaid(bookingId: string): Promise<void> {
 
       await sendMail({
         to: admin,
+        cc: ADMIN_CC,
         subject: `PAID ${serviceLabel} — ${b.name} (${amount})`,
         text: [
           `A ${serviceLabel} booking was paid.`,
@@ -310,5 +315,134 @@ export async function notifyRefunded(bookingId: string, refundCentavos?: number)
     });
   } catch (e) {
     console.error('[notifications] notifyRefunded failed', e);
+  }
+}
+
+/** Per-type extra line for internal emails (system size, duration, etc.). */
+function scheduleDetailFor(b: DbBooking): string {
+  if (b.booking_type === 'maintenance') return b.system_size_kw ? ` · ${b.system_size_kw}kW system` : '';
+  if (b.booking_type === 'site_assessment') return b.roof_type ? ` · ${b.roof_type}` : '';
+  return b.duration_hours ? ` (${b.duration_hours}hr)` : '';
+}
+
+/**
+ * New booking created → notify the internal inbox (Zoho) and CC the ops Gmail.
+ * Fires for both free and pay-first bookings. Never throws.
+ */
+export async function notifyAdminNewBooking(bookingId: string): Promise<void> {
+  try {
+    const admin = smtpUser();
+    if (!admin) return;
+
+    const snap = await adminDb.collection('bookings').doc(bookingId).get();
+    if (!snap.exists) return;
+    const b = snap.data() as DbBooking;
+
+    const serviceLabel = serviceLabelFor(b);
+    const serviceTitle = serviceLabel.charAt(0).toUpperCase() + serviceLabel.slice(1) + scheduleDetailFor(b);
+    const when = `${b.preferred_date} ${b.preferred_time}`;
+    const ref = `JMC-${bookingId.slice(0, 8).toUpperCase()}`;
+    const paymentLine =
+      b.payment_status === 'pending'
+        ? `Awaiting payment${b.payment_amount != null ? ` (${formatCentavos(b.payment_amount)})` : ''}`
+        : b.payment_status === 'not_required'
+        ? 'Free booking'
+        : b.payment_status;
+
+    const html = emailWrap(`
+      <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#f5a623;">New Booking</p>
+      <p style="margin:0 0 28px;font-size:22px;font-weight:700;color:#0a1628;">${b.name}</p>
+      <table cellpadding="0" cellspacing="0" width="100%" style="border-top:1px solid #eee;">
+        ${row('Service', serviceTitle)}
+        ${row('Phone', b.phone)}
+        ${row('Email', b.email ?? 'n/a')}
+        ${row('City', b.city_name)}
+        ${row('Requested', when)}
+        ${row('Payment', paymentLine)}
+        ${row('Reference', ref)}
+      </table>
+      ${SITE_URL ? ctaButton('View Bookings', `${SITE_URL}/admin/bookings`) : ''}
+    `);
+
+    await sendMail({
+      to: admin,
+      cc: ADMIN_CC,
+      subject: `NEW ${serviceLabel} — ${b.name} (${ref})`,
+      text: [
+        `A new ${serviceLabel} booking was submitted.`,
+        ``,
+        `Name: ${b.name}`,
+        `Phone: ${b.phone}`,
+        `Email: ${b.email ?? 'n/a'}`,
+        `City: ${b.city_name}`,
+        `Requested: ${when}`,
+        `Payment: ${paymentLine}`,
+        `Reference: ${ref}`,
+        ``,
+        `Bookings: ${SITE_URL ? `${SITE_URL}/admin/bookings` : '/admin/bookings'}`,
+      ].join('\n'),
+      html,
+    });
+  } catch (e) {
+    console.error('[notifications] notifyAdminNewBooking failed', e);
+  }
+}
+
+/**
+ * Upcoming-service reminder for the internal team. Sent T-2 and T-1 days before
+ * the scheduled date. Goes to the Zoho inbox, CC the ops Gmail. Never throws.
+ * Returns whether the mail was actually sent (so the cron can mark it done).
+ */
+export async function sendBookingReminder(b: DbBooking, daysOut: number): Promise<boolean> {
+  try {
+    const admin = smtpUser();
+    if (!admin) return false;
+
+    const serviceLabel = serviceLabelFor(b);
+    const serviceTitle = serviceLabel.charAt(0).toUpperCase() + serviceLabel.slice(1) + scheduleDetailFor(b);
+    const when = `${b.preferred_date} ${b.preferred_time}`;
+    const ref = `JMC-${b.id.slice(0, 8).toUpperCase()}`;
+    const lead =
+      daysOut === 1
+        ? `Reminder: a ${serviceLabel} is scheduled tomorrow.`
+        : `Reminder: a ${serviceLabel} is scheduled in ${daysOut} days.`;
+
+    const html = emailWrap(`
+      <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#f5a623;">Upcoming Service · ${daysOut === 1 ? 'Tomorrow' : `In ${daysOut} days`}</p>
+      <p style="margin:0 0 4px;font-size:22px;font-weight:700;color:#0a1628;">${b.name}</p>
+      <p style="margin:0 0 24px;font-size:14px;color:#666;">${lead}</p>
+      <table cellpadding="0" cellspacing="0" width="100%" style="border-top:1px solid #eee;">
+        ${row('Service', serviceTitle)}
+        ${row('Date & Time', when)}
+        ${row('Phone', b.phone)}
+        ${row('Email', b.email ?? 'n/a')}
+        ${row('City', b.city_name)}
+        ${row('Status', b.status)}
+        ${row('Reference', ref)}
+      </table>
+      ${SITE_URL ? ctaButton('View Bookings', `${SITE_URL}/admin/bookings`) : ''}
+    `);
+
+    return await sendMail({
+      to: admin,
+      cc: ADMIN_CC,
+      subject: `REMINDER — ${serviceLabel} for ${b.name} ${daysOut === 1 ? 'tomorrow' : `in ${daysOut} days`} (${when})`,
+      text: [
+        lead,
+        ``,
+        `Name: ${b.name}`,
+        `Service: ${serviceTitle}`,
+        `Date & Time: ${when}`,
+        `Phone: ${b.phone}`,
+        `Email: ${b.email ?? 'n/a'}`,
+        `City: ${b.city_name}`,
+        `Status: ${b.status}`,
+        `Reference: ${ref}`,
+      ].join('\n'),
+      html,
+    });
+  } catch (e) {
+    console.error('[notifications] sendBookingReminder failed', e);
+    return false;
   }
 }

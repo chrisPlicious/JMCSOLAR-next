@@ -133,6 +133,9 @@ export type DbBooking = {
   refund_id: string | null; // PayMongo refund id (ref_xxx)
   refunded_at: string | null; // ISO timestamp when refunded
   refund_amount: number | null; // amount refunded in centavos
+  // Internal reminder emails (set by the booking-reminders cron; absent = not yet sent)
+  reminder_2d_sent?: boolean;
+  reminder_1d_sent?: boolean;
   created_at: string;
   updated_at: string | null;
 };

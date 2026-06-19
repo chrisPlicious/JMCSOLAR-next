@@ -3,7 +3,7 @@
 import { headers } from 'next/headers';
 import { adminDb } from '@/lib/firebase/admin';
 import { getPaymentProvider } from '@/lib/payments';
-import { notifyReceived } from '@/lib/bookings/notifications';
+import { notifyReceived, notifyAdminNewBooking } from '@/lib/bookings/notifications';
 import {
   getBookingAmount,
   getSiteAssessmentTier,
@@ -178,7 +178,8 @@ export async function createBookingAction(data: BookingInput): Promise<CreateBoo
 
     // Free intake types (maintenance, site assessment until priced) end here.
     if (!requiresPayment || amount === null) {
-      await notifyReceived(ref.id); // best-effort "booking received" acknowledgement
+      // best-effort: ack the customer + alert the internal inbox (Zoho, CC ops Gmail)
+      await Promise.all([notifyReceived(ref.id), notifyAdminNewBooking(ref.id)]);
       return { bookingId: ref.id };
     }
 
@@ -224,6 +225,7 @@ export async function createBookingAction(data: BookingInput): Promise<CreateBoo
         cancelUrl,
       }),
       notifyReceived(ref.id),
+      notifyAdminNewBooking(ref.id),
     ]);
 
     await ref.update({

@@ -53,7 +53,8 @@
       "mcp__plugin_context-mode_context-mode__ctx_fetch_and_index",
       "mcp__plugin_context-mode_context-mode__ctx_search",
       "mcp__plugin_context-mode_context-mode__ctx_batch_execute",
-      "Bash(rtk curl *)"
+      "Bash(rtk curl *)",
+      "mcp__plugin_firebase_firebase__firestore_delete_document"
     ]
   },
   "enableAllProjectMcpServers": true,
