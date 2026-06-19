@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { SESSION_COOKIE, TOKEN_TTL_MS } from '@/lib/auth-constants';
+import { SESSION_COOKIE, TOKEN_TTL_REMEMBER_MS } from '@/lib/auth-constants';
 
 function buildCsp(nonce: string): string {
   const isDev = process.env.NODE_ENV === 'development';
@@ -17,20 +17,22 @@ function buildCsp(nonce: string): string {
 }
 
 /**
- * Verify a `nonce.iat.hmac` session token using Edge-compatible crypto.subtle.
- * Returns true if the HMAC over the nonce.iat matches the one in the token.
+ * Verify a `nonce.iat.ttl.hmac` session token using Edge-compatible crypto.subtle.
+ * Returns true if the HMAC over `nonce.iat.ttl` matches the one in the token and
+ * the per-token TTL (capped at the allowed maximum) has not elapsed.
  */
 async function verifyToken(token: string): Promise<boolean> {
   const parts = token.split('.');
-  if (parts.length !== 3) return false;
+  if (parts.length !== 4) return false;
 
-  const [nonce, iatHex, providedHmac] = parts;
-  if (!nonce || !iatHex || !providedHmac) return false;
+  const [nonce, iatHex, ttlHex, providedHmac] = parts;
+  if (!nonce || !iatHex || !ttlHex || !providedHmac) return false;
 
   // M1: cap length to prevent overflow with malformed tokens
-  if (iatHex.length > 16) return false;
+  if (iatHex.length > 16 || ttlHex.length > 16) return false;
   const iat = parseInt(iatHex, 16);
-  if (isNaN(iat) || Date.now() - iat > TOKEN_TTL_MS) return false;
+  const ttl = Math.min(parseInt(ttlHex, 16), TOKEN_TTL_REMEMBER_MS);
+  if (isNaN(iat) || isNaN(ttl) || Date.now() - iat > ttl) return false;
 
   const secret = process.env.SESSION_SECRET;
   if (!secret) return false;
@@ -46,7 +48,7 @@ async function verifyToken(token: string): Promise<boolean> {
   const sig = await crypto.subtle.sign(
     'HMAC',
     key,
-    new TextEncoder().encode(`${nonce}.${iatHex}`),
+    new TextEncoder().encode(`${nonce}.${iatHex}.${ttlHex}`),
   );
 
   const expectedHmac = Array.from(new Uint8Array(sig))

@@ -67,6 +67,14 @@ export default async function LoginPage({
             required
             className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-solar-500 focus:border-transparent transition-shadow"
           />
+          <label className="flex items-center gap-2 text-sm text-slate-500 select-none cursor-pointer">
+            <input
+              type="checkbox"
+              name="remember"
+              className="h-4 w-4 rounded border-slate-300 text-solar-500 focus:ring-solar-500"
+            />
+            Remember me for 30 days
+          </label>
           <button
             type="submit"
             className="w-full bg-solar-500 hover:bg-solar-600 text-navy-950 font-bold py-3 rounded-xl transition-colors duration-200 text-sm"

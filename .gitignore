@@ -63,3 +63,4 @@ CODE_REVIEW.md
 
 # local smoke-test scripts
 /scripts/test-email.mjs
+/scripts/test-reminders.mjs
