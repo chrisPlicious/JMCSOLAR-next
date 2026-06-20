@@ -4,6 +4,7 @@ import { adminDb } from '@/lib/firebase/admin';
 import { rateLimit } from '@/lib/rate-limit';
 import { getClientIp } from '@/lib/get-client-ip';
 import nodemailer from 'nodemailer';
+import { adminCc } from '@/lib/email-transporter';
 
 // 3 review submissions per IP per 30 minutes
 const RATE_LIMIT = 3;
@@ -98,6 +99,7 @@ export async function POST(request: Request) {
       .sendMail({
         from: `"JMC Solar Website" <${smtpUser}>`,
         to: smtpUser,
+        cc: adminCc(),
         subject: `New Review Submission: ${name}`,
         text: [
           `New review submitted via the website (pending approval).`,

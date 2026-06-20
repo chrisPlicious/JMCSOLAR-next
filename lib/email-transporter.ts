@@ -26,6 +26,20 @@ export function smtpUser(): string | undefined {
   return process.env.ZOHO_SMTP_USER;
 }
 
+// Operations inboxes CC'd on every internal (admin) notification. Override with
+// ADMIN_CC_EMAIL (comma-separated) to replace the default list.
+const DEFAULT_ADMIN_CC = [
+  'jmcsolarph@gmail.com',
+  'admn.jmcsolarph@gmail.com',
+  'jmcacounting00@gmail.com',
+];
+
+export function adminCc(): string[] {
+  const override = process.env.ADMIN_CC_EMAIL;
+  if (!override) return DEFAULT_ADMIN_CC;
+  return override.split(',').map((e) => e.trim()).filter(Boolean);
+}
+
 type SendMailArgs = {
   to: string;
   subject: string;

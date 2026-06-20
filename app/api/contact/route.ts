@@ -3,6 +3,7 @@ import { adminDb } from '@/lib/firebase/admin';
 import { rateLimit } from '@/lib/rate-limit';
 import { getClientIp } from '@/lib/get-client-ip';
 import nodemailer from 'nodemailer';
+import { adminCc } from '@/lib/email-transporter';
 
 // 5 submissions per IP per 15 minutes
 const RATE_LIMIT = 5;
@@ -85,6 +86,7 @@ export async function POST(request: Request) {
     await transporter.sendMail({
       from: `"JMC Solar Website" <${smtpUser}>`,
       to: smtpUser,
+      cc: adminCc(),
       replyTo: email || undefined,
       subject: `New Inquiry: ${systemType || 'General'} — ${name}`,
       text: [

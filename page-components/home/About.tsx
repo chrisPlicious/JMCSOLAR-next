@@ -8,7 +8,7 @@ const solarImg = '/assets/solar.jpg';
 
 const highlights = [
   "DOE/ERC compliant solar installations",
-  "6kW to 100kW+ system capacities",
+  "6kW to 1MW system capacities",
   "Serving all of Leyte and Eastern Visayas",
   "Certified dealer of world-class solar brands",
 ];

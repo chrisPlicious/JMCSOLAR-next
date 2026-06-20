@@ -1,14 +1,14 @@
 import { adminDb } from '@/lib/firebase/admin';
-import { sendMail, smtpUser } from '@/lib/email-transporter';
+import { sendMail, smtpUser, adminCc } from '@/lib/email-transporter';
 import { formatCentavos } from '@/lib/bookings/pricing';
 import type { DbBooking } from '@/lib/firebase/types';
 
 // Optional absolute base for links in emails (relative hrefs don't resolve in mail clients).
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? '').replace(/\/$/, '');
 
-// Operations inbox copied on every internal (admin) notification. The primary
-// recipient is the Zoho address (smtpUser()); this Gmail is CC'd alongside it.
-const ADMIN_CC = process.env.ADMIN_CC_EMAIL ?? 'jmcsolarph@gmail.com';
+// Operations inboxes copied on every internal (admin) notification. The primary
+// recipient is the Zoho address (smtpUser()); adminCc() addresses are CC'd alongside.
+const ADMIN_CC = adminCc();
 
 function bookingPath(bookingType: DbBooking['booking_type']): string {
   if (bookingType === 'maintenance') return '/booking/maintenance';
