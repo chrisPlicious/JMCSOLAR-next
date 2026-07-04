@@ -1,9 +1,17 @@
+import type { Metadata } from 'next';
 import HomePage from '@/page-components/home/HomePage';
 import { adminDb } from '@/lib/firebase/admin';
-import type { DbReview, DbService } from '@/lib/firebase/types';
+import type { DbReview } from '@/lib/firebase/types';
 import type { Review } from '@/types';
 import { SITE_URL } from '@/lib/seo/site';
 import { buildAreaServedArray } from '@/lib/seo/serviceArea';
+import { getServices } from '@/lib/data/getServices';
+
+// Homepage owns the site-root canonical. (It used to live on the root layout, but
+// that leaked to every child page — see app/layout.tsx.)
+export const metadata: Metadata = {
+  alternates: { canonical: '/' },
+};
 
 const baseJsonLd = {
   '@context': 'https://schema.org',
@@ -79,19 +87,10 @@ async function fetchApprovedReviews(): Promise<Review[]> {
   }
 }
 
-async function fetchServices(): Promise<DbService[]> {
-  try {
-    const snap = await adminDb.collection('services').orderBy('display_order').get();
-    return snap.docs.map((d) => d.data() as DbService);
-  } catch {
-    return [];
-  }
-}
-
 export default async function Home() {
   const [reviews, services] = await Promise.all([
     fetchApprovedReviews(),
-    fetchServices(),
+    getServices(),
   ]);
 
   const ratings = reviews.filter((r) => typeof r.rating === 'number');
@@ -129,7 +128,7 @@ export default async function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <HomePage reviews={reviews} />
+      <HomePage reviews={reviews} services={services} />
     </>
   );
 }

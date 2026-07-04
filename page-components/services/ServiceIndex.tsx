@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, type ComponentType } from "react";
+import { useState, useRef, type ComponentType } from "react";
 import { motion } from "framer-motion";
 import type { MouseEvent } from "react";
 import Link from "next/link";
@@ -9,8 +9,6 @@ import type { LucideProps } from "lucide-react";
 import WhoWeServeCard from "@/components/ui/WhoWeServeCard";
 import Button from "@/components/ui/Button";
 import { ArrowRight } from "lucide-react";
-import { db } from "@/lib/firebase/client";
-import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import type { DbService } from "@/lib/firebase/types";
 import { clientTypes } from "@/data/services";
 import Layout from "@/components/layout/Layout";
@@ -19,28 +17,15 @@ const solarImg = '/assets/solar.jpg';
 
 type IconName = keyof typeof Icons;
 
-export default function ServicesPage() {
-  const [services, setServices] = useState<DbService[]>([]);
-  const [loading, setLoading] = useState(true);
+// Services are fetched server-side (app/services/page.tsx) and passed in as a prop,
+// so the /services/[slug] links are present in the initial SSR HTML for crawlers.
+export default function ServicesPage({ services }: { services: DbService[] }) {
   const [activeIndex, setActiveIndex] = useState<number | null>(0);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const isDown = useRef(false);
   const startX = useRef(0);
   const scrollLeft = useRef(0);
-
-  useEffect(() => {
-    const q = query(collection(db, 'services'), orderBy('display_order', 'asc'));
-    getDocs(q)
-      .then((snap) => {
-        const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as DbService[];
-        setServices(data);
-      })
-      .catch((err) => {
-        console.error('[services] failed to load services:', err);
-      })
-      .finally(() => setLoading(false));
-  }, []);
 
   function onMouseDown(e: MouseEvent<HTMLDivElement>) {
     if (!scrollRef.current) return;
@@ -101,15 +86,6 @@ export default function ServicesPage() {
           </motion.div>
           {/* Mobile: 2-col card grid (hidden on desktop) */}
           <div className="lg:hidden grid grid-cols-2 sm:grid-cols-3 gap-4 mb-12">
-            {loading
-              ? Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="animate-pulse flex flex-col items-center gap-3 bg-white rounded-2xl p-5 border border-slate-100">
-                  <div className="w-14 h-14 bg-slate-200 rounded-2xl" />
-                  <div className="h-3.5 bg-slate-200 rounded w-3/4" />
-                  <div className="h-3 bg-slate-100 rounded w-1/2" />
-                </div>
-              ))
-              : null}
             {services.map((service, index) => {
               const IconComponent = Icons[service.icon as IconName] as
                 | ComponentType<LucideProps>
@@ -156,15 +132,6 @@ export default function ServicesPage() {
             onMouseUp={onMouseUp}
             onMouseLeave={onMouseLeave}
           >
-            {loading
-              ? Array.from({ length: 6 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="animate-pulse shrink-0 rounded-2xl bg-slate-200"
-                  style={{ width: "92px", height: "100%" }}
-                />
-              ))
-              : null}
             {services.map((service, index) => {
               const isActive = activeIndex === index;
               const IconComponent = Icons[service.icon as IconName] as

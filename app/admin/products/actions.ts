@@ -6,8 +6,17 @@ import { adminDb } from '@/lib/firebase/admin';
 import { uploadFile, deleteFile } from '@/lib/firebase/storage';
 import { validateImageUpload, safeExtension } from '@/lib/upload-validation';
 import { requireField, optionalField } from '@/lib/form-data';
+import { slugify } from '@/lib/seo/slug';
 
 type ActionResult = { error?: string; success?: boolean };
+
+// Unique, stable slug for the product's /products/[slug] detail URL. Falls back to a
+// short id suffix on collision. Slugs never change on rename (see updateProductAction).
+async function uniqueProductSlug(name: string, productId: string): Promise<string> {
+  const base = slugify(name) || 'product';
+  const existing = await adminDb.collection('products').where('slug', '==', base).limit(1).get();
+  return existing.empty ? base : `${base}-${productId.slice(0, 4)}`;
+}
 
 async function uploadProductImage(productId: string, file: File): Promise<string | null> {
   const validationError = await validateImageUpload(file);
@@ -36,11 +45,13 @@ export async function createProductAction(
   if (!category) return { error: 'Category is required.' };
 
   const productId = crypto.randomUUID();
+  const slug = await uniqueProductSlug(name, productId);
 
   try {
     // M3: use create() so a UUID collision fails loudly instead of silently overwriting
     await adminDb.collection('products').doc(productId).create({
       id: productId,
+      slug,
       name,
       category,
       brand: optionalField(formData, 'brand'),
@@ -81,6 +92,9 @@ export async function updateProductAction(
   if (!name) return { error: 'Product name is required.' };
   if (!category) return { error: 'Category is required.' };
 
+  // NOTE: `slug` is intentionally NOT updated — it must stay stable across renames so
+  // previously-indexed /products/[slug] URLs don't 404. (Existing slug-less docs are
+  // filled by scripts/backfill-product-slugs.mjs.)
   const update: Record<string, string | null> = {
     name,
     category,

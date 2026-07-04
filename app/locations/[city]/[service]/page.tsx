@@ -7,6 +7,7 @@ import ProjectCard from '@/components/ui/ProjectCard';
 import { LOCATIONS, getLocation, getProvinceSlug } from '@/data/locations';
 import { adminDb } from '@/lib/firebase/admin';
 import { itemsNearCity } from '@/lib/data/nearestLocations';
+import { isIndexableCityService } from '@/data/indexableCityServices';
 import { SITE_URL } from '@/lib/seo/site';
 import { makeBreadcrumbLd } from '@/lib/seo/breadcrumb';
 import type { DbProject, DbService, DbServiceDetail } from '@/lib/firebase/types';
@@ -51,6 +52,10 @@ export async function generateMetadata({
   return {
     title,
     description,
+    // Prune: these auto-generated combos are thin near-duplicates. noindex,follow
+    // (still crawl outbound links) unless allowlisted in data/indexableCityServices.ts.
+    // Keep the SELF canonical — never pair noindex with a canonical to a different URL.
+    robots: { index: isIndexableCityService(citySlug, serviceSlug), follow: true },
     alternates: { canonical: `/locations/${citySlug}/${serviceSlug}` },
     openGraph: { title, description },
   };

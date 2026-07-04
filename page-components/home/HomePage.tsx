@@ -5,18 +5,22 @@ import About from './About';
 import Partners from './Partners';
 import Reviews from './Reviews';
 import Contact from './Contact';
+import HomeExplore from './HomeExplore';
 import type { Review } from '@/types';
+import type { DbService } from '@/lib/firebase/types';
 
 interface HomePageProps {
   reviews: Review[];
+  services: DbService[];
 }
 
-export default function HomePage({ reviews }: HomePageProps) {
+export default function HomePage({ reviews, services }: HomePageProps) {
   return (
     <Layout>
       <Hero />
       <About />
       <Partners />
+      <HomeExplore services={services} />
       <Reviews reviews={reviews} />
       {/* L1: fallback skeleton so Suspense boundary renders something */}
       <Suspense fallback={<div className="py-24 bg-white" aria-hidden="true" />}>

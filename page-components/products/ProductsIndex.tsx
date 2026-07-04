@@ -35,6 +35,9 @@ const categoryIcon: Record<ProductCategory, (size: number) => React.ReactNode> =
 
 function ProductCard({ product, index }: { product: Product; index: number }) {
   const number = String(index + 1).padStart(2, '0');
+  // Link to the detail page once the product has a slug (backfilled); until then fall
+  // back to the inquiry deep-link so nothing breaks pre-backfill.
+  const detailHref = product.slug ? `/products/${product.slug}` : null;
 
   return (
     <motion.div
@@ -71,13 +74,23 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
           </span>
         )}
 
-        <a
-          href={`/?product=${product.id}&service=${product.related_service}#contact`}
-          className="absolute bottom-4 right-4 w-11 h-11 bg-navy-900 hover:bg-solar-500 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg"
-          aria-label={`Inquire about ${product.name}`}
-        >
-          <ArrowUpRight size={17} className="text-white" />
-        </a>
+        {detailHref ? (
+          <Link
+            href={detailHref}
+            className="absolute bottom-4 right-4 w-11 h-11 bg-navy-900 hover:bg-solar-500 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg"
+            aria-label={`View ${product.name}`}
+          >
+            <ArrowUpRight size={17} className="text-white" />
+          </Link>
+        ) : (
+          <a
+            href={`/?product=${product.id}&service=${product.related_service}#contact`}
+            className="absolute bottom-4 right-4 w-11 h-11 bg-navy-900 hover:bg-solar-500 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg"
+            aria-label={`Inquire about ${product.name}`}
+          >
+            <ArrowUpRight size={17} className="text-white" />
+          </a>
+        )}
       </div>
 
       <div className="mt-4">
@@ -85,7 +98,13 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
           className="text-navy-900 font-bold text-[15px] leading-snug mb-1"
           style={{ fontFamily: 'Poppins, sans-serif' }}
         >
-          {product.name}
+          {detailHref ? (
+            <Link href={detailHref} className="hover:text-solar-600 transition-colors">
+              {product.name}
+            </Link>
+          ) : (
+            product.name
+          )}
         </h3>
         <p className="text-slate-400 text-[12px] leading-relaxed">{product.specs}</p>
       </div>
