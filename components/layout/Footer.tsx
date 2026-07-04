@@ -3,45 +3,19 @@
 import Link from 'next/link';
 import { Phone, Mail, MapPin, Facebook, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
-
-type ProvinceGroup = { provinceSlug: string; cities: { slug: string; name: string }[] };
-
-const serviceAreaLinks: Record<string, ProvinceGroup> = {
-  Leyte: {
-    provinceSlug: 'leyte',
-    cities: [
-      { slug: 'ormoc-city', name: 'Ormoc City' },
-      { slug: 'tacloban-city', name: 'Tacloban City' },
-      { slug: 'baybay-city', name: 'Baybay City' },
-    ],
-  },
-  'Southern Leyte': {
-    provinceSlug: 'southern-leyte',
-    cities: [
-      { slug: 'maasin-city', name: 'Maasin City' },
-      { slug: 'sogod', name: 'Sogod' },
-      { slug: 'macrohon', name: 'Macrohon' },
-    ],
-  },
-  Cebu: {
-    provinceSlug: 'cebu',
-    cities: [
-      { slug: 'cebu-city', name: 'Cebu City' },
-      { slug: 'mandaue-city', name: 'Mandaue City' },
-      { slug: 'talisay-cebu', name: 'Talisay City' },
-    ],
-  },
-};
+import { NAV_SERVICES } from '@/data/services';
+import type { FooterProvince } from '@/data/locations';
 
 const quickLinks = [
   { label: 'Home', href: '/' },
   { label: 'Services', href: '/services' },
   { label: 'Projects', href: '/projects' },
+  { label: 'Results', href: '/results' },
   { label: 'Products', href: '/products' },
   { label: 'Contact', href: '/#contact' },
 ];
 
-export default function Footer() {
+export default function Footer({ locations }: { locations: FooterProvince[] }) {
   return (
     <footer className="relative bg-navy-950 text-white overflow-hidden">
       {/* Decorative top line */}
@@ -109,6 +83,23 @@ export default function Footer() {
                 </li>
               ))}
             </ul>
+
+            <h4 className="text-white font-semibold mt-8 mb-4 text-sm uppercase tracking-wider" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              Services
+            </h4>
+            <ul className="flex flex-col gap-3">
+              {NAV_SERVICES.map((service) => (
+                <li key={service.slug}>
+                  <Link
+                    href={`/services/${service.slug}`}
+                    className="text-white/40 hover:text-solar-400 transition-colors text-sm flex items-center gap-2 group"
+                  >
+                    <ArrowRight size={12} className="text-solar-500/40 group-hover:text-solar-400 group-hover:translate-x-0.5 transition-all duration-200" />
+                    {service.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </motion.div>
 
           {/* Service Areas */}
@@ -122,16 +113,16 @@ export default function Footer() {
               Service Areas
             </h4>
             <div className="flex flex-col gap-5">
-              {Object.entries(serviceAreaLinks).map(([province, { provinceSlug, cities }]) => (
-                <div key={province}>
+              {locations.map((province) => (
+                <div key={province.slug}>
                   <Link
-                    href={`/locations/${provinceSlug}`}
+                    href={`/locations/${province.slug}`}
                     className="text-white/25 text-[10px] font-bold uppercase tracking-widest mb-2 block hover:text-solar-500/60 transition-colors"
                   >
-                    {province}
+                    {province.name}
                   </Link>
                   <ul className="flex flex-col gap-2">
-                    {cities.map((city) => (
+                    {province.cities.map((city) => (
                       <li key={city.slug}>
                         <Link
                           href={`/locations/${city.slug}`}

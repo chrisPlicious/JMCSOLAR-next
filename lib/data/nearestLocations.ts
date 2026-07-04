@@ -1,4 +1,4 @@
-import { LOCATIONS } from '@/data/locations';
+import { LOCATIONS, getMunicipalityLocations } from '@/data/locations';
 import type { ServiceLocation } from '@/data/locations';
 
 function toRad(deg: number): number {
@@ -33,4 +33,14 @@ export function itemsNearCity<T extends WithCitySlug>(
     if (!itemCity) return false;
     return haversineKm(city.geo.lat, city.geo.lng, itemCity.geo.lat, itemCity.geo.lng) <= radiusKm;
   });
+}
+
+/** The N closest OTHER municipalities to `loc`, nearest first (for cross-links). */
+export function nearestCities(loc: ServiceLocation, n = 4): ServiceLocation[] {
+  return getMunicipalityLocations()
+    .filter((m) => m.slug !== loc.slug)
+    .map((m) => ({ m, d: haversineKm(loc.geo.lat, loc.geo.lng, m.geo.lat, m.geo.lng) }))
+    .sort((a, b) => a.d - b.d)
+    .slice(0, n)
+    .map((x) => x.m);
 }

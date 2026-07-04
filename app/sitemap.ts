@@ -2,7 +2,10 @@ import type { MetadataRoute } from 'next';
 import { adminDb } from '@/lib/firebase/admin';
 import { SITE_URL } from '@/lib/seo/site';
 import { LOCATIONS } from '@/data/locations';
+import { isIndexableCityService } from '@/data/indexableCityServices';
+import { isProductIndexable } from '@/lib/seo/product';
 import type { DbService } from '@/lib/firebase/types';
+import type { Product } from '@/types';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages: MetadataRoute.Sitemap = [
@@ -12,6 +15,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/projects`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
     { url: `${SITE_URL}/calculator`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
     { url: `${SITE_URL}/locations`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.85 },
+    { url: `${SITE_URL}/results`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
   ];
 
   // Dynamic service detail pages — only those with full ServiceDetail content
@@ -46,17 +50,44 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: loc.tier === 'municipality' ? 0.85 : 0.8,
   }));
 
-  // City × service cross-pages — only generated when we have service slugs
+  // City × service cross-pages — only allowlisted combos (data/indexableCityServices.ts).
+  // Empty allowlist = none emitted: the rest are pruned (noindex) so must NOT appear here.
   const cityServicePages: MetadataRoute.Sitemap = serviceSlugs.length > 0
     ? LOCATIONS.flatMap((loc) =>
-        serviceSlugs.map((serviceSlug) => ({
-          url: `${SITE_URL}/locations/${loc.slug}/${serviceSlug}`,
-          lastModified: new Date(),
-          changeFrequency: 'monthly' as const,
-          priority: 0.7,
-        }))
+        serviceSlugs
+          .filter((serviceSlug) => isIndexableCityService(loc.slug, serviceSlug))
+          .map((serviceSlug) => ({
+            url: `${SITE_URL}/locations/${loc.slug}/${serviceSlug}`,
+            lastModified: new Date(),
+            changeFrequency: 'monthly' as const,
+            priority: 0.7,
+          }))
       )
     : [];
 
-  return [...staticPages, ...servicePages, ...locationPages, ...cityServicePages];
+  // Product detail pages — only substantial products (isProductIndexable gate), so
+  // thin/slug-less products stay out of the index just like the pruned location combos.
+  let productPages: MetadataRoute.Sitemap = [];
+  try {
+    const snap = await adminDb.collection('products').get();
+    productPages = snap.docs
+      .map((doc) => ({ id: doc.id, ...doc.data() }) as Product)
+      .filter(isProductIndexable)
+      .map((p) => ({
+        url: `${SITE_URL}/products/${p.slug}`,
+        lastModified: new Date(p.created_at),
+        changeFrequency: 'monthly' as const,
+        priority: 0.6,
+      }));
+  } catch (err) {
+    console.error('[sitemap] Failed to fetch product pages:', err);
+  }
+
+  return [
+    ...staticPages,
+    ...servicePages,
+    ...locationPages,
+    ...cityServicePages,
+    ...productPages,
+  ];
 }

@@ -8,13 +8,18 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { db } from '@/lib/firebase/client';
 import { collection, getDocs, orderBy, query } from 'firebase/firestore';
 import type { DbService } from '@/lib/firebase/types';
+import { NAV_SERVICES } from '@/data/services';
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileServicesOpen, setMobileServicesOpen] = useState(false);
-  const [services, setServices] = useState<DbService[]>([]);
+  // Seeded from the static NAV_SERVICES so the menus show correct links immediately;
+  // the effect below refreshes from Firestore after hydration. (These menus are
+  // conditionally mounted, so they are NOT an SSR crawl surface — Footer/ServiceIndex/
+  // HomeExplore server-render the service links for crawlers.)
+  const [services, setServices] = useState<Pick<DbService, 'slug' | 'title'>[]>(NAV_SERVICES);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
 

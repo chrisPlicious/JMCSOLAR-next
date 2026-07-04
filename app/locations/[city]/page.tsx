@@ -10,7 +10,8 @@ import ProjectCard from '@/components/ui/ProjectCard';
 import ReviewCard from '@/components/ui/ReviewCard';
 import { LOCATIONS, getLocation, getMunicipalityLocations, getProvinceSlug } from '@/data/locations';
 import { adminDb } from '@/lib/firebase/admin';
-import { itemsNearCity } from '@/lib/data/nearestLocations';
+import { itemsNearCity, nearestCities } from '@/lib/data/nearestLocations';
+import { getPublicUrl } from '@/lib/firebase/storage';
 import { SITE_URL } from '@/lib/seo/site';
 import { makeBreadcrumbLd } from '@/lib/seo/breadcrumb';
 import type { DbProject, DbReview, DbService } from '@/lib/firebase/types';
@@ -114,7 +115,7 @@ export default async function CityPage({
     location: p.location,
     city_slug: p.city_slug,
     facebook_url: p.facebook_url,
-    cover_image_path: p.cover_image_path,
+    cover_image_path: getPublicUrl(p.cover_image_path),
     created_at: p.created_at,
     completed_at: null,
   }));
@@ -132,7 +133,25 @@ export default async function CityPage({
       ? getMunicipalityLocations().filter((m) => loc.childSlugs?.includes(m.slug))
       : [];
 
+  // Nearby-city cross-links (municipalities only) — unique per city + interlink the keepers.
+  const nearbyCities = loc.tier === 'municipality' ? nearestCities(loc, 4) : [];
+
   const provinceSlug = getProvinceSlug(loc.province);
+
+  // AggregateRating from the approved reviews actually rendered on this page.
+  const ratedReviews = mappedReviews.filter((r) => typeof r.rating === 'number');
+  const aggregateRating =
+    ratedReviews.length > 0
+      ? {
+          '@type': 'AggregateRating',
+          ratingValue: (
+            ratedReviews.reduce((s, r) => s + r.rating, 0) / ratedReviews.length
+          ).toFixed(1),
+          reviewCount: ratedReviews.length,
+          bestRating: 5,
+          worstRating: 1,
+        }
+      : undefined;
 
   const serviceLd = {
     '@context': 'https://schema.org',
@@ -148,6 +167,7 @@ export default async function CityPage({
         : {
             '@type': 'City',
             name: loc.name,
+            geo: { '@type': 'GeoCoordinates', latitude: loc.geo.lat, longitude: loc.geo.lng },
             containedInPlace: {
               '@type': 'AdministrativeArea',
               name: loc.province,
@@ -155,6 +175,7 @@ export default async function CityPage({
             },
           },
     url: `${SITE_URL}/locations/${slug}`,
+    ...(aggregateRating && { aggregateRating }),
   };
 
   const faqLd = {
@@ -305,6 +326,32 @@ export default async function CityPage({
             </div>
           </section>
 
+          {/* Areas we serve (barangays / localities) */}
+          {loc.nearbyAreas && loc.nearbyAreas.length > 0 && (
+            <section>
+              <h2
+                className="font-black text-2xl sm:text-3xl text-navy-900 mb-2"
+                style={{ fontFamily: 'Poppins, sans-serif' }}
+              >
+                Areas We Serve in {loc.name}
+              </h2>
+              <p className="text-slate-500 mb-6">
+                JMC Solar installs across {loc.name} and its surrounding barangays and localities:
+              </p>
+              <div className="flex flex-wrap gap-2.5">
+                {loc.nearbyAreas.map((area) => (
+                  <span
+                    key={area}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-slate-200 bg-slate-50 text-slate-600 text-sm"
+                  >
+                    <MapPin size={13} className="text-solar-500/70" />
+                    {area}
+                  </span>
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* Projects */}
           {mappedProjects.length > 0 && (
             <section>
@@ -392,6 +439,37 @@ export default async function CityPage({
                       {faq.a}
                     </div>
                   </details>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Nearby cities */}
+          {nearbyCities.length > 0 && (
+            <section>
+              <h2
+                className="font-black text-2xl sm:text-3xl text-navy-900 mb-8"
+                style={{ fontFamily: 'Poppins, sans-serif' }}
+              >
+                Solar Installation Near {loc.name}
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {nearbyCities.map((city) => (
+                  <Link
+                    key={city.slug}
+                    href={`/locations/${city.slug}`}
+                    className="group flex items-center gap-3 p-4 rounded-2xl border border-slate-200 hover:border-solar-400 hover:bg-solar-500/5 transition-all duration-200"
+                  >
+                    <div className="w-9 h-9 bg-solar-500/10 rounded-xl flex items-center justify-center shrink-0">
+                      <MapPin size={15} className="text-solar-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-navy-900 text-sm group-hover:text-solar-600 transition-colors truncate">
+                        {city.name}
+                      </p>
+                      <p className="text-slate-400 text-xs">{city.province ?? city.region}</p>
+                    </div>
+                  </Link>
                 ))}
               </div>
             </section>

@@ -28,6 +28,15 @@ const categoryIcons: Record<Project['category'], string> = {
 export default function ProjectCard({ project, onClick }: ProjectCardProps) {
   const hasGallery = (project.images?.length ?? 0) > 0;
 
+  // next/image throws (and 500s the whole page) on a src that isn't an absolute
+  // URL or a root-relative path. Some Firestore project docs hold a bare storage
+  // path (e.g. "project-images/…jpg"); guard so a bad path degrades to the
+  // gradient fallback instead of crashing a page we want indexed.
+  const coverSrc =
+    project.cover_image_path && /^(https?:\/\/|\/)/.test(project.cover_image_path)
+      ? project.cover_image_path
+      : null;
+
   // Warm cache for first gallery image so modal opens instantly
   const prefetchGallery = () => {
     const first = project.images?.[0]?.storage_path;
@@ -50,10 +59,10 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
     >
 
       {/* Background: image if available, gradient fallback */}
-      {project.cover_image_path ? (
+      {coverSrc ? (
         // M7: next/image for Vercel optimisation + LCP
         <Image
-          src={project.cover_image_path}
+          src={coverSrc}
           alt={project.title}
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
@@ -81,7 +90,7 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
       )}
 
       {/* Centered emoji — only when no image */}
-      {!project.cover_image_path && (
+      {!coverSrc && (
         <div className="absolute inset-0 flex items-center justify-center">
           <span className="text-7xl opacity-20">{categoryIcons[project.category]}</span>
         </div>

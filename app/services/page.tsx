@@ -1,6 +1,9 @@
 import type { Metadata } from 'next';
 import ServicesPage from '@/page-components/services/ServiceIndex';
 import { makeBreadcrumbLd } from '@/lib/seo/breadcrumb';
+import { getServices } from '@/lib/data/getServices';
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: 'Solar Services',
@@ -19,11 +22,12 @@ const breadcrumb = makeBreadcrumbLd([
   { name: 'Services', url: '/services' },
 ]);
 
-export default function Services() {
+export default async function Services() {
+  const services = await getServices();
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
-      <ServicesPage />
+      <ServicesPage services={services} />
     </>
   );
 }
