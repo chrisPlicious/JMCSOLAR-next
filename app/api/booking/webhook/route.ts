@@ -1,19 +1,11 @@
 import { NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase/admin';
 import { getPaymentProvider } from '@/lib/payments';
+import { kindFromBody, eventIdFromBody } from '@/lib/payments/webhook';
 import { notifyPaid, notifyFailed, notifyRefunded } from '@/lib/bookings/notifications';
 import type { DbBooking } from '@/lib/firebase/types';
 
 export const dynamic = 'force-dynamic';
-
-function eventIdFromBody(rawBody: string): string | null {
-  try {
-    const json = JSON.parse(rawBody) as { data?: { id?: string } };
-    return json.data?.id ?? null;
-  } catch {
-    return null;
-  }
-}
 
 export async function POST(request: Request) {
   // Must read the RAW body for HMAC verification — never re-stringify.
@@ -24,6 +16,13 @@ export async function POST(request: Request) {
 
   if (!provider.verifyWebhookSignature(rawBody, signature)) {
     return NextResponse.json({ error: 'Invalid signature.' }, { status: 401 });
+  }
+
+  // Cross-talk guard: PayMongo broadcasts every event to all registered webhooks.
+  // Ack-and-ignore order events here so a misrouted order event never 500-retries.
+  // Absent/'booking' kind is treated as a booking (legacy events have no kind).
+  if (kindFromBody(rawBody) === 'order') {
+    return NextResponse.json({ received: true });
   }
 
   const eventId = eventIdFromBody(rawBody);
@@ -62,7 +61,12 @@ export async function POST(request: Request) {
         const existing = await tx.get(eventRef);
         if (existing.exists) return false; // replay
         const snap = await tx.get(bookingRef);
-        if (!snap.exists) throw new Error(`booking ${event.bookingId} not found`);
+        if (!snap.exists) {
+          // Ack-and-ignore (return 200, not 500): a misrouted/order event must not
+          // trigger PayMongo 500-retries. Skip the update; leave the event unclaimed.
+          console.warn(`[webhook] booking ${event.bookingId} not found; ack-and-ignore`);
+          return false;
+        }
         const b = snap.data() as DbBooking;
         if (b.payment_status !== 'paid') {
           tx.update(bookingRef, {

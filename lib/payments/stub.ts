@@ -16,10 +16,15 @@ export const stubProvider: PaymentProvider = {
 
   async createCheckoutSession(input: CreateCheckoutInput): Promise<CheckoutSession> {
     const sessionId = `stub_${crypto.randomUUID()}`;
+    // Orders route to the shop stub page; everything else keeps the booking flow.
     const checkoutUrl =
-      `/booking/stub-checkout?booking=${encodeURIComponent(input.bookingId)}` +
-      `&session=${encodeURIComponent(sessionId)}` +
-      `&amount=${input.amount}`;
+      input.kind === 'order'
+        ? `/shop/stub-checkout?order=${encodeURIComponent(input.bookingId)}` +
+          `&session=${encodeURIComponent(sessionId)}` +
+          `&amount=${input.amount}`
+        : `/booking/stub-checkout?booking=${encodeURIComponent(input.bookingId)}` +
+          `&session=${encodeURIComponent(sessionId)}` +
+          `&amount=${input.amount}`;
     return { sessionId, checkoutUrl };
   },
 
@@ -41,5 +46,11 @@ export const stubProvider: PaymentProvider = {
     } catch {
       return { type: 'ignored' };
     }
+  },
+
+  async getCheckoutSessionStatus(): Promise<{ paid: boolean; paymentId: string | null }> {
+    // Stub orders are confirmed via simulateOrderPaymentAction, not by querying a
+    // (non-existent) provider session — so verify-on-return is always a no-op here.
+    return { paid: false, paymentId: null };
   },
 };

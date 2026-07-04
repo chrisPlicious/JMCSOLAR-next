@@ -135,3 +135,154 @@ export interface Booking {
   created_at: string;
   updated_at: string | null;
 }
+
+// ---------------------------------------------------------------------------
+// E-commerce store (shopItems / orders) — see .claude/plans/ecommerce-store.md
+// Money is always centavos (integers); ₱500 = 50000. Never store floats/pesos.
+// ---------------------------------------------------------------------------
+
+export type ShopItemCategory = 'lights' | 'wires' | 'accessories';
+export type OrderStatus =
+  | 'pending'
+  | 'paid'
+  | 'processing'
+  | 'shipped'
+  | 'delivered'
+  | 'cancelled'
+  | 'failed';
+export type OrderPaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
+export type FulfillmentMethod = 'delivery' | 'pickup';
+export type OrderSource = 'online' | 'manual'; // #19 — 'manual' = admin-created phone/walk-in order
+export type ReturnStatus = 'none' | 'requested' | 'approved' | 'rejected' | 'completed'; // #23 RMA
+export type StockChangeReason =
+  | 'sale'
+  | 'refund_restore'
+  | 'cancel_restore'
+  | 'manual_adjust'
+  | 'po_receive'
+  | 'csv_import';
+export type PurchaseOrderStatus = 'draft' | 'ordered' | 'partial' | 'received' | 'cancelled';
+
+// #9 product variants — empty/absent = simple item (use base price + stock)
+export interface ShopItemVariant {
+  id: string; // stable variant id
+  label: string; // e.g. "100W", "Warm White", "5m"
+  sku: string;
+  price_centavos: number; // overrides base price for this variant
+  stock: number;
+}
+
+export interface ShopItem {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  category: ShopItemCategory;
+  sku: string;
+  price: number; // centavos — base price; per-variant price overrides when variants exist
+  stock: number; // base stock; used when item has NO variants
+  low_stock_threshold: number | null; // #14 — badge/alert when stock <= this (null = use default)
+  active: boolean;
+  weight_grams: number | null;
+  image_path: string | null;
+  variants: ShopItemVariant[] | null; // #9
+  meta_title: string | null; // #5 SEO override (falls back to name)
+  meta_description: string | null; // #5 SEO override (falls back to description)
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OrderItem {
+  shop_item_id: string;
+  variant_id: string | null; // #9 — null for simple items
+  name: string;
+  sku: string;
+  unit_price_centavos: number;
+  quantity: number;
+  line_total_centavos: number;
+}
+
+export interface Order {
+  id: string;
+  items: OrderItem[];
+  subtotal_centavos: number;
+  shipping_centavos: number;
+  shipping_region: string;
+  fulfillment_method: FulfillmentMethod;
+  source: OrderSource; // #19
+  return_status: ReturnStatus; // #23
+  total_centavos: number;
+  customer: {
+    name: string;
+    email: string;
+    phone: string;
+    address: string | null;
+  };
+  status: OrderStatus;
+  payment_status: OrderPaymentStatus;
+  payment_reference: string | null;
+  payment_session_id: string | null;
+  paid_at: string | null;
+  refund_id: string | null;
+  refunded_at: string | null;
+  refund_amount: number | null;
+  created_at: string;
+  updated_at: string | null; // set on create; null until first update
+}
+
+// #15 stock history / audit log
+export interface StockAuditEntry {
+  id: string;
+  shop_item_id: string;
+  variant_id: string | null;
+  delta: number; // signed: -2 (sale), +5 (PO receive), +1 (refund restore)
+  reason: StockChangeReason;
+  ref_id: string | null; // order id / PO id / import batch id
+  actor: string; // 'system' | 'webhook' | admin email
+  stock_after: number;
+  created_at: string;
+}
+
+// #16 purchase orders / supplier transfers
+export interface PurchaseOrderLine {
+  shop_item_id: string;
+  variant_id: string | null;
+  qty_ordered: number;
+  qty_received: number;
+  unit_cost_centavos: number | null;
+}
+
+export interface PurchaseOrder {
+  id: string;
+  supplier_name: string;
+  reference: string | null;
+  status: PurchaseOrderStatus;
+  lines: PurchaseOrderLine[];
+  notes: string | null;
+  created_by: string; // admin email
+  created_at: string;
+  received_at: string | null;
+}
+
+// #23 self-serve returns (guest: order-ID + email lookup)
+export interface RmaRequest {
+  id: string;
+  order_id: string;
+  customer_email: string; // must match order.customer.email to authorize lookup
+  items: { shop_item_id: string; variant_id: string | null; quantity: number }[];
+  reason: string;
+  status: 'requested' | 'approved' | 'rejected' | 'completed';
+  admin_note: string | null;
+  created_at: string;
+  resolved_at: string | null;
+}
+
+// #11 abandoned cart recovery
+export interface AbandonedCart {
+  id: string;
+  email: string;
+  items: { shop_item_id: string; variant_id: string | null; quantity: number }[];
+  recovered: boolean; // set true if a paid order with this email follows
+  reminder_sent_at: string | null;
+  created_at: string;
+}

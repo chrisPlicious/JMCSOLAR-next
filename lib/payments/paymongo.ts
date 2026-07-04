@@ -39,6 +39,15 @@ export const paymongoProvider: PaymentProvider = {
   name: 'paymongo',
 
   async createCheckoutSession(input: CreateCheckoutInput): Promise<CheckoutSession> {
+    // Both bookings and orders flow through this provider. metadata.kind lets the
+    // (kind-specific) webhook routes early-ignore events that aren't theirs, since
+    // PayMongo delivers every event to all registered webhook URLs.
+    const kind = input.kind ?? 'booking';
+    const metadata: Record<string, string> =
+      kind === 'order'
+        ? { kind, order_id: input.bookingId }
+        : { kind, booking_id: input.bookingId };
+
     const res = await fetch(`${API_BASE}/checkout_sessions`, {
       method: 'POST',
       headers: {
@@ -60,7 +69,7 @@ export const paymongoProvider: PaymentProvider = {
             success_url: input.successUrl,
             cancel_url: input.cancelUrl,
             send_email_receipt: true,
-            metadata: { booking_id: input.bookingId },
+            metadata,
           },
         },
       }),
@@ -164,6 +173,41 @@ export const paymongoProvider: PaymentProvider = {
       return { type: 'ignored' };
     } catch {
       return { type: 'ignored' };
+    }
+  },
+
+  async getCheckoutSessionStatus(
+    sessionId: string,
+  ): Promise<{ paid: boolean; paymentId: string | null }> {
+    // Defensive throughout (mirrors parseWebhookEvent): a verify-on-return failure
+    // must never throw — it just means "not confirmed yet" and the page stays pending.
+    try {
+      const res = await fetch(`${API_BASE}/checkout_sessions/${sessionId}`, {
+        method: 'GET',
+        headers: { Authorization: authHeader() },
+      });
+      if (!res.ok) return { paid: false, paymentId: null };
+
+      const json = (await res.json()) as {
+        data?: {
+          attributes?: {
+            payments?: { id?: string; attributes?: { status?: string } }[];
+            payment_intent?: { attributes?: { status?: string } };
+          };
+        };
+      };
+
+      const attrs = json.data?.attributes;
+      const payments = attrs?.payments ?? [];
+      const paidByPayment = payments.some((p) => p?.attributes?.status === 'paid');
+      const paidByIntent = attrs?.payment_intent?.attributes?.status === 'succeeded';
+
+      return {
+        paid: paidByPayment || paidByIntent,
+        paymentId: payments[0]?.id ?? null,
+      };
+    } catch {
+      return { paid: false, paymentId: null };
     }
   },
 };

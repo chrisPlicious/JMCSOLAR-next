@@ -42,5 +42,19 @@ service cloud.firestore {
     match /processedWebhookEvents/{docId} {
       allow read, write: if false;
     }
+    // shopItems: public read, server-only write
+    match /shopItems/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    // orders: server-only read/write
+    match /orders/{docId} {
+      allow read, write: if false;
+    }
+    // back-office + RMA + abandoned carts: server-only (Admin SDK bypasses rules)
+    match /stockAudit/{docId}     { allow read, write: if false; }
+    match /purchaseOrders/{docId} { allow read, write: if false; }
+    match /rmaRequests/{docId}    { allow read, write: if false; }
+    match /abandonedCarts/{docId} { allow read, write: if false; }
   }
 }

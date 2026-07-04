@@ -2,13 +2,14 @@ import type { MetadataRoute } from 'next';
 import { adminDb } from '@/lib/firebase/admin';
 import { SITE_URL } from '@/lib/seo/site';
 import { LOCATIONS } from '@/data/locations';
-import type { DbService } from '@/lib/firebase/types';
+import type { DbService, DbShopItem } from '@/lib/firebase/types';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages: MetadataRoute.Sitemap = [
     { url: SITE_URL, lastModified: new Date(), changeFrequency: 'weekly', priority: 1 },
     { url: `${SITE_URL}/services`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.9 },
     { url: `${SITE_URL}/products`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${SITE_URL}/shop`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
     { url: `${SITE_URL}/projects`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
     { url: `${SITE_URL}/calculator`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
     { url: `${SITE_URL}/locations`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.85 },
@@ -38,6 +39,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error('[sitemap] Failed to fetch service pages:', err);
   }
 
+  // Dynamic shop item detail pages — active items only
+  let shopItemPages: MetadataRoute.Sitemap = [];
+  try {
+    const shopSnap = await adminDb.collection('shopItems').get();
+    shopItemPages = shopSnap.docs
+      .map((doc) => doc.data() as DbShopItem)
+      .filter((item) => item.active)
+      .map((item) => ({
+        url: `${SITE_URL}/shop/${item.slug}`,
+        lastModified: new Date(item.updated_at || item.created_at),
+        changeFrequency: 'weekly' as const,
+        priority: 0.6,
+      }));
+  } catch (err) {
+    console.error('[sitemap] Failed to fetch shop items:', err);
+  }
+
   // Location landing pages — one per city/province slug
   const locationPages: MetadataRoute.Sitemap = LOCATIONS.map((loc) => ({
     url: `${SITE_URL}/locations/${loc.slug}`,
@@ -58,5 +76,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       )
     : [];
 
-  return [...staticPages, ...servicePages, ...locationPages, ...cityServicePages];
+  return [...staticPages, ...servicePages, ...shopItemPages, ...locationPages, ...cityServicePages];
 }

@@ -3,11 +3,12 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, ChevronDown, LayoutGrid, Package, Calculator, MapPin, CalendarCheck } from 'lucide-react';
+import { Menu, X, ChevronDown, LayoutGrid, Package, Calculator, MapPin, CalendarCheck, ShoppingCart, Store } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { db } from '@/lib/firebase/client';
 import { collection, getDocs, orderBy, query } from 'firebase/firestore';
 import type { DbService } from '@/lib/firebase/types';
+import { useCart } from '@/components/shop/CartContext';
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -17,6 +18,10 @@ export default function Navbar() {
   const [services, setServices] = useState<DbService[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
+  const { totalQuantity, hydrated } = useCart();
+  const cartCount = hydrated ? totalQuantity : 0;
+  // Cart is only surfaced while shopping.
+  const isShop = pathname.startsWith('/shop');
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 80);
@@ -224,10 +229,30 @@ export default function Navbar() {
           <Link href="/results" className={linkClass(pathname === '/results')}>
             Results
           </Link>
+
+          <Link href="/shop" className={linkClass(pathname.startsWith('/shop'))}>
+            Shop
+          </Link>
         </div>
 
         {/* Desktop CTA */}
         <div className="hidden lg:flex items-center gap-3">
+          {isShop && (
+            <Link
+              href="/shop/cart"
+              aria-label={`Cart${cartCount > 0 ? `, ${cartCount} item${cartCount === 1 ? '' : 's'}` : ''}`}
+              className={`relative p-2.5 rounded-full transition-colors ${
+                isTransparent ? 'text-white hover:bg-white/10' : 'text-navy-900 hover:bg-navy-50'
+              }`}
+            >
+              <ShoppingCart size={20} />
+              {cartCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-solar-500 text-navy-950 text-[10px] font-black rounded-full flex items-center justify-center">
+                  {cartCount > 99 ? '99+' : cartCount}
+                </span>
+              )}
+            </Link>
+          )}
           <a
             href="/booking"
             className={`font-bold text-sm px-6 py-2.5 rounded-full transition-all duration-300 shadow-sm hover:shadow-md ${
@@ -420,6 +445,33 @@ export default function Navbar() {
               >
                 Results
               </Link>
+
+              <Link
+                href="/shop"
+                className={`flex items-center gap-2 text-base font-medium px-4 py-3.5 rounded-xl transition-colors ${
+                  pathname.startsWith('/shop') && !pathname.startsWith('/shop/cart') ? 'text-solar-400 bg-white/5' : 'text-white/80 hover:text-solar-400 hover:bg-white/5'
+                }`}
+              >
+                <Store size={18} /> Shop
+              </Link>
+
+              {isShop && (
+                <Link
+                  href="/shop/cart"
+                  className={`flex items-center justify-between text-base font-medium px-4 py-3.5 rounded-xl transition-colors ${
+                    pathname.startsWith('/shop/cart') ? 'text-solar-400 bg-white/5' : 'text-white/80 hover:text-solar-400 hover:bg-white/5'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <ShoppingCart size={18} /> Cart
+                  </span>
+                  {cartCount > 0 && (
+                    <span className="min-w-[20px] h-5 px-1.5 bg-solar-500 text-navy-950 text-xs font-black rounded-full flex items-center justify-center">
+                      {cartCount > 99 ? '99+' : cartCount}
+                    </span>
+                  )}
+                </Link>
+              )}
 
               <a
                 href="/booking"

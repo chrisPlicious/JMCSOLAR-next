@@ -7,6 +7,7 @@ import LoaderScreen from '@/components/ui/LoaderScreen';
 import LoaderGate from '@/components/ui/LoaderGate';
 import ScrollToTop from '@/components/ui/ScrollToTop';
 import PageTransition from '@/components/ui/PageTransition';
+import CartProvider from '@/components/shop/CartProvider';
 import HeroBgLayer from './_components/HeroBgLayer';
 import { cn } from "@/lib/utils";
 import { SITE_URL } from '@/lib/seo/site';
@@ -96,9 +97,11 @@ export default async function RootLayout({
         <ScrollToTop />
         <HeroBgLayer />
         <LoaderScreen />
-        <LoaderGate>
-          <PageTransition>{children}</PageTransition>
-        </LoaderGate>
+        <CartProvider>
+          <LoaderGate>
+            <PageTransition>{children}</PageTransition>
+          </LoaderGate>
+        </CartProvider>
         <Analytics />
       {/* impeccable-live-start */}
 <script src="http://localhost:8400/live.js"></script>

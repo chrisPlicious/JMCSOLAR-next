@@ -139,3 +139,149 @@ export type DbBooking = {
   created_at: string;
   updated_at: string | null;
 };
+
+// ---------------------------------------------------------------------------
+// E-commerce store (shopItems / orders) — see .claude/plans/ecommerce-store.md
+// Money is always centavos (integers); ₱500 = 50000.
+// ---------------------------------------------------------------------------
+
+export type DbShopItemCategory = 'lights' | 'wires' | 'accessories';
+export type DbOrderStatus =
+  | 'pending'
+  | 'paid'
+  | 'processing'
+  | 'shipped'
+  | 'delivered'
+  | 'cancelled'
+  | 'failed';
+export type DbOrderPaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
+export type DbFulfillmentMethod = 'delivery' | 'pickup';
+export type DbOrderSource = 'online' | 'manual';
+export type DbReturnStatus = 'none' | 'requested' | 'approved' | 'rejected' | 'completed';
+export type DbStockChangeReason =
+  | 'sale'
+  | 'refund_restore'
+  | 'cancel_restore'
+  | 'manual_adjust'
+  | 'po_receive'
+  | 'csv_import';
+export type DbPurchaseOrderStatus = 'draft' | 'ordered' | 'partial' | 'received' | 'cancelled';
+
+export type DbShopItemVariant = {
+  id: string;
+  label: string;
+  sku: string;
+  price_centavos: number;
+  stock: number;
+};
+
+export type DbShopItem = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  category: string;
+  sku: string;
+  price: number; // centavos
+  stock: number;
+  low_stock_threshold: number | null;
+  active: boolean;
+  weight_grams: number | null;
+  image_path: string | null;
+  variants: DbShopItemVariant[] | null;
+  meta_title: string | null;
+  meta_description: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type DbOrderItem = {
+  shop_item_id: string;
+  variant_id: string | null;
+  name: string;
+  sku: string;
+  unit_price_centavos: number;
+  quantity: number;
+  line_total_centavos: number;
+};
+
+export type DbOrder = {
+  id: string;
+  items: DbOrderItem[];
+  subtotal_centavos: number;
+  shipping_centavos: number;
+  shipping_region: string;
+  fulfillment_method: DbFulfillmentMethod;
+  source: DbOrderSource;
+  return_status: DbReturnStatus;
+  total_centavos: number;
+  customer: {
+    name: string;
+    email: string;
+    phone: string;
+    address: string | null;
+  };
+  status: DbOrderStatus;
+  payment_status: DbOrderPaymentStatus;
+  payment_reference: string | null;
+  payment_session_id: string | null;
+  paid_at: string | null;
+  refund_id: string | null;
+  refunded_at: string | null;
+  refund_amount: number | null;
+  created_at: string;
+  updated_at: string | null;
+};
+
+export type DbStockAuditEntry = {
+  id: string;
+  shop_item_id: string;
+  variant_id: string | null;
+  delta: number;
+  reason: DbStockChangeReason;
+  ref_id: string | null;
+  actor: string;
+  stock_after: number;
+  created_at: string;
+};
+
+export type DbPurchaseOrderLine = {
+  shop_item_id: string;
+  variant_id: string | null;
+  qty_ordered: number;
+  qty_received: number;
+  unit_cost_centavos: number | null;
+};
+
+export type DbPurchaseOrder = {
+  id: string;
+  supplier_name: string;
+  reference: string | null;
+  status: DbPurchaseOrderStatus;
+  lines: DbPurchaseOrderLine[];
+  notes: string | null;
+  created_by: string;
+  created_at: string;
+  received_at: string | null;
+};
+
+export type DbRmaRequest = {
+  id: string;
+  order_id: string;
+  customer_email: string;
+  items: { shop_item_id: string; variant_id: string | null; quantity: number }[];
+  reason: string;
+  status: 'requested' | 'approved' | 'rejected' | 'completed';
+  admin_note: string | null;
+  created_at: string;
+  resolved_at: string | null;
+};
+
+export type DbAbandonedCart = {
+  id: string;
+  email: string;
+  items: { shop_item_id: string; variant_id: string | null; quantity: number }[];
+  recovered: boolean;
+  reminder_sent_at: string | null;
+  created_at: string;
+};

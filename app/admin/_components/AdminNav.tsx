@@ -80,6 +80,48 @@ const navItems = [
     ),
   },
   {
+    label: 'Shop Items',
+    href: '/admin/shop-items',
+    exact: false,
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path
+          d="M2 5.5h14l-1 8a2 2 0 01-2 1.8H5a2 2 0 01-2-1.8l-1-8z"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinejoin="round"
+          fill="none"
+        />
+        <path
+          d="M6 5.5V4a3 3 0 016 0v1.5"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          fill="none"
+        />
+      </svg>
+    ),
+  },
+  {
+    label: 'Orders',
+    href: '/admin/orders',
+    exact: false,
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path
+          d="M2 3h2l1.2 9.2a1.5 1.5 0 001.49 1.3h6.42a1.5 1.5 0 001.47-1.2l1.1-5.5H4.2"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+        />
+        <circle cx="7" cy="16" r="1" fill="currentColor" />
+        <circle cx="13.5" cy="16" r="1" fill="currentColor" />
+      </svg>
+    ),
+  },
+  {
     label: 'Services',
     href: '/admin/services',
     exact: false,
