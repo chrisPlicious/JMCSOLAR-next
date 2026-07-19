@@ -31,7 +31,7 @@ describe('validateImageUpload magic bytes', () => {
   });
 
   it('rejects file exceeding size limit', async () => {
-    const f = new File([new Uint8Array(6 * 1024 * 1024)], 'big.jpg', { type: 'image/jpeg' });
+    const f = new File([new Uint8Array(11 * 1024 * 1024)], 'big.jpg', { type: 'image/jpeg' });
     expect(await validateImageUpload(f)).toMatch(/10 MB/);
   });
 
