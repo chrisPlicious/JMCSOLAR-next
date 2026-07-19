@@ -19,7 +19,7 @@ const baseJsonLd = {
   '@id': `${SITE_URL}/#business`,
   name: 'JMC Solar PH',
   description:
-    'Professional solar installation services in Ormoc City, Leyte. Hybrid solar, on-grid, battery storage, EV chargers, and more.',
+    'Professional solar installation services in Ormoc City, Leyte and Cebu, Central Visayas. Hybrid solar, on-grid, battery storage, EV chargers, and more.',
   url: SITE_URL,
   telephone: '+639175088220',
   email: 'jmcsolarph@gmail.com',

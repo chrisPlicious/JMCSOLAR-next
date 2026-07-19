@@ -136,15 +136,15 @@ export default function Hero() {
               className="text-white font-black text-5xl sm:text-5xl lg:text-7xl xl:text-[5.5rem] leading-[1.05] mb-8"
               style={{ fontFamily: "Poppins, sans-serif" }}
             >
-              Solar Installation in{" "}
-              <span className="text-solar-400">Ormoc City</span>
+              Premium Solar Installations{" "}
+              <span className="text-solar-400">for You</span>
             </h1>
 
             {/* Subtitle */}
             <p className="text-white text-lg sm:text-xl lg:text-2xl max-w-2xl mb-4 leading-relaxed mx-auto lg:mx-0">
-              Professional Solar Installation Services across{" "}
+              Professional Solar Installation Services in{" "}
               <span className="text-white font-semibold">
-                Eastern Visayas & Central Visayas
+                Ormoc City, Eastern Visayas &amp; Cebu, Central Visayas
               </span>
             </p>
             <p className="text-white text-lg max-w-xl mb-10 mx-auto lg:mx-0">

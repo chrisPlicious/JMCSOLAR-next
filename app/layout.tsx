@@ -35,17 +35,17 @@ export const metadata: Metadata = {
     apple: '/JMC.png',
   },
   title: {
-    default: 'JMC Solar PH | Solar Installation in Ormoc City, Leyte',
+    default: 'JMC Solar PH | Solar Installation in Ormoc City & Cebu',
     template: '%s | JMC Solar PH',
   },
   description:
-    'JMC Solar PH provides professional solar installation services in Ormoc City, Leyte. Hybrid solar, on-grid, battery storage, EV chargers, and more. Future is Electric.',
+    'JMC Solar PH provides professional solar installation services in Ormoc City, Leyte and Cebu, Central Visayas. Hybrid solar, on-grid, battery storage, EV chargers, and more. Future is Electric.',
   keywords:
-    'solar panels Philippines, solar installation Ormoc City, hybrid solar system Leyte, JMC Solar PH, solar energy Visayas, solar panel Leyte, solar energy Philippines',
+    'solar panels Philippines, solar installation Ormoc City, solar installation Cebu, hybrid solar system Leyte, solar panels Cebu, JMC Solar PH, solar energy Visayas, solar energy Central Visayas, solar panel Leyte, solar energy Philippines',
   openGraph: {
     title: 'JMC Solar PH — Future is Electric',
     description:
-      'Professional solar installation services in Ormoc City, Leyte. From residential rooftops to 100kW+ industrial systems.',
+      'Professional solar installation services in Ormoc City, Leyte and Cebu, Central Visayas. From residential rooftops to 100kW+ industrial systems.',
     url: '/',
     siteName: 'JMC Solar PH',
     type: 'website',
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'JMC Solar PH — Future is Electric',
     description:
-      'Professional solar installation in Ormoc City, Leyte. Hybrid solar, on-grid, battery storage, EV chargers.',
+      'Professional solar installation in Ormoc City & Cebu. Hybrid solar, on-grid, battery storage, EV chargers.',
   },
   // NOTE: no root-level `alternates.canonical` — in the App Router it is inherited
   // by every child route that lacks its own canonical, pointing them all at the
