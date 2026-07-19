@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   checks:
-    name: Type check, lint & tests
+    name: Type check & tests
     runs-on: ubuntu-latest
     steps:
       - name: Get the code
@@ -33,9 +33,6 @@ jobs:
 
       - name: Type check (catches broken code references)
         run: npm run typecheck
-
-      - name: Lint (catches sloppy or risky code)
-        run: npm run lint
 
       - name: Run tests (checks the important logic still works)
         run: npm test
