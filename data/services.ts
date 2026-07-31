@@ -81,3 +81,18 @@ export const clientTypes: ClientType[] = [
     badge: 'industrial',
   },
 ];
+
+export type NavService = { slug: string; title: string };
+
+// Chrome (Navbar + Footer) service links. These slugs MUST match the Firestore
+// `services` collection — the runtime source of truth used to build /services/[slug].
+// The `services` array above is STALE for linking (it still lists bess/ups/controller,
+// which no longer exist in Firestore, and is missing operation-maintenance), so never
+// build links from it. The /services grid and homepage use live Firestore data instead.
+export const NAV_SERVICES: NavService[] = [
+  { slug: 'hybrid', title: 'Hybrid Solar Systems' },
+  { slug: 'ongrid', title: 'On-Grid / Net-Metered' },
+  { slug: 'pump', title: 'Solar Pumping Systems' },
+  { slug: 'ev', title: 'EV Charger Installation' },
+  { slug: 'operation-maintenance', title: 'Operation & Maintenance' },
+];

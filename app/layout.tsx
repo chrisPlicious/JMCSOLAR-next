@@ -58,9 +58,10 @@ export const metadata: Metadata = {
     description:
       'Professional solar installation in Ormoc City, Leyte. Hybrid solar, on-grid, battery storage, EV chargers.',
   },
-  alternates: {
-    canonical: '/',
-  },
+  // NOTE: no root-level `alternates.canonical` — in the App Router it is inherited
+  // by every child route that lacks its own canonical, pointing them all at the
+  // homepage (GSC "Alternate page with proper canonical tag"). The homepage sets
+  // its own canonical in app/page.tsx; every other page already self-canonicalizes.
   robots: {
     index: true,
     follow: true,
@@ -84,7 +85,7 @@ export default async function RootLayout({
       <head>
         <link rel="preload" as="image" href="/assets/bg-1.jpg" />
       </head>
-      <body className={`${geist.variable} ${poppins.variable} ${montserrat.variable}`}>
+      <body className={`${geist.variable} ${poppins.variable} ${montserrat.variable}`} suppressHydrationWarning>
         <NextTopLoader
           color="#f59e0b"
           height={3}
@@ -103,10 +104,7 @@ export default async function RootLayout({
           </LoaderGate>
         </CartProvider>
         <Analytics />
-      {/* impeccable-live-start */}
-<script src="http://localhost:8400/live.js"></script>
-{/* impeccable-live-end */}
-</body>
+      </body>
     </html>
   );
 }

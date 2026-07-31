@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react';
 import Navbar from './Navbar';
 import Footer from './Footer';
+import { getFooterLocations } from '@/data/locations';
 
 interface LayoutProps {
   children: ReactNode;
@@ -13,7 +14,7 @@ export default function Layout({ children }: LayoutProps) {
       <main className="flex-1">
         {children}
       </main>
-      <Footer />
+      <Footer locations={getFooterLocations()} />
     </div>
   );
 }

@@ -31,6 +31,9 @@ export interface Project {
 
 export interface Product {
   id: string;
+  // SEO slug for the /products/[slug] detail page. Optional until existing docs are
+  // backfilled (scripts/backfill-product-slugs.mjs); new products get one on create.
+  slug?: string;
   name: string;
   brand: string | null;
   category: 'panels' | 'batteries' | 'inverters' | 'controllers' | 'converters';

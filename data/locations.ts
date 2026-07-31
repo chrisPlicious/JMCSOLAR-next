@@ -777,3 +777,22 @@ export function getProvinceSlug(provinceName: string | undefined): string | unde
   if (!provinceName) return undefined;
   return LOCATIONS.find((l) => l.tier === 'province' && l.name === provinceName)?.slug;
 }
+
+export type FooterCity = { slug: string; name: string };
+export type FooterProvince = { slug: string; name: string; cities: FooterCity[] };
+
+/**
+ * Slim projection of every province + its child municipalities (slug + name only)
+ * for the Footer. Computed server-side (in Layout) and passed as a prop so the
+ * heavy LOCATIONS data (intro/whyJmc/faqs) never ships to the client bundle.
+ */
+export function getFooterLocations(): FooterProvince[] {
+  return getProvinceLocations().map((p) => ({
+    slug: p.slug,
+    name: p.name,
+    cities: (p.childSlugs ?? [])
+      .map((s) => getLocation(s))
+      .filter((l): l is ServiceLocation => Boolean(l))
+      .map((l) => ({ slug: l.slug, name: l.name })),
+  }));
+}
