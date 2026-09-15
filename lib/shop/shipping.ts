@@ -14,6 +14,19 @@ export const regionShippingFees: Record<string, number> = {
   mindanao: 200000, // ₱2,000 — Mindanao
 };
 
+// Friendly labels for the region keys above. Shared by the storefront checkout and
+// the admin manual-order form so the two never drift apart.
+export const REGION_LABELS: Record<string, string> = {
+  ormoc_city: 'Ormoc City',
+  ormoc_far: 'Ormoc (far barangay)',
+  leyte_province: 'Leyte (province)',
+  visayas: 'Visayas (Cebu, Iloilo, etc.)',
+  luzon: 'Luzon / Metro Manila',
+  mindanao: 'Mindanao',
+};
+
+export const REGION_KEYS = Object.keys(regionShippingFees);
+
 // Default fee (centavos) for an unknown/unmapped region.
 export const DEFAULT_SHIPPING_FEE_CENTAVOS = 250000; // ₱2,500
 

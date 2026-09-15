@@ -229,6 +229,12 @@ export type DbOrder = {
   refund_id: string | null;
   refunded_at: string | null;
   refund_amount: number | null;
+  // Set only for refunds settled OUT OF BAND (QRPh has no PayMongo refund API):
+  // who recorded it and why. Absent on provider-issued refunds, which carry a
+  // real `refund_id` instead. Optional so existing order docs stay valid.
+  refund_method?: 'provider' | 'manual';
+  refund_note?: string | null;
+  refund_actor?: string | null;
   created_at: string;
   updated_at: string | null;
 };

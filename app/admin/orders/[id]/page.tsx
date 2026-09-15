@@ -4,8 +4,10 @@ import { ArrowLeft } from 'lucide-react';
 import { adminDb } from '@/lib/firebase/admin';
 import { requireAdminAuth } from '@/lib/auth';
 import { formatCentavos } from '@/lib/bookings/pricing';
+import { orderRefundsEnabled } from '@/lib/shop/refund-switch';
 import type { DbOrder } from '@/lib/firebase/types';
 import { OrderStatusControl } from '../_components/OrderStatusControl';
+import { RefundPanel } from '../_components/RefundPanel';
 import {
   ORDER_STATUS_STYLES,
   ORDER_STATUS_LABELS,
@@ -189,6 +191,9 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
               Open in PayMongo dashboard
             </a>
           )}
+
+          {/* Refund controls. The switch is read server-side; the action re-checks it. */}
+          <RefundPanel order={order} refundsEnabled={orderRefundsEnabled()} />
         </Section>
       </div>
     </div>

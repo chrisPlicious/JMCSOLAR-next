@@ -49,6 +49,12 @@ export default async function AdminOrdersPage() {
             {orders.length} order{orders.length !== 1 ? 's' : ''}
           </p>
         </div>
+        <Link
+          href="/admin/orders/new"
+          className="text-sm font-semibold text-white bg-navy-900 hover:bg-navy-800 px-4 py-2 rounded-xl transition-colors shrink-0"
+        >
+          New order
+        </Link>
       </div>
 
       {!orders.length ? (

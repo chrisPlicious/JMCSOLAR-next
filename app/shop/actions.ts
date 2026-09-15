@@ -10,6 +10,7 @@ import { headers } from 'next/headers';
 import { adminDb } from '@/lib/firebase/admin';
 import { getPaymentProvider } from '@/lib/payments';
 import { getShippingFee } from '@/lib/shop/shipping';
+import { buildOrderLines } from '@/lib/shop/order-lines';
 import { screenOrder } from '@/lib/shop/fraud';
 import { markOrderPaid } from '@/lib/shop/orders';
 import {
@@ -18,12 +19,7 @@ import {
   notifyOrderPaid,
 } from '@/lib/shop/notifications';
 import { formatCentavos } from '@/lib/bookings/pricing';
-import type {
-  DbOrder,
-  DbOrderItem,
-  DbShopItem,
-  DbShopItemVariant,
-} from '@/lib/firebase/types';
+import type { DbOrder } from '@/lib/firebase/types';
 import type { FulfillmentMethod } from '@/types';
 
 export type CheckoutCartItem = {
@@ -76,54 +72,11 @@ export async function createOrderAction(input: CreateOrderInput): Promise<Create
 
   try {
     // ---- Server-authoritative pricing + stock validation ----
-    const orderItems: DbOrderItem[] = [];
-    let subtotal = 0;
-
-    for (const line of cartItems) {
-      if (!line.shopItemId || !Number.isInteger(line.quantity) || line.quantity <= 0) {
-        return { error: 'Invalid item in cart.' };
-      }
-
-      const snap = await adminDb.collection('shopItems').doc(line.shopItemId).get();
-      if (!snap.exists) return { error: 'One of the items is no longer available.' };
-      const item = { id: snap.id, ...(snap.data() as Omit<DbShopItem, 'id'>) };
-      if (!item.active) return { error: `"${item.name}" is no longer available.` };
-
-      let unitPrice: number;
-      let available: number;
-      let sku: string;
-      let variant: DbShopItemVariant | null = null;
-
-      if (line.variantId) {
-        variant = (item.variants ?? []).find((v) => v.id === line.variantId) ?? null;
-        if (!variant) return { error: `A selected option for "${item.name}" is unavailable.` };
-        unitPrice = variant.price_centavos;
-        available = variant.stock;
-        sku = variant.sku;
-      } else {
-        unitPrice = item.price;
-        available = item.stock;
-        sku = item.sku;
-      }
-
-      if (available < line.quantity) {
-        return {
-          error: `Not enough stock for "${item.name}"${variant ? ` (${variant.label})` : ''}. Only ${available} left.`,
-        };
-      }
-
-      const lineTotal = unitPrice * line.quantity;
-      subtotal += lineTotal;
-      orderItems.push({
-        shop_item_id: item.id,
-        variant_id: line.variantId,
-        name: variant ? `${item.name} — ${variant.label}` : item.name,
-        sku,
-        unit_price_centavos: unitPrice,
-        quantity: line.quantity,
-        line_total_centavos: lineTotal,
-      });
-    }
+    // Shared with the admin manual-order path so both price identically.
+    const built = await buildOrderLines(cartItems);
+    if (!built.ok) return { error: built.error };
+    const orderItems = built.items;
+    const subtotal = built.subtotalCentavos;
 
     const shipping = getShippingFee(region, fulfillmentMethod);
     const total = subtotal + shipping;

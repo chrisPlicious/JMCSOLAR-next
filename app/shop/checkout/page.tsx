@@ -6,22 +6,15 @@ import { useRouter } from 'next/navigation';
 import { Loader2, ShoppingBag, ArrowLeft, Truck, Store } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import { formatCentavos } from '@/lib/bookings/pricing';
-import { getShippingFee, regionShippingFees } from '@/lib/shop/shipping';
+import {
+  getShippingFee,
+  regionShippingFees,
+  REGION_LABELS,
+  REGION_KEYS,
+} from '@/lib/shop/shipping';
 import { useCart } from '@/components/shop/CartContext';
 import { createOrderAction } from '../actions';
 import type { FulfillmentMethod } from '@/types';
-
-// Friendly labels for the region keys defined in lib/shop/shipping.ts.
-const REGION_LABELS: Record<string, string> = {
-  ormoc_city: 'Ormoc City',
-  ormoc_far: 'Ormoc (far barangay)',
-  leyte_province: 'Leyte (province)',
-  visayas: 'Visayas (Cebu, Iloilo, etc.)',
-  luzon: 'Luzon / Metro Manila',
-  mindanao: 'Mindanao',
-};
-
-const REGION_KEYS = Object.keys(regionShippingFees);
 
 // #12 — saved checkout info (this device only, no account).
 const SAVED_KEY = 'jmc-shop-checkout';

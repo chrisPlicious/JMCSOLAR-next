@@ -3,13 +3,13 @@ import { adminDb } from '@/lib/firebase/admin';
 import { getPaymentProvider } from '@/lib/payments';
 import { kindFromBody, eventIdFromBody } from '@/lib/payments/webhook';
 import { markOrderPaid, markCartsRecovered } from '@/lib/shop/orders';
-import { recordStockChange } from '@/lib/shop/inventory';
+import { applyRefundToOrder, findOrderIdByPaymentId } from '@/lib/shop/refunds';
 import {
   notifyOrderPaid,
   notifyOrderFailed,
   notifyOrderRefunded,
 } from '@/lib/shop/notifications';
-import type { DbOrder, DbShopItem, DbShopItemVariant } from '@/lib/firebase/types';
+import type { DbOrder } from '@/lib/firebase/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -231,147 +231,41 @@ async function handleRefundEvent(
 
   // Find the order whose payment_reference matches the refunded payment id. Look up
   // BEFORE claiming the event id (claiming first would burn it on a failed lookup).
+  //
+  // NOTE: this branch is deliberately NOT gated by the refund kill switch
+  // (lib/shop/refund-switch.ts). If a refund is ever issued by hand from the
+  // PayMongo dashboard, this is the only thing that restores stock and reconciles
+  // the order — suppressing it would strand real money movement with no record.
   try {
-    let snap = await adminDb
-      .collection('orders')
-      .where('payment_reference', '==', paymentId)
-      .limit(1)
-      .get();
-
-    if (snap.empty) {
-      snap = await adminDb
-        .collection('orders')
-        .where('payment_session_id', '==', paymentId)
-        .limit(1)
-        .get();
-    }
-
-    if (snap.empty) {
+    const orderId = await findOrderIdByPaymentId(paymentId);
+    if (!orderId) {
       console.error('[orders webhook] refund event: no order found for payment_id', paymentId);
       return NextResponse.json({ received: true });
     }
 
-    const orderRef = snap.docs[0].ref;
-
-    // Idempotent: if already refunded, no-op.
-    if ((snap.docs[0].data() as DbOrder).payment_status === 'refunded') {
-      return NextResponse.json({ received: true });
-    }
-
-    const eventRef = adminDb.collection('processedWebhookEvents').doc(eventId);
-    const claimed = await adminDb.runTransaction(async (tx) => {
-      // ---- READS (all before any write) ----
-      const existing = await tx.get(eventRef);
-      if (existing.exists) return false; // replay
-      const orderSnap = await tx.get(orderRef);
-      if (!orderSnap.exists) return false; // ack-and-ignore
-      const order = { id: orderSnap.id, ...(orderSnap.data() as Omit<DbOrder, 'id'>) };
-      if (order.payment_status === 'refunded') return false; // idempotent
-
-      const itemIds = Array.from(new Set(order.items.map((i) => i.shop_item_id)));
-      const itemRefs = itemIds.map((id) => adminDb.collection('shopItems').doc(id));
-      const itemSnaps = await Promise.all(itemRefs.map((ref) => tx.get(ref)));
-      const items = new Map<
-        string,
-        { ref: typeof itemRefs[number]; data: DbShopItem }
-      >();
-      itemSnaps.forEach((s, idx) => {
-        if (s.exists) {
-          items.set(itemIds[idx], {
-            ref: itemRefs[idx],
-            data: { id: s.id, ...(s.data() as Omit<DbShopItem, 'id'>) },
-          });
-        }
-      });
-
-      // ---- Compute restores in memory (add the sold qty back) ----
-      type AuditRow = { shopItemId: string; variantId: string | null; delta: number; stockAfter: number };
-      const audits: AuditRow[] = [];
-      const working = new Map<string, DbShopItem>();
-      for (const line of order.items) {
-        const entry = items.get(line.shop_item_id);
-        if (!entry) {
-          console.warn(`[orders webhook] shopItem ${line.shop_item_id} gone; skipping restore for order ${order.id}`);
-          continue;
-        }
-        const item = working.get(line.shop_item_id) ?? { ...entry.data };
-        working.set(line.shop_item_id, item);
-
-        if (line.variant_id) {
-          const variants: DbShopItemVariant[] = (item.variants ?? []).map((v) => ({ ...v }));
-          const variant = variants.find((v) => v.id === line.variant_id);
-          if (!variant) {
-            console.warn(`[orders webhook] variant ${line.variant_id} gone; skipping restore`);
-            continue;
-          }
-          variant.stock += line.quantity;
-          item.variants = variants;
-          audits.push({
-            shopItemId: line.shop_item_id,
-            variantId: line.variant_id,
-            delta: line.quantity,
-            stockAfter: variant.stock,
-          });
-        } else {
-          item.stock += line.quantity;
-          audits.push({
-            shopItemId: line.shop_item_id,
-            variantId: null,
-            delta: line.quantity,
-            stockAfter: item.stock,
-          });
-        }
-      }
-
-      // ---- WRITES ----
-      const now = new Date().toISOString();
-      tx.update(orderRef, {
-        payment_status: 'refunded',
-        status: 'cancelled', // refund implies the order is off
-        refund_id: refundId,
-        refunded_at: now,
-        refund_amount: refundAmount,
-        updated_at: now,
-      });
-      for (const item of working.values()) {
-        if (item.variants) {
-          tx.update(items.get(item.id)!.ref, { variants: item.variants, updated_at: now });
-        } else {
-          tx.update(items.get(item.id)!.ref, { stock: item.stock, updated_at: now });
-        }
-      }
-      for (const a of audits) {
-        if (a.delta === 0) continue;
-        await recordStockChange(
-          {
-            shopItemId: a.shopItemId,
-            variantId: a.variantId,
-            delta: a.delta,
-            reason: 'refund_restore',
-            refId: order.id,
-            actor: 'webhook',
-            stockAfter: a.stockAfter,
-          },
-          tx,
-        );
-      }
-      tx.set(eventRef, {
-        id: eventId,
-        type: eventType,
-        refund_id: refundId,
-        payment_id: paymentId,
-        order_id: order.id,
-        processed_at: now,
-      });
-      return true;
+    const result = await applyRefundToOrder({
+      orderId,
+      refundId,
+      refundAmount,
+      actor: 'webhook',
+      method: 'provider',
+      eventClaim: {
+        eventId,
+        eventType,
+        extra: { refund_id: refundId, payment_id: paymentId },
+      },
     });
 
-    if (!claimed) {
+    if (result === 'missing') {
+      console.warn(`[orders webhook] order ${orderId} not found (refund); ack-and-ignore`);
+      return NextResponse.json({ received: true });
+    }
+    if (result === 'duplicate') {
       return NextResponse.json({ received: true, duplicate: true });
     }
 
     // Best-effort: confirm the refund to the customer.
-    await notifyOrderRefunded(snap.docs[0].id, refundAmount);
+    await notifyOrderRefunded(orderId, refundAmount);
   } catch (e) {
     console.error('[orders webhook] failed to update order for refund event', e);
     return NextResponse.json({ error: 'Failed to update order.' }, { status: 500 });
