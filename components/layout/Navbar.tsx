@@ -9,6 +9,16 @@ import { db } from '@/lib/firebase/client';
 import { collection, getDocs, orderBy, query } from 'firebase/firestore';
 import type { DbService } from '@/lib/firebase/types';
 import { NAV_SERVICES } from '@/data/services';
+import { Button } from '@/components/ui/Button';
+import { cn } from '@/lib/utils';
+import { DURATION, EASE_OUT } from '@/lib/motion';
+
+// Every route reachable from the Services dropdown marks "Services" active.
+const SERVICES_ROUTES = ['/services', '/products', '/calculator', '/locations', '/booking'];
+
+function isUnder(pathname: string, base: string) {
+  return pathname === base || pathname.startsWith(`${base}/`);
+}
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -55,165 +65,179 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const isServicesActive =
-    pathname.startsWith('/services') ||
-    pathname.startsWith('/products') ||
-    pathname.startsWith('/calculator');
+  const isServicesActive = SERVICES_ROUTES.some((base) => isUnder(pathname, base));
   const isHomePage = pathname === '/';
   const isTransparent = isHomePage && !scrolled;
 
+  // Desktop top-level link: navy (or white over the hero) text; active state is
+  // a small solar bar underneath, never amber text.
   const linkClass = (active: boolean) =>
-    `text-sm font-semibold px-4 py-2 rounded-full transition-all duration-300 ${
-      active
-        ? 'text-solar-500 bg-solar-500/10'
-        : isTransparent
-          ? 'text-white/90 hover:text-white hover:bg-white/10'
-          : 'text-navy-900 hover:text-solar-600 hover:bg-navy-50'
-    }`;
+    cn(
+      'relative inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition-colors duration-200',
+      isTransparent
+        ? active
+          ? 'text-white'
+          : 'text-white/80 hover:bg-white/10 hover:text-white'
+        : active
+          ? 'text-navy-950'
+          : 'text-slate-600 hover:bg-navy-50 hover:text-navy-950',
+    );
+
+  const activeBar = (active: boolean) =>
+    active ? (
+      <span aria-hidden className="absolute inset-x-4 -bottom-0.5 h-0.5 rounded-full bg-solar-500" />
+    ) : null;
+
+  // Dropdown rows (light panel).
+  const menuRowClass = (active: boolean) =>
+    cn(
+      'flex items-center gap-2.5 rounded-control px-3 py-2.5 text-sm font-semibold transition-colors duration-200',
+      active ? 'bg-navy-50 text-navy-950' : 'text-navy-950 hover:bg-navy-50',
+    );
+  const iconTile = 'flex size-8 items-center justify-center rounded-control bg-navy-50 text-navy-700';
+
+  // Mobile rows (dark panel, inside surface-dark).
+  const mobileRowClass = (active: boolean, size: 'lg' | 'sm' = 'lg') =>
+    cn(
+      'flex items-center gap-2 rounded-control transition-colors',
+      size === 'lg' ? 'px-4 py-3.5 text-base font-medium' : 'px-4 py-2.5 text-sm font-semibold',
+      active ? 'bg-white/10 text-fg' : 'text-fg-muted hover:bg-white/10 hover:text-fg',
+    );
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        isTransparent
-          ? 'bg-transparent py-5'
-          : 'bg-white/80 backdrop-blur-xl shadow-[0_1px_20px_rgba(15,31,64,0.08)] py-3'
-      }`}
+      aria-label="Main"
+      className={cn(
+        'fixed top-0 right-0 left-0 z-50 transition-all duration-500',
+        // Solid white: translucent white turns grey over the navy page heroes.
+        isTransparent ? 'bg-transparent py-5' : 'bg-white py-3 shadow-soft',
+      )}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-10 h-10 flex items-center justify-center">
+        <Link href="/" className="group flex items-center gap-2.5">
+          <div className="flex size-10 items-center justify-center">
             <img src="/Logos/JMC SOLAR.png" alt="JMC Solar Logo" />
           </div>
-          <div className="leading-tight">
-            <span className="font-montserrat text-base tracking-tight flex gap-1">
-              <span className={`font-black text-2xl transition-colors duration-300 ${isTransparent ? 'text-white' : 'text-navy-900'}`}>JMC</span>
-              <span className={`text-2xl font-medium transition-colors duration-300 ${isTransparent ? 'text-white/70' : 'text-navy-500'}`}>SOLAR</span>
+          <span className="flex gap-1 font-wordmark text-2xl leading-tight">
+            <span
+              className={cn(
+                'font-extrabold transition-colors duration-300',
+                isTransparent ? 'text-white' : 'text-navy-950',
+              )}
+            >
+              JMC
             </span>
-          </div>
+            <span
+              className={cn(
+                'font-medium transition-colors duration-300',
+                isTransparent ? 'text-white/80' : 'text-navy-500',
+              )}
+            >
+              SOLAR
+            </span>
+          </span>
         </Link>
 
         {/* Desktop Nav */}
-        <div className="hidden lg:flex items-center gap-1">
-          <Link href="/" className={linkClass(pathname === '/')}>
+        <div className="hidden items-center gap-1 lg:flex">
+          <Link href="/" className={linkClass(isHomePage)} aria-current={isHomePage ? 'page' : undefined}>
             Home
+            {activeBar(isHomePage)}
           </Link>
 
           {/* Services Dropdown */}
           <div ref={dropdownRef} className="relative">
             <button
+              type="button"
               onClick={() => setDropdownOpen((prev) => !prev)}
-              className={`${linkClass(isServicesActive)} inline-flex items-center gap-1.5 cursor-pointer`}
+              aria-expanded={dropdownOpen}
+              aria-haspopup="true"
+              className={cn(linkClass(isServicesActive), 'cursor-pointer')}
             >
               Services
               <motion.span
                 animate={{ rotate: dropdownOpen ? 180 : 0 }}
-                transition={{ duration: 0.25 }}
+                transition={{ duration: DURATION.base, ease: EASE_OUT }}
                 className="inline-flex"
               >
-                <ChevronDown size={14} />
+                <ChevronDown size={14} aria-hidden />
               </motion.span>
+              {activeBar(isServicesActive)}
             </button>
 
             <AnimatePresence>
               {dropdownOpen && (
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.95, y: -8 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: -8 }}
-                  transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
-                  className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-72 bg-white/95 backdrop-blur-xl rounded-2xl shadow-elevated border border-slate-100/80 overflow-hidden z-50"
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: DURATION.fast, ease: EASE_OUT }}
+                  className="absolute top-full left-1/2 z-50 mt-3 w-72 -translate-x-1/2 overflow-hidden rounded-card border border-line bg-white shadow-elevated"
                 >
                   <div className="px-4 pt-4 pb-2">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
-                      Overview
-                    </p>
-                    <Link
-                      href="/booking"
-                      className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                        pathname.startsWith('/booking')
-                          ? 'text-solar-600 bg-solar-500/8'
-                          : 'text-navy-900 hover:bg-solar-500/8 hover:text-solar-600'
-                      }`}
-                    >
-                      <div className="w-8 h-8 bg-solar-400 rounded-lg flex items-center justify-center">
-                        <CalendarCheck size={15} className="text-navy-950" />
-                      </div>
+                    <p className="caps mb-2">Overview</p>
+                    <Link href="/booking" className={menuRowClass(isUnder(pathname, '/booking'))}>
+                      <span className="flex size-8 items-center justify-center rounded-control bg-solar-500 text-navy-950">
+                        <CalendarCheck size={15} aria-hidden />
+                      </span>
                       Book a Service
                     </Link>
 
-                    <div className="h-px bg-slate-100 mx-1 my-2" />
+                    <div className="mx-1 my-2 h-px bg-line" />
 
-                    <Link
-                      href="/services"
-                      className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold text-navy-900 hover:bg-solar-500/8 hover:text-solar-600 transition-all duration-200"
-                    >
-                      <div className="w-8 h-8 bg-solar-500/10 rounded-lg flex items-center justify-center">
-                        <LayoutGrid size={15} className="text-solar-500" />
-                      </div>
+                    <Link href="/services" className={menuRowClass(pathname === '/services')}>
+                      <span className={iconTile}>
+                        <LayoutGrid size={15} aria-hidden />
+                      </span>
                       All Services
                     </Link>
-                    <Link
-                      href="/locations"
-                      className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                        pathname.startsWith('/locations')
-                          ? 'text-solar-600 bg-solar-500/8'
-                          : 'text-navy-900 hover:bg-solar-500/8 hover:text-solar-600'
-                      }`}
-                    >
-                      <div className="w-8 h-8 bg-blue-500/10 rounded-lg flex items-center justify-center">
-                        <MapPin size={15} className="text-blue-500" />
-                      </div>
+                    <Link href="/locations" className={menuRowClass(isUnder(pathname, '/locations'))}>
+                      <span className={iconTile}>
+                        <MapPin size={15} aria-hidden />
+                      </span>
                       Locations
                     </Link>
                   </div>
 
-                  <div className="h-px bg-slate-100 mx-4" />
+                  <div className="mx-4 h-px bg-line" />
 
                   <div className="px-4 py-2">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
-                      Service Types
-                    </p>
+                    <p className="caps mb-2">Service Types</p>
                     <div className="flex flex-col gap-0.5">
-                      {services.map((service) => (
-                        <Link
-                          key={service.slug}
-                          href={`/services/${service.slug}`}
-                          className={`px-3 py-2 rounded-xl text-sm transition-all duration-200 ${
-                            pathname === `/services/${service.slug}`
-                              ? 'text-solar-600 bg-solar-500/8 font-medium'
-                              : 'text-slate-600 hover:text-solar-600 hover:bg-solar-500/5'
-                          }`}
-                        >
-                          {service.title}
-                        </Link>
-                      ))}
+                      {services.map((service) => {
+                        const active = pathname === `/services/${service.slug}`;
+                        return (
+                          <Link
+                            key={service.slug}
+                            href={`/services/${service.slug}`}
+                            className={cn(
+                              'rounded-control px-3 py-2 text-sm transition-colors duration-200',
+                              active
+                                ? 'bg-navy-50 font-semibold text-navy-950'
+                                : 'text-fg-muted hover:bg-navy-50 hover:text-navy-950',
+                            )}
+                          >
+                            {service.title}
+                          </Link>
+                        );
+                      })}
                     </div>
                   </div>
 
-                  <div className="h-px bg-slate-100 mx-4" />
+                  <div className="mx-4 h-px bg-line" />
 
-                  <div className="px-4 py-3 flex flex-col gap-1">
-                    <Link
-                      href="/products"
-                      className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold text-navy-900 hover:bg-solar-500/8 hover:text-solar-600 transition-all duration-200"
-                    >
-                      <div className="w-8 h-8 bg-navy-900/8 rounded-lg flex items-center justify-center">
-                        <Package size={15} className="text-navy-700" />
-                      </div>
+                  <div className="flex flex-col gap-1 px-4 py-3">
+                    <Link href="/products" className={menuRowClass(isUnder(pathname, '/products'))}>
+                      <span className={iconTile}>
+                        <Package size={15} aria-hidden />
+                      </span>
                       Products
                     </Link>
-                    <Link
-                      href="/calculator"
-                      className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                        pathname === '/calculator'
-                          ? 'text-solar-600 bg-solar-500/8'
-                          : 'text-navy-900 hover:bg-solar-500/8 hover:text-solar-600'
-                      }`}
-                    >
-                      <div className="w-8 h-8 bg-solar-500/10 rounded-lg flex items-center justify-center">
-                        <Calculator size={15} className="text-solar-500" />
-                      </div>
+                    <Link href="/calculator" className={menuRowClass(isUnder(pathname, '/calculator'))}>
+                      <span className={iconTile}>
+                        <Calculator size={15} aria-hidden />
+                      </span>
                       Solar Calculator
                     </Link>
                   </div>
@@ -222,102 +246,93 @@ export default function Navbar() {
             </AnimatePresence>
           </div>
 
-          <Link href="/projects" className={linkClass(pathname === '/projects')}>
+          <Link href="/projects" className={linkClass(isUnder(pathname, '/projects'))}>
             Projects
+            {activeBar(isUnder(pathname, '/projects'))}
           </Link>
 
-          <Link href="/results" className={linkClass(pathname === '/results')}>
+          <Link href="/results" className={linkClass(isUnder(pathname, '/results'))}>
             Results
+            {activeBar(isUnder(pathname, '/results'))}
           </Link>
         </div>
 
         {/* Desktop CTA */}
-        <div className="hidden lg:flex items-center gap-3">
-          <a
-            href="/booking"
-            className={`font-bold text-sm px-6 py-2.5 rounded-full transition-all duration-300 shadow-sm hover:shadow-md ${
-              isTransparent
-                ? 'bg-white text-navy-900 hover:bg-white/90'
-                : 'bg-navy-900 text-white hover:bg-navy-800'
-            }`}
-          >
-            Get a Quote
-          </a>
+        <div className="hidden items-center gap-3 lg:flex">
+          <Button href="/booking" size="sm">
+            Get a quote
+          </Button>
         </div>
 
         {/* Mobile Hamburger */}
-        <button
-          className={`lg:hidden p-2.5 rounded-xl transition-colors ${
-            isTransparent
-              ? 'text-white hover:bg-white/10'
-              : 'text-navy-900 hover:bg-navy-50'
-          }`}
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn('lg:hidden', isTransparent ? 'text-white hover:bg-white/10' : 'text-navy-950')}
           onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="Toggle menu"
+          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={menuOpen}
+          aria-controls={menuOpen ? 'mobile-menu' : undefined}
         >
           <AnimatePresence mode="wait" initial={false}>
             {menuOpen ? (
               <motion.span
                 key="close"
-                initial={{ rotate: -90, opacity: 0 }}
-                animate={{ rotate: 0, opacity: 1 }}
-                exit={{ rotate: 90, opacity: 0 }}
-                transition={{ duration: 0.15 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: DURATION.fast }}
                 className="inline-flex"
               >
-                <X size={22} />
+                <X size={22} aria-hidden />
               </motion.span>
             ) : (
               <motion.span
                 key="open"
-                initial={{ rotate: 90, opacity: 0 }}
-                animate={{ rotate: 0, opacity: 1 }}
-                exit={{ rotate: -90, opacity: 0 }}
-                transition={{ duration: 0.15 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: DURATION.fast }}
                 className="inline-flex"
               >
-                <Menu size={22} />
+                <Menu size={22} aria-hidden />
               </motion.span>
             )}
           </AnimatePresence>
-        </button>
+        </Button>
       </div>
 
       {/* Mobile Menu */}
       <AnimatePresence>
         {menuOpen && (
           <motion.div
+            id="mobile-menu"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-            className="lg:hidden overflow-hidden bg-navy-950/98 backdrop-blur-xl border-t border-white/5"
+            transition={{ duration: DURATION.base, ease: EASE_OUT }}
+            className="surface-dark overflow-hidden border-t border-line bg-navy-950 lg:hidden"
           >
-            <div className="px-4 py-5 flex flex-col gap-1">
-              <Link
-                href="/"
-                className={`text-base font-medium px-4 py-3.5 rounded-xl transition-colors ${
-                  pathname === '/' ? 'text-solar-400 bg-white/5' : 'text-white/80 hover:text-solar-400 hover:bg-white/5'
-                }`}
-              >
+            <div className="flex flex-col gap-1 px-4 py-5">
+              <Link href="/" className={mobileRowClass(isHomePage)}>
                 Home
               </Link>
 
               {/* Services accordion */}
               <div>
                 <button
+                  type="button"
                   onClick={() => setMobileServicesOpen((prev) => !prev)}
-                  className={`w-full flex items-center justify-between text-base font-medium px-4 py-3.5 rounded-xl transition-colors ${
-                    isServicesActive ? 'text-solar-400 bg-white/5' : 'text-white/80 hover:text-solar-400 hover:bg-white/5'
-                  }`}
+                  aria-expanded={mobileServicesOpen}
+                  className={cn(mobileRowClass(isServicesActive), 'w-full cursor-pointer justify-between')}
                 >
                   Services
                   <motion.span
                     animate={{ rotate: mobileServicesOpen ? 180 : 0 }}
-                    transition={{ duration: 0.2 }}
+                    transition={{ duration: DURATION.base, ease: EASE_OUT }}
                     className="inline-flex"
                   >
-                    <ChevronDown size={16} />
+                    <ChevronDown size={16} aria-hidden />
                   </motion.span>
                 </button>
 
@@ -327,79 +342,53 @@ export default function Navbar() {
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+                      transition={{ duration: DURATION.base, ease: EASE_OUT }}
                       className="overflow-hidden"
                     >
-                      <div className="pl-3 pb-3 flex flex-col gap-0.5 mt-1">
-                        <Link
-                          href="/booking"
-                          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-                            pathname.startsWith('/booking')
-                              ? 'text-solar-400 bg-white/5'
-                              : 'text-white/80 hover:text-solar-400 hover:bg-white/5'
-                          }`}
-                        >
-                          <CalendarCheck size={14} />
+                      <div className="mt-1 flex flex-col gap-0.5 pb-3 pl-3">
+                        <Link href="/booking" className={mobileRowClass(isUnder(pathname, '/booking'), 'sm')}>
+                          <CalendarCheck size={14} aria-hidden />
                           Book a Service
                         </Link>
 
-                        <div className="h-px bg-white/10 my-1 mx-3" />
+                        <div className="mx-3 my-1 h-px bg-line" />
 
-                        <Link
-                          href="/services"
-                          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-solar-400 hover:bg-white/5 transition-colors"
-                        >
-                          <LayoutGrid size={14} />
+                        <Link href="/services" className={mobileRowClass(pathname === '/services', 'sm')}>
+                          <LayoutGrid size={14} aria-hidden />
                           All Services
                         </Link>
-                        
-                        <Link
-                          href="/locations"
-                          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-                            pathname.startsWith('/locations')
-                              ? 'text-solar-400 bg-white/5'
-                              : 'text-white/80 hover:text-solar-400 hover:bg-white/5'
-                          }`}
-                        >
-                          <MapPin size={14} />
+
+                        <Link href="/locations" className={mobileRowClass(isUnder(pathname, '/locations'), 'sm')}>
+                          <MapPin size={14} aria-hidden />
                           Locations
                         </Link>
 
-                        <div className="h-px bg-white/10 my-1.5 mx-3" />
+                        <div className="mx-3 my-1.5 h-px bg-line" />
 
                         {services.map((s) => (
                           <Link
                             key={s.slug}
                             href={`/services/${s.slug}`}
-                            className={`px-4 py-2.5 rounded-xl text-sm transition-colors ${
+                            className={cn(
+                              'rounded-control px-4 py-2.5 text-sm transition-colors',
                               pathname === `/services/${s.slug}`
-                                ? 'text-solar-400 bg-white/5'
-                                : 'text-white/70 hover:text-solar-400 hover:bg-white/5'
-                            }`}
+                                ? 'bg-white/10 text-fg'
+                                : 'text-fg-muted hover:bg-white/10 hover:text-fg',
+                            )}
                           >
                             {s.title}
                           </Link>
                         ))}
 
-                        <div className="h-px bg-white/10 my-1.5 mx-3" />
+                        <div className="mx-3 my-1.5 h-px bg-line" />
 
-                        <Link
-                          href="/products"
-                          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white/80 hover:text-solar-400 hover:bg-white/5 transition-colors"
-                        >
-                          <Package size={14} />
+                        <Link href="/products" className={mobileRowClass(isUnder(pathname, '/products'), 'sm')}>
+                          <Package size={14} aria-hidden />
                           Products
                         </Link>
 
-                        <Link
-                          href="/calculator"
-                          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-                            pathname === '/calculator'
-                              ? 'text-solar-400 bg-white/5'
-                              : 'text-white/80 hover:text-solar-400 hover:bg-white/5'
-                          }`}
-                        >
-                          <Calculator size={14} />
+                        <Link href="/calculator" className={mobileRowClass(isUnder(pathname, '/calculator'), 'sm')}>
+                          <Calculator size={14} aria-hidden />
                           Solar Calculator
                         </Link>
                       </div>
@@ -408,30 +397,17 @@ export default function Navbar() {
                 </AnimatePresence>
               </div>
 
-              <Link
-                href="/projects"
-                className={`text-base font-medium px-4 py-3.5 rounded-xl transition-colors ${
-                  pathname === '/projects' ? 'text-solar-400 bg-white/5' : 'text-white/80 hover:text-solar-400 hover:bg-white/5'
-                }`}
-              >
+              <Link href="/projects" className={mobileRowClass(isUnder(pathname, '/projects'))}>
                 Projects
               </Link>
 
-              <Link
-                href="/results"
-                className={`text-base font-medium px-4 py-3.5 rounded-xl transition-colors ${
-                  pathname === '/results' ? 'text-solar-400 bg-white/5' : 'text-white/80 hover:text-solar-400 hover:bg-white/5'
-                }`}
-              >
+              <Link href="/results" className={mobileRowClass(isUnder(pathname, '/results'))}>
                 Results
               </Link>
 
-              <a
-                href="/booking"
-                className="mt-3 w-full block bg-solar-500 hover:bg-solar-400 text-navy-900 font-bold text-base px-5 py-3.5 rounded-xl transition-all duration-200 text-center"
-              >
-                Get a Free Quote
-              </a>
+              <Button href="/booking" size="sm" fullWidth className="mt-3">
+                Get a quote
+              </Button>
             </div>
           </motion.div>
         )}

@@ -3,7 +3,7 @@ import HomePage from '@/page-components/home/HomePage';
 import { adminDb } from '@/lib/firebase/admin';
 import type { DbReview } from '@/lib/firebase/types';
 import type { Review } from '@/types';
-import { SITE_URL } from '@/lib/seo/site';
+import { FACEBOOK_URL, SITE_URL } from '@/lib/seo/site';
 import { buildAreaServedArray } from '@/lib/seo/serviceArea';
 import { getServices } from '@/lib/data/getServices';
 
@@ -42,7 +42,7 @@ const baseJsonLd = {
     opens: '08:00',
     closes: '17:00',
   },
-  sameAs: ['https://www.facebook.com/JMCSolarPH'],
+  sameAs: [FACEBOOK_URL],
   priceRange: '$$',
   slogan: 'Future is Electric',
   knowsAbout: [

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { BookingDetails } from '../_components/BookingDetails';
+import AdminPageHeader from '../../_components/AdminPageHeader';
 
 export const metadata = { title: 'Booking — Admin' };
 export const dynamic = 'force-dynamic';
@@ -23,14 +24,15 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
   if (!b) notFound();
 
   return (
-    <div className="p-8 max-w-2xl">
+    <div className="max-w-2xl">
       <Link
         href="/admin/bookings"
-        className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-navy-900 transition-colors mb-5"
+        className="inline-flex items-center gap-1.5 text-sm text-fg-subtle hover:text-fg transition-colors mb-5"
       >
-        <ArrowLeft size={15} />
+        <ArrowLeft size={15} aria-hidden />
         All bookings
       </Link>
+      <AdminPageHeader title="Booking details" />
       <BookingDetails booking={b} />
     </div>
   );

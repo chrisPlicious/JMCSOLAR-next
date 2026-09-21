@@ -1,8 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { Images } from "lucide-react";
 import ProjectCard from "@/components/ui/ProjectCard";
+import PageHero from "@/components/ui/PageHero";
+import CtaBand from "@/components/ui/CtaBand";
+import EmptyState from "@/components/ui/EmptyState";
+import Button from "@/components/ui/Button";
+import { Section } from "@/components/ui/Section";
 import ProjectCarouselModal from "@/components/ui/ProjectCarouselModal";
 import { Timeline } from "@/components/ui/timeline";
 import Layout from "@/components/layout/Layout";
@@ -70,42 +75,28 @@ export default function ProjectsPage({ projects }: Props) {
 
   return (
     <Layout>
-      <section id="projects" className="relative bg-white mx-auto py-20 px-4 lg:py-28">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0"
-          style={{
-            backgroundImage: 'radial-gradient(circle, #d1d5db 1px, transparent 1px)',
-            backgroundSize: '24px 24px',
-            maskImage: 'radial-gradient(ellipse 75% 60% at 50% 10%, black 20%, transparent 100%)',
-            WebkitMaskImage: 'radial-gradient(ellipse 75% 60% at 50% 10%, black 20%, transparent 100%)',
-          }}
-        />
-        {/* Header — kept as-is */}
-        <motion.div
-          className="text-center max-w-2xl mx-auto mb-10"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.5 }}
-        >
-          <span className="text-solar-600 font-semibold text-lg uppercase tracking-widest mb-4 block">
-            Our Work
-          </span>
-          <h2
-            className="text-navy-900 font-black text-3xl sm:text-4xl lg:text-6xl leading-tight mb-4"
-            style={{ fontFamily: "Poppins, sans-serif" }}
-          >
-            Projects & <span className="text-solar-500">Installations</span>
-          </h2>
-          <p className="text-slate-600 text-lg leading-relaxed">
-            From residential rooftops to large-scale industrial farms — browse
-            our completed solar installations across Eastern Visayas.
-          </p>
-        </motion.div>
+      <PageHero
+        title="Projects & Installations"
+        lead="From residential rooftops to large-scale industrial farms — browse our completed solar installations across Eastern Visayas."
+      />
 
-        <Timeline data={timelineData} />
-      </section>
+      <Section id="projects" tone="white" spacing="compact">
+        {timelineData.length > 0 ? (
+          <Timeline data={timelineData} />
+        ) : (
+          <EmptyState
+            icon={Images}
+            title="No projects yet"
+            body="Our completed installations will appear here soon."
+            action={<Button href="/booking">Get a quote</Button>}
+          />
+        )}
+      </Section>
+
+      <CtaBand
+        title="Planning a system like these?"
+        body="Tell us about your site and we'll size a system for it."
+      />
 
       <ProjectCarouselModal
         project={selectedProject}

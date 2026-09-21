@@ -1,11 +1,17 @@
-// {
-//   "version": "0.0.1",
-//   "configurations": [
-//     {
-//       "name": "jmc-next",
-//       "runtimeExecutable": "npm",
-//       "runtimeArgs": ["run", "dev"],
-//       "port": 3000
-//     }
-//   ]
-// }
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "jmc-next",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000
+    },
+    {
+      "name": "redesign-static",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["redesign/_serve.mjs"],
+      "port": 8787
+    }
+  ]
+}

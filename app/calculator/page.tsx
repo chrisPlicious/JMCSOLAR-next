@@ -3,7 +3,7 @@ import SolarCalculator from '@/page-components/calculator/SolarCalculator';
 import { makeBreadcrumbLd } from '@/lib/seo/breadcrumb';
 
 export const metadata: Metadata = {
-  title: 'Solar Savings Calculator | JMC Solar',
+  title: 'Solar Savings Calculator',
   description:
     'Estimate your solar savings based on your monthly electric bill or kWh usage. See recommended system size, payback period, and 25-year savings projection for your region in the Philippines.',
   alternates: { canonical: '/calculator' },

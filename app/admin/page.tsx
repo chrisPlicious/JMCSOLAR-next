@@ -4,6 +4,11 @@ import { formatCentavos } from '@/lib/bookings/pricing';
 import type { DbBooking, DbBookingType } from '@/lib/firebase/types';
 import Link from 'next/link';
 import { CalendarDays, Images, FolderOpen, Package, Wrench, Star, Wallet, ExternalLink } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/Button';
+import { cardVariants } from '@/components/ui/Card';
+import Badge from '@/components/ui/Badge';
+import AdminPageHeader from './_components/AdminPageHeader';
 import { CalendarView, type CalEvent } from './calendar/_components/CalendarView';
 
 export const dynamic = 'force-dynamic';
@@ -30,7 +35,7 @@ function StatCard({
   icon,
   tile,
   secondary,
-  secondaryClass = 'text-slate-400',
+  secondaryClass = 'text-fg-subtle',
   href,
 }: {
   count: number;
@@ -42,10 +47,10 @@ function StatCard({
   href?: string;
 }) {
   const inner = (
-    <div className="col-span-1 bg-white rounded-2xl border border-slate-100/80 shadow-soft h-full p-5 hover:shadow-card transition-shadow">
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${tile}`}>{icon}</div>
-      <p className="text-4xl font-black text-navy-950 leading-none mt-4">{count}</p>
-      <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mt-2">{label}</p>
+    <div className={cn(cardVariants({ variant: href ? 'interactive' : 'default' }), 'col-span-1 h-full p-5')}>
+      <div className={`w-10 h-10 rounded-control flex items-center justify-center ${tile}`}>{icon}</div>
+      <p className="font-display text-h2 tabular-nums text-fg mt-4">{count}</p>
+      <p className="caps mt-2">{label}</p>
       <p className={`text-xs mt-1 ${secondaryClass}`}>{secondary}</p>
     </div>
   );
@@ -60,11 +65,11 @@ function StatCard({
 
 type ActivityType = 'project' | 'product' | 'booking' | 'result';
 
-const ACTIVITY_STYLES: Record<ActivityType, { dot: string; badge: string }> = {
-  project: { dot: 'bg-navy-950', badge: 'bg-navy-50 text-navy-700' },
-  product: { dot: 'bg-solar-500', badge: 'bg-solar-50 text-solar-700' },
-  booking: { dot: 'bg-emerald-500', badge: 'bg-emerald-50 text-emerald-700' },
-  result: { dot: 'bg-cyan-500', badge: 'bg-cyan-50 text-cyan-700' },
+const ACTIVITY_STYLES: Record<ActivityType, { dot: string; tone: 'info' | 'solar' | 'success' | 'neutral' }> = {
+  project: { dot: 'bg-navy-950', tone: 'info' },
+  product: { dot: 'bg-solar-500', tone: 'solar' },
+  booking: { dot: 'bg-green-eco', tone: 'success' },
+  result: { dot: 'bg-slate-400', tone: 'neutral' },
 };
 
 const ACTIVITY_HREF: Record<ActivityType, string> = {
@@ -201,59 +206,47 @@ export default async function AdminDashboard() {
 
   return (
     <div>
-      {/* Header strip — no background */}
-      <div className="flex items-start justify-between gap-4 mb-6">
-        <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="w-2 h-2 rounded-full bg-solar-500" />
-            <span className="text-xs uppercase tracking-widest font-bold text-slate-400">Admin Panel</span>
-          </div>
-          <h1 className="text-2xl font-black text-navy-950 leading-tight" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            JMC Solar PH
-          </h1>
-          <p className="text-slate-500 text-sm mt-0.5">Manage your content from here.</p>
-        </div>
-        <div className="flex items-center gap-4 shrink-0">
-          <span className="text-xs text-slate-400 hidden md:block">
-            {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-          </span>
-          <a
-            href="/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-navy-700 border border-slate-200 bg-white hover:bg-slate-50 px-4 py-2 rounded-xl shadow-soft transition-colors"
-          >
-            Visit live site
-            <ExternalLink size={14} />
-          </a>
-        </div>
-      </div>
+      <AdminPageHeader
+        title="Dashboard"
+        description="Manage your content from here."
+        actions={
+          <>
+            <span className="text-xs text-fg-subtle hidden md:block">
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            </span>
+            <Button href="/" target="_blank" rel="noopener noreferrer" variant="outline" size="sm">
+              Visit live site
+              <ExternalLink size={14} aria-hidden />
+            </Button>
+          </>
+        }
+      />
 
       <div className="grid grid-cols-6 gap-5">
         {/* Needs attention: pending bookings — tall left card (col-span-2 row-span-2) */}
-        <div className="col-span-2 row-span-2 bg-amber-50/30 rounded-2xl border border-amber-100/70 shadow-soft p-5">
+        <div className="col-span-2 row-span-2 bg-solar-50 rounded-card border border-solar-200 shadow-soft p-5">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-bold uppercase tracking-widest text-amber-700">Needs Attention</p>
-            <Link href="/admin/bookings" className="text-xs text-amber-700 hover:text-amber-600 transition-colors">
+            <p className="caps text-solar-ink">Needs Attention</p>
+            <Link href="/admin/bookings" className="text-xs font-semibold text-solar-ink hover:underline">
               View all →
             </Link>
           </div>
           {pendingBookings.length === 0 ? (
-            <p className="text-slate-400 text-sm text-center py-4">All caught up — no pending bookings.</p>
+            <p className="text-fg-muted text-sm text-center py-4">All caught up — no pending bookings.</p>
           ) : (
             <div className="space-y-2">
               {pendingBookings.map((b) => (
                 <Link
                   key={b.id}
                   href="/admin/bookings"
-                  className="flex items-center gap-3 py-1.5 px-2 -mx-2 rounded-lg hover:bg-amber-100/50 transition-colors"
+                  className="flex items-center gap-3 py-1.5 px-2 -mx-2 rounded-control hover:bg-solar-100 transition-colors"
                 >
-                  <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
-                  <span className="text-sm text-navy-900 font-medium flex-1 truncate">{b.name}</span>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium shrink-0">
+                  <span className="w-2 h-2 rounded-full bg-solar-500 shrink-0" />
+                  <span className="text-sm text-fg font-medium flex-1 truncate">{b.name}</span>
+                  <Badge tone="solar" className="shrink-0">
                     {BOOKING_TYPE_LABELS[b.booking_type ?? 'consultation']}
-                  </span>
-                  <span className="text-xs text-slate-400 shrink-0">{b.preferred_date || '—'}</span>
+                  </Badge>
+                  <span className="text-xs text-fg-muted shrink-0">{b.preferred_date || '—'}</span>
                 </Link>
               ))}
             </div>
@@ -264,61 +257,61 @@ export default async function AdminDashboard() {
         <StatCard
           count={bookingCount ?? 0}
           label="Bookings"
-          icon={<CalendarDays size={18} />}
-          tile="bg-emerald-50 text-emerald-600"
+          icon={<CalendarDays size={18} aria-hidden />}
+          tile="bg-green-eco-bg text-green-eco"
           secondary={pendingBookingCount > 0 ? `${pendingBookingCount} pending` : 'none pending'}
-          secondaryClass={pendingBookingCount > 0 ? 'text-amber-600 font-semibold' : 'text-slate-400'}
+          secondaryClass={pendingBookingCount > 0 ? 'text-solar-ink font-semibold' : 'text-fg-subtle'}
           href="/admin/bookings"
         />
         <StatCard
           count={resultCount ?? 0}
           label="Results"
-          icon={<Images size={18} />}
-          tile="bg-cyan-50 text-cyan-600"
+          icon={<Images size={18} aria-hidden />}
+          tile="bg-navy-50 text-navy-700"
           secondary="before / after gallery"
           href="/admin/results"
         />
         <StatCard
           count={projectCount ?? 0}
           label="Projects"
-          icon={<FolderOpen size={18} />}
-          tile="bg-solar-400/15 text-solar-600"
+          icon={<FolderOpen size={18} aria-hidden />}
+          tile="bg-solar-100 text-solar-700"
           secondary="residential · commercial · more"
           href="/admin/projects"
         />
         <StatCard
           count={productCount ?? 0}
           label="Products"
-          icon={<Package size={18} />}
-          tile="bg-blue-50 text-blue-600"
+          icon={<Package size={18} aria-hidden />}
+          tile="bg-navy-50 text-navy-700"
           secondary="across multiple categories"
           href="/admin/products"
         />
         <StatCard
           count={serviceCount ?? 0}
           label="Services"
-          icon={<Wrench size={18} />}
-          tile="bg-teal-50 text-teal-600"
+          icon={<Wrench size={18} aria-hidden />}
+          tile="bg-slate-100 text-slate-600"
           secondary={`${featuredServices?.length ?? 0} featured`}
           href="/admin/services"
         />
         <StatCard
           count={reviewCount ?? 0}
           label="Reviews"
-          icon={<Star size={18} />}
-          tile="bg-violet-50 text-violet-600"
+          icon={<Star size={18} aria-hidden />}
+          tile="bg-solar-100 text-solar-700"
           secondary={avgRating ? `★ ${avgRating} avg rating` : 'no ratings yet'}
           href="/admin/reviews"
         />
 
         {/* Revenue summary: col-span-2 (fills row 2, cols 5-6) */}
-        <div className="col-span-2 bg-white rounded-2xl border border-slate-100/80 shadow-soft p-5">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-green-eco-bg text-green-eco">
-            <Wallet size={18} />
+        <div className={cn(cardVariants(), 'col-span-2 p-5')}>
+          <div className="w-10 h-10 rounded-control flex items-center justify-center bg-green-eco-bg text-green-eco">
+            <Wallet size={18} aria-hidden />
           </div>
-          <p className="text-3xl font-black text-navy-950 leading-none mt-4">{formatCentavos(revenueCentavos)}</p>
-          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mt-2">Revenue Collected</p>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="font-display text-h2 tabular-nums text-fg mt-4">{formatCentavos(revenueCentavos)}</p>
+          <p className="caps mt-2">Revenue Collected</p>
+          <p className="text-xs text-fg-subtle mt-1">
             {paidCount} paid booking{paidCount !== 1 ? 's' : ''}
           </p>
         </div>
@@ -326,8 +319,8 @@ export default async function AdminDashboard() {
         {/* Scheduled services calendar: full width */}
         <div className="col-span-6">
           <div className="flex items-center justify-between mb-2 px-1">
-            <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Scheduled Services</p>
-            <Link href="/admin/calendar" className="text-xs text-slate-500 hover:text-navy-900 transition-colors">
+            <p className="caps">Scheduled Services</p>
+            <Link href="/admin/calendar" className="text-xs font-semibold text-solar-ink hover:underline">
               Full calendar →
             </Link>
           </div>
@@ -335,26 +328,24 @@ export default async function AdminDashboard() {
         </div>
 
         {/* Recent activity: col-span-6 */}
-        <div className="col-span-6 bg-white rounded-2xl border border-slate-100/80 shadow-soft p-5">
+        <div className={cn(cardVariants(), 'col-span-6 p-5')}>
           <div className="flex items-center justify-between mb-4">
-            <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Recent Activity</p>
+            <p className="caps">Recent Activity</p>
           </div>
           {recentActivity.length === 0 ? (
-            <p className="text-slate-400 text-sm text-center py-4">No recent activity</p>
+            <p className="text-fg-subtle text-sm text-center py-4">No recent activity</p>
           ) : (
             <div className="space-y-2">
               {recentActivity.map((item, i) => (
                 <Link
                   key={i}
                   href={ACTIVITY_HREF[item.type]}
-                  className="flex items-center gap-3 py-1.5 px-2 -mx-2 rounded-lg hover:bg-slate-50 transition-colors"
+                  className="flex items-center gap-3 py-1.5 px-2 -mx-2 rounded-control hover:bg-slate-50 transition-colors"
                 >
                   <div className={`w-2 h-2 rounded-full shrink-0 ${ACTIVITY_STYLES[item.type].dot}`} />
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${ACTIVITY_STYLES[item.type].badge}`}>
-                    {item.type}
-                  </span>
-                  <span className="text-sm text-slate-700 font-medium flex-1 truncate">{item.title}</span>
-                  <span className="text-xs text-slate-400 shrink-0">{getRelativeTime(item.created_at)}</span>
+                  <Badge tone={ACTIVITY_STYLES[item.type].tone}>{item.type}</Badge>
+                  <span className="text-sm text-fg font-medium flex-1 truncate">{item.title}</span>
+                  <span className="text-xs text-fg-subtle shrink-0">{getRelativeTime(item.created_at)}</span>
                 </Link>
               ))}
             </div>

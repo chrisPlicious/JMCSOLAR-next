@@ -1,23 +1,30 @@
 "use client";
 
 import { useEffect, useState } from "react";
-const solarBg = "/assets/bg-1.jpg";
-import { ArrowRight, ChevronDown, Star, Users, Zap, Sun } from "lucide-react";
+import { ChevronDown, Star, Users, Zap, Sun } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import Link from "next/link";
-import { buttonVariants } from "@/components/ui/Button";
+import { Button } from "@/components/ui/Button";
+import { Container } from "@/components/ui/Section";
+import { DURATION, EASE_OUT, fadeUp, stagger } from "@/lib/motion";
 
 const stats = [
-  { value: "100%", label: "Recommend Rate", icon: <Star size={18} /> },
-  { value: "3.3K+", label: "Facebook Followers", icon: <Users size={18} /> },
-  { value: "6–1MW+", label: "System Capacities", icon: <Zap size={18} /> },
-  { value: "9+", label: "Completed Projects", icon: <Sun size={18} /> },
+  { value: "100%", label: "Recommend Rate", icon: <Star size={18} aria-hidden /> },
+  { value: "3.3K+", label: "Facebook Followers", icon: <Users size={18} aria-hidden /> },
+  { value: "6–1MW+", label: "System Capacities", icon: <Zap size={18} aria-hidden /> },
+  { value: "9+", label: "Completed Projects", icon: <Sun size={18} aria-hidden /> },
+];
+
+// Staggered ("tilted") arrangement of the desktop stat cards.
+const STAT_POSITIONS = [
+  { top: "0%", left: "10%", delay: 0.3 },
+  { top: "5%", left: "55%", delay: 0.45 },
+  { top: "48%", left: "0%", delay: 0.6 },
+  { top: "52%", left: "50%", delay: 0.75 },
 ];
 
 const words = ["Electric", "Renewable", "Sustainable", "Now"];
 
 export default function Hero() {
-  const [visible, setVisible] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
@@ -25,11 +32,6 @@ export default function Hero() {
       setCurrentIndex((prev) => (prev + 1) % words.length);
     }, 3500);
     return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    const t = setTimeout(() => setVisible(true), 100);
-    return () => clearTimeout(t);
   }, []);
 
   const scrollToAbout = () => {
@@ -40,215 +42,116 @@ export default function Hero() {
     }
   };
 
-  const scrollToContact = () => {
-    const el = document.querySelector("#contact");
-    if (el) {
-      const top = el.getBoundingClientRect().top + window.scrollY - 72;
-      window.scrollTo({ top, behavior: "smooth" });
-    }
-  };
-
   return (
-    <section
-      id="hero"
-      className="relative min-h-[100svh] flex items-center overflow-x-hidden"
-    >
-      {/* Background is now handled globally by HeroBgLayer to prevent fade-in */}
-
-      {/* Decorative organic blobs — overflow-hidden is on this wrapper, not the section, so content can expand vertically */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Large solar glow blob - top right */}
-        {/* <div
-          className="absolute -top-32 -right-32 w-[500px] h-[500px] blob-shape animate-pulse-glow opacity-20"
-          style={{
-            background: "radial-gradient(circle, #f59e0b 0%, #d97706 30%, transparent 70%)",
-          }}
-        /> */}
-        {/* Smaller accent blob - bottom left */}
-        <div
-          className="absolute bottom-20 -left-20 w-[300px] h-[300px] blob-shape-2 animate-float-slower opacity-10"
-          style={{
-            background: "radial-gradient(circle, #fbbf24 0%, transparent 70%)",
-          }}
-        />
-        {/* Decorative ring - mid right */}
-        <div className="absolute top-1/3 right-[15%] w-64 h-64 rounded-full border border-white/5 animate-spin-slow hidden lg:block" />
-        <div
-          className="absolute top-1/3 right-[15%] w-48 h-48 rounded-full border border-solar-500/10 animate-spin-slow hidden lg:block"
-          style={{ animationDirection: "reverse", animationDuration: "15s" }}
-        />
-
-        {/* Subtle dot pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)`,
-            backgroundSize: "40px 40px",
-          }}
-        />
-      </div>
-
-      {/* Main Content */}
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center ">
+    <section id="hero" className="surface-dark relative flex min-h-[100svh] items-center overflow-x-hidden">
+      {/* Background photo is handled globally by HeroBgLayer to prevent fade-in */}
+      <Container className="relative z-10 pt-28 pb-24 lg:py-20">
+        <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12">
           {/* Left Column - Text */}
-          <div
-            className={`lg:col-span-7 text-center lg:text-left transition-all duration-1000 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-              }`}
+          <motion.div
+            className="text-center lg:col-span-7 lg:text-left"
+            variants={stagger(0.08)}
+            initial="hidden"
+            animate="visible"
           >
-            {/* Badge */}
-            {/* <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.6 }}
-              className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/10 rounded-full px-4 py-2 mb-8"
-            >
-              <span className="w-2 h-2 rounded-full bg-solar-400 animate-pulse" />
-              <span className="text-white/80 text-sm font-medium">
-                Renewable Energy Advocates
-              </span>
-            </motion.div> */}
-
-            {/* Tagline — demoted for SEO; H1 holds primary keyword */}
-            <p
-              className="text-solar-400 font-black text-2xl sm:text-3xl leading-tight mb-4 flex flex-wrap items-center justify-center lg:justify-start gap-x-2"
-              style={{ fontFamily: "Poppins, sans-serif" }}
+            {/* Rotating tagline: the page's single eyebrow. H1 holds the primary keyword. */}
+            <motion.p
+              variants={fadeUp}
+              className="eyebrow mb-4 flex flex-wrap items-center justify-center gap-x-1.5 lg:justify-start"
             >
               <span>Future is</span>
               <span className="relative inline-flex overflow-hidden">
-                <span className="invisible pointer-events-none">Sustainable</span>
+                <span className="pointer-events-none invisible">Sustainable</span>
                 <AnimatePresence mode="wait">
                   <motion.span
                     key={currentIndex}
                     className="absolute inset-0 flex items-center justify-start"
-                    initial={{ opacity: 0, y: 40 }}
+                    initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -40 }}
-                    transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+                    exit={{ opacity: 0, y: -12 }}
+                    transition={{ duration: DURATION.base, ease: EASE_OUT }}
                   >
                     {words[currentIndex]}
                   </motion.span>
                 </AnimatePresence>
               </span>
-            </p>
+            </motion.p>
 
-            <h1
-              className="text-white font-black text-5xl sm:text-5xl lg:text-7xl xl:text-[5.5rem] leading-[1.05] mb-8"
-              style={{ fontFamily: "Poppins, sans-serif" }}
-            >
-              Premium Solar Installations{" "}
-              <span className="text-solar-400">for You</span>
-            </h1>
+            <motion.h1 variants={fadeUp} className="mb-8 text-display text-fg">
+              Premium Solar Installations <span className="text-solar-ink">for You</span>
+            </motion.h1>
 
-            {/* Subtitle */}
-            <p className="text-white text-lg sm:text-xl lg:text-2xl max-w-2xl mb-4 leading-relaxed mx-auto lg:mx-0">
+            <motion.p variants={fadeUp} className="mx-auto mb-4 max-w-2xl text-lead text-fg lg:mx-0">
               Professional Solar Installation Services in{" "}
-              <span className="text-white font-semibold">
-                Ormoc City, Eastern Visayas &amp; Cebu, Central Visayas
-              </span>
-            </p>
-            <p className="text-white text-lg max-w-xl mb-10 mx-auto lg:mx-0">
+              <span className="font-semibold">Ormoc City, Eastern Visayas &amp; Cebu, Central Visayas</span>
+            </motion.p>
+            <motion.p variants={fadeUp} className="mx-auto mb-10 max-w-xl text-base text-fg-muted lg:mx-0">
               Every installation is carried out by a duly licensed electrical engineer, backed by a professionally trained team — ensuring safety, compliance, and precision from start to finish.
-            </p>
+            </motion.p>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-4 mb-16">
-              <button
-                onClick={scrollToContact}
-                className={buttonVariants({ variant: "default", size: "lg" })}
-              >
-                Get a Free Quote
-                <ArrowRight size={18} />
-              </button>
-              <Link
-                href="/booking"
-                className={buttonVariants({ variant: "outline", size: "lg" })}
-              >
-                Book Now
-              </Link>
-            </div>
-          </div>
+            <motion.div
+              variants={fadeUp}
+              className="flex flex-col items-center justify-center gap-4 sm:flex-row lg:justify-start"
+            >
+              <Button href="/booking" size="lg">
+                Get a quote
+              </Button>
+              <Button href="/#contact" variant="outline-dark" size="lg">
+                Message us
+              </Button>
+            </motion.div>
+          </motion.div>
 
-          {/* Right Column - Floating Stat Cards */}
-          <div className="lg:col-span-5 hidden lg:block relative h-[420px]" >
+          {/* Right Column - Stats. Desktop: staggered floating cards. */}
+          <ul className="relative hidden h-105 lg:col-span-5 lg:block">
             {stats.map((stat, i) => {
-              const positions = [
-                { top: "0%", left: "10%", delay: 0.3 },
-                { top: "5%", left: "55%", delay: 0.45 },
-                { top: "48%", left: "0%", delay: 0.6 },
-                { top: "52%", left: "50%", delay: 0.75 },
-              ];
-              const pos = positions[i];
-
+              const pos = STAT_POSITIONS[i];
               return (
-                <motion.div
+                <motion.li
                   key={stat.label}
-                  className="absolute glass rounded-2xl p-5 min-w-[180px] hover:bg-white/12 hover:scale-102 hover:translate-y-[-5px] transition-all duration-300"
+                  className="frosted absolute min-w-45 rounded-card p-5 transition-[translate,scale] duration-300 ease-out-quart hover:-translate-y-1 hover:scale-[1.02]"
                   style={{ top: pos.top, left: pos.left }}
                   initial={{ opacity: 0, y: 30, scale: 0.9 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{
-                    delay: pos.delay,
-                    duration: 0.6,
-                    ease: [0.4, 0, 0.2, 1],
-                  }}
+                  transition={{ delay: pos.delay, duration: DURATION.slow, ease: EASE_OUT }}
                 >
-                  <div className="text-solar-400 mb-2">{stat.icon}</div>
-                  <div
-                    className="text-white font-black text-3xl mb-1"
-                    style={{ fontFamily: "Poppins, sans-serif" }}
-                  >
-                    {stat.value}
-                  </div>
-                  <div className="text-white/50 text-xs font-medium">
-                    {stat.label}
-                  </div>
-                </motion.div>
+                  <div className="mb-2 text-solar-ink">{stat.icon}</div>
+                  <div className="font-display text-h2 text-fg tabular-nums">{stat.value}</div>
+                  <div className="mt-1 text-xs font-medium text-fg-muted">{stat.label}</div>
+                </motion.li>
               );
             })}
+          </ul>
 
-            {/* Decorative floating circle */}
-            <motion.div
-              className="absolute top-[35%] left-[38%] w-20 h-20 rounded-full border-2 border-solar-500/20"
-              animate={{ y: [0, -12, 0], rotate: [0, 90, 0] }}
-              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-            />
-          </div>
+          {/* Mobile / tablet: 2 × 2 grid */}
+          <motion.ul
+            className="mx-auto grid w-full max-w-md grid-cols-2 gap-3 sm:gap-4 lg:hidden"
+            variants={stagger(0.08, 0.3)}
+            initial="hidden"
+            animate="visible"
+          >
+            {stats.map((stat) => (
+              <motion.li key={stat.label} variants={fadeUp} className="frosted rounded-card p-4 text-center sm:p-5">
+                <div className="mb-2 flex justify-center text-solar-ink">{stat.icon}</div>
+                <div className="font-display text-h2 text-fg tabular-nums">{stat.value}</div>
+                <div className="mt-1 text-xs font-medium text-fg-muted">{stat.label}</div>
+              </motion.li>
+            ))}
+          </motion.ul>
         </div>
-
-        {/* Mobile Stats Strip */}
-        <div
-          className={`lg:hidden grid grid-cols-2 gap-3 max-w-md mx-auto transition-all duration-1000 delay-300 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-            }`}
-        >
-          {stats.map((stat) => (
-            <div key={stat.label} className="glass rounded-2xl p-4 text-center">
-              <div className="text-solar-400 flex justify-center mb-1">
-                {stat.icon}
-              </div>
-              <div
-                className="text-white font-black text-2xl"
-                style={{ fontFamily: "Poppins, sans-serif" }}
-              >
-                {stat.value}
-              </div>
-              <div className="text-white/50 text-xs mt-0.5">{stat.label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
+      </Container>
 
       {/* Scroll Indicator */}
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={scrollToAbout}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/40 hover:text-solar-400 transition-colors animate-bounce cursor-pointer"
+        className="absolute bottom-6 left-1/2 hidden -translate-x-1/2 text-fg-muted hover:bg-white/10 hover:text-fg sm:inline-flex"
         aria-label="Scroll down"
       >
-        <ChevronDown size={32} />
-      </button>
-
-      {/* Bottom gradient fade */}
-      {/* <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white to-transparent" /> */}
+        <ChevronDown size={28} aria-hidden />
+      </Button>
     </section>
   );
 }

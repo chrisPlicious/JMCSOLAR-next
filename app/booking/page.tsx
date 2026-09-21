@@ -10,17 +10,14 @@ export const metadata: Metadata = {
 export default function BookingSelectionPage() {
   return (
     <BookingSplitLayout
-      leftTag={`BOOKING · ${new Date().getFullYear()}`}
       leftTitle={
-        <div className="text-8xl">
-          Book a
-          <span className="text-solar-600"> Service </span>
-        </div>
+        <>
+          Book a <span className="text-solar-ink">service</span>
+        </>
       }
       leftDescription="A licensed engineering team that designs solar systems specifically for your roof, your bill, and your future."
     >
-      <div className="p-8 lg:p-16 max-w-7xl xl:ml-12 lg:min-h-screen flex flex-col">
-        <div className="mb-12 pt-8 lg:pt-24" />
+      <div className="flex w-full max-w-4xl flex-1 flex-col px-4 py-10 sm:px-8 sm:py-14 lg:px-12 lg:py-16 xl:px-16">
         <BookingServiceList />
       </div>
     </BookingSplitLayout>

@@ -7,23 +7,30 @@ import LoaderScreen from '@/components/ui/LoaderScreen';
 import LoaderGate from '@/components/ui/LoaderGate';
 import ScrollToTop from '@/components/ui/ScrollToTop';
 import PageTransition from '@/components/ui/PageTransition';
+import MotionProvider from '@/components/ui/MotionProvider';
 import HeroBgLayer from './_components/HeroBgLayer';
 import { cn } from "@/lib/utils";
 import { SITE_URL } from '@/lib/seo/site';
 import { Analytics } from '@vercel/analytics/next';
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+// Font roles (see app/globals.css): Geist = body, Poppins = headings
+// (700/800/900 ladder), Montserrat = the JMC SOLAR wordmark only.
+const geist = Geist({
+  subsets: ['latin'],
+  variable: '--font-geist',
+  display: 'swap',
+});
 
 const poppins = Poppins({
   subsets: ['latin'],
-  weight: ['600', '700', '800', '900'],
-  variable: '--font-display',
+  weight: ['700', '800', '900'],
+  variable: '--font-poppins',
   display: 'swap',
 });
 
 const montserrat = Montserrat({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
+  weight: ['500', '800'],
   variable: '--font-montserrat',
   display: 'swap',
 });
@@ -80,26 +87,33 @@ export default async function RootLayout({
 }) {
   const nonce = (await headers()).get('x-nonce') ?? '';
   return (
-    <html lang="en" className={cn("font-sans", geist.variable)} nonce={nonce} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={cn(geist.variable, poppins.variable, montserrat.variable, 'font-sans')}
+      nonce={nonce}
+      suppressHydrationWarning
+    >
       <head>
         <link rel="preload" as="image" href="/assets/bg-1.jpg" />
       </head>
-      <body className={`${geist.variable} ${poppins.variable} ${montserrat.variable}`} suppressHydrationWarning>
+      <body suppressHydrationWarning>
         <NextTopLoader
-          color="#f59e0b"
+          color="var(--color-solar-500)"
           height={3}
           showSpinner={false}
           crawl={true}
           crawlSpeed={200}
           speed={200}
-          shadow="0 0 10px #f59e0b,0 0 5px #f59e0b"
+          shadow="0 0 10px var(--color-solar-500),0 0 5px var(--color-solar-500)"
         />
         <ScrollToTop />
         <HeroBgLayer />
         <LoaderScreen />
-        <LoaderGate>
-          <PageTransition>{children}</PageTransition>
-        </LoaderGate>
+        <MotionProvider>
+          <LoaderGate>
+            <PageTransition>{children}</PageTransition>
+          </LoaderGate>
+        </MotionProvider>
         <Analytics />
       </body>
     </html>

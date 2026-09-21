@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import type { Project, ProjectImage } from '@/types';
+import Button from './Button';
 
 interface Props {
   project: Project | null;
@@ -63,63 +64,76 @@ export default function ProjectCarouselModal({ project, open, onClose }: Props) 
   const img = images[current];
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-4 md:p-8 bg-black/95 backdrop-blur-md">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${project.title} photos`}
+      className="surface-dark fixed inset-0 z-50 flex flex-col items-center justify-center p-4 md:p-8 bg-navy-950/95 backdrop-blur-md"
+    >
       {/* Close Background Area */}
       <div className="absolute inset-0" onClick={onClose} aria-hidden="true" />
 
       {/* Close Button */}
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={onClose}
-        className="absolute top-4 right-4 md:top-6 md:right-6 z-[60] p-2 md:p-3 bg-white/10 hover:bg-white/25 text-white rounded-full backdrop-blur-md transition-all cursor-pointer"
-        aria-label="Close"
+        className="absolute top-4 right-4 md:top-6 md:right-6 z-[60] bg-white/10 hover:bg-white/20 backdrop-blur-md"
+        aria-label="Close gallery"
       >
-        <X size={24} />
-      </button>
+        <X className="size-6" aria-hidden />
+      </Button>
 
       <div className="relative z-10 w-full max-w-6xl flex flex-col gap-4">
         {/* Main Image Container */}
-        <div className="relative w-full aspect-video max-h-[70vh] bg-transparent rounded-lg overflow-hidden flex items-center justify-center select-none">
+        <div className="relative w-full aspect-video max-h-[70vh] rounded-card overflow-hidden flex items-center justify-center select-none">
           {img ? (
             <img
               key={img.id}
               src={img.storage_path}
               alt={project.title}
-              className="w-full h-full object-contain drop-shadow-2xl"
+              className="w-full h-full object-contain"
               draggable={false}
               decoding="async"
               fetchPriority="high"
             />
           ) : (
-            <span className="text-white/40 text-sm">No images available</span>
+            <span className="text-fg-subtle text-sm">No images available</span>
           )}
 
           {images.length > 1 && (
             <>
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={(e) => { e.stopPropagation(); prev(); }}
-                className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-2 md:p-4 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all cursor-pointer"
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-20 md:size-14 bg-navy-950/60 hover:bg-navy-950/80 backdrop-blur-sm"
                 aria-label="Previous image"
               >
-                <ChevronLeft size={32} />
-              </button>
-              <button
+                <ChevronLeft className="size-7" aria-hidden />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={(e) => { e.stopPropagation(); next(); }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-2 md:p-4 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-all cursor-pointer"
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-20 md:size-14 bg-navy-950/60 hover:bg-navy-950/80 backdrop-blur-sm"
                 aria-label="Next image"
               >
-                <ChevronRight size={32} />
-              </button>
+                <ChevronRight className="size-7" aria-hidden />
+              </Button>
 
               {/* Dots Indicator */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20 bg-black/40 px-3 py-2 rounded-full backdrop-blur-md">
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20 bg-navy-950/60 px-3 py-2 rounded-full backdrop-blur-md">
                 {images.map((_, idx) => (
                   <button
                     key={idx}
+                    type="button"
                     onClick={(e) => { e.stopPropagation(); setCurrent(idx); }}
-                    className={`w-2.5 h-2.5 rounded-full transition-all cursor-pointer ${
-                      idx === current ? 'bg-white w-6' : 'bg-white/50 hover:bg-white/80'
+                    className={`h-2.5 rounded-full transition-all duration-200 cursor-pointer ${
+                      idx === current ? 'bg-solar-500 w-6' : 'w-2.5 bg-white/60 hover:bg-white/80'
                     }`}
                     aria-label={`Go to slide ${idx + 1}`}
+                    aria-current={idx === current || undefined}
                   />
                 ))}
               </div>
@@ -133,11 +147,12 @@ export default function ProjectCarouselModal({ project, open, onClose }: Props) 
             {images.map((im, idx) => (
               <button
                 key={im.id}
+                type="button"
                 onClick={() => setCurrent(idx)}
-                className={`relative h-20 md:h-24 aspect-video flex-shrink-0 rounded-md overflow-hidden transition-all cursor-pointer border-2 ${
+                className={`relative h-20 md:h-24 aspect-video flex-shrink-0 rounded-control overflow-hidden transition-all duration-200 cursor-pointer border-2 ${
                   idx === current
-                    ? 'border-white opacity-100 scale-105 shadow-lg'
-                    : 'border-transparent opacity-40 hover:opacity-100 hover:scale-100'
+                    ? 'border-solar-500 opacity-100 shadow-card'
+                    : 'border-transparent opacity-60 hover:opacity-100'
                 }`}
                 aria-label={`View image ${idx + 1}`}
               >

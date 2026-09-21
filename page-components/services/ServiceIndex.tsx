@@ -8,10 +8,18 @@ import * as Icons from "lucide-react";
 import type { LucideProps } from "lucide-react";
 import WhoWeServeCard from "@/components/ui/WhoWeServeCard";
 import Button from "@/components/ui/Button";
-import { ArrowRight } from "lucide-react";
+import Badge from "@/components/ui/Badge";
+import { cardVariants } from "@/components/ui/Card";
+import PageHero from "@/components/ui/PageHero";
+import CtaBand from "@/components/ui/CtaBand";
+import { Section } from "@/components/ui/Section";
+import { SectionHeader } from "@/components/ui/SectionHeader";
+import { ArrowRight, X } from "lucide-react";
 import type { DbService } from "@/lib/firebase/types";
 import { clientTypes } from "@/data/services";
 import Layout from "@/components/layout/Layout";
+import { fadeUp, revealOnScroll } from "@/lib/motion";
+import { cn } from "@/lib/utils";
 
 const solarImg = '/assets/solar.jpg';
 
@@ -32,7 +40,6 @@ export default function ServicesPage({ services }: { services: DbService[] }) {
     isDown.current = true;
     startX.current = e.pageX - scrollRef.current.offsetLeft;
     scrollLeft.current = scrollRef.current.scrollLeft;
-    scrollRef.current.style.cursor = "grabbing";
   }
 
   function onMouseMove(e: MouseEvent<HTMLDivElement>) {
@@ -45,12 +52,6 @@ export default function ServicesPage({ services }: { services: DbService[] }) {
 
   function onMouseUp() {
     isDown.current = false;
-    if (scrollRef.current) scrollRef.current.style.cursor = "grab";
-  }
-
-  function onMouseLeave() {
-    isDown.current = false;
-    if (scrollRef.current) scrollRef.current.style.cursor = "grab";
   }
 
   function toggleCard(index: number) {
@@ -59,203 +60,155 @@ export default function ServicesPage({ services }: { services: DbService[] }) {
 
   return (
     <Layout>
-      <section id="services" className="py-20 transition-all duration-700 ">
-        <div className=" px-4 sm:px-6 lg:px-8">
-          {/* Header */}
-          <motion.div
-            className="text-center max-w-2xl mx-auto mb-14"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-60px" }}
-            transition={{ duration: 0.5 }}
-          >
-            <span className="text-solar-600 font-semibold text-sm uppercase tracking-widest mb-4 block">
-              What We Do
-            </span>
-            <h2
-              className="text-navy-900 font-black text-3xl sm:text-4xl lg:text-5xl leading-tight mb-4"
-              style={{ fontFamily: "Poppins, sans-serif" }}
-            >
-              Complete Solar <span className="text-solar-500">Solutions</span>
-            </h2>
-            <p className="text-slate-600 text-lg leading-relaxed">
-              From the initial consultation to after-sales support — we handle every
-              step of your solar journey for residential, commercial, agricultural,
-              and industrial clients.
-            </p>
-          </motion.div>
-          {/* Mobile: 2-col card grid (hidden on desktop) */}
-          <div className="lg:hidden grid grid-cols-2 sm:grid-cols-3 gap-4 mb-12">
-            {services.map((service, index) => {
-              const IconComponent = Icons[service.icon as IconName] as
-                | ComponentType<LucideProps>
-                | undefined;
-              return (
-                <motion.div
-                  key={service.id}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-60px" }}
-                  transition={{ duration: 0.45, delay: index * 0.07 }}
-                >
-                  <Link
-                    href={`/services/${service.slug}`}
-                    className="flex flex-col items-center text-center gap-3 bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md hover:border-solar-300 transition-all duration-200"
-                  >
-                    {service.highlight && (
-                      <span className="text-[10px] font-bold text-solar-600 uppercase tracking-widest bg-solar-500/10 px-2 py-0.5 rounded-full">
-                        ★ Featured
-                      </span>
-                    )}
-                    <div className="w-14 h-14 bg-solar-500/10 rounded-2xl flex items-center justify-center">
-                      {IconComponent && <IconComponent size={28} className="text-solar-600" />}
-                    </div>
-                    <span className="text-navy-900 font-semibold text-sm leading-snug">
-                      {service.title}
-                    </span>
-                    <span className="text-solar-600 text-xs font-medium flex items-center gap-1 mt-auto">
-                      Learn more <ArrowRight size={12} />
-                    </span>
-                  </Link>
-                </motion.div>
-              );
-            })}
-          </div>
+      <PageHero
+        title="Complete Solar Solutions"
+        lead="From the initial consultation to after-sales support — we handle every step of your solar journey for residential, commercial, agricultural, and industrial clients."
+      />
 
-          {/* Desktop: Accordion Cards (hidden on mobile) */}
-          <div
-            ref={scrollRef}
-            className="hidden lg:flex gap-3 justify-center overflow-x-auto scrollbar-hide lg:h-150 mb-12 px-1"
-            style={{ cursor: "grab" }}
-            onMouseDown={onMouseDown}
-            onMouseMove={onMouseMove}
-            onMouseUp={onMouseUp}
-            onMouseLeave={onMouseLeave}
-          >
-            {services.map((service, index) => {
-              const isActive = activeIndex === index;
-              const IconComponent = Icons[service.icon as IconName] as
-                | ComponentType<LucideProps>
-                | undefined;
-              return (
-                <div
-                  key={service.id}
-                  onClick={() => toggleCard(index)}
-                  style={{ width: isActive ? "900px" : "92px" }}
-                  className="relative rounded-2xl overflow-hidden cursor-pointer shrink-0 transition-all duration-500 ease-in-out"
+      <Section id="services" tone="white">
+        {/* Mobile: 2-col card grid (hidden on desktop) */}
+        <div className="lg:hidden grid grid-cols-2 sm:grid-cols-3 gap-4">
+          {services.map((service) => {
+            const IconComponent = Icons[service.icon as IconName] as
+              | ComponentType<LucideProps>
+              | undefined;
+            return (
+              <motion.div key={service.id} variants={fadeUp} {...revealOnScroll}>
+                <Link
+                  href={`/services/${service.slug}`}
+                  className={cn(
+                    cardVariants({ variant: 'interactive', padding: 'sm' }),
+                    'flex h-full flex-col items-center gap-3 text-center',
+                  )}
                 >
-                  {/* Background image */}
-                  <img
-                    src={service.photo_url ?? solarImg}
-                    alt=""
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
-                  {/* Overlay */}
-                  <div
-                    className={`absolute inset-0 transition-all duration-500 ${isActive ? "bg-black/40" : "bg-black/70"}`}
-                  />
-                  {/* Collapsed: vertical label */}
-                  <div
-                    className={`absolute inset-0 flex flex-col items-center justify-center gap-3 transition-opacity duration-300 ${isActive ? "opacity-0 pointer-events-none" : "opacity-100"}`}
+                  {service.highlight && <Badge tone="solar">Featured</Badge>}
+                  <div className="grid size-14 place-items-center rounded-control bg-solar-100">
+                    {IconComponent && <IconComponent className="size-7 text-solar-ink" aria-hidden />}
+                  </div>
+                  <span className="text-title text-fg">{service.title}</span>
+                  <span className="mt-auto flex items-center gap-1 text-xs font-semibold text-solar-ink">
+                    Learn more <ArrowRight className="size-3" aria-hidden />
+                  </span>
+                </Link>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* Desktop: accordion. Starts at the left edge and scrolls if the row
+            outgrows the container, so every card stays reachable. Proximity
+            snapping only — mandatory snapping fights the drag-to-scroll. */}
+        <div
+          ref={scrollRef}
+          className="hidden lg:flex h-150 gap-3 justify-start overflow-x-auto scrollbar-hide snap-x snap-proximity scroll-px-1 px-1 cursor-grab active:cursor-grabbing"
+          onMouseDown={onMouseDown}
+          onMouseMove={onMouseMove}
+          onMouseUp={onMouseUp}
+          onMouseLeave={onMouseUp}
+        >
+          {services.map((service, index) => {
+            const isActive = activeIndex === index;
+            const IconComponent = Icons[service.icon as IconName] as
+              | ComponentType<LucideProps>
+              | undefined;
+            return (
+              <div
+                key={service.id}
+                className={cn(
+                  'surface-dark relative snap-start overflow-hidden rounded-card transition-[flex-grow,flex-basis,min-width] duration-500 ease-out-quart',
+                  isActive ? 'min-w-[28rem] flex-1' : 'w-24 shrink-0',
+                )}
+              >
+                {/* Background image */}
+                <img
+                  src={service.photo_url ?? solarImg}
+                  alt=""
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+                {/* Overlay */}
+                <div
+                  className={cn(
+                    'absolute inset-0 transition-colors duration-500',
+                    isActive ? 'bg-navy-950/55' : 'bg-navy-950/80',
+                  )}
+                  aria-hidden
+                />
+                {/* Collapsed: vertical label — the card's toggle */}
+                {!isActive && (
+                  <button
+                    type="button"
+                    onClick={() => toggleCard(index)}
+                    aria-expanded={false}
+                    className="absolute inset-0 flex cursor-pointer flex-col items-center justify-center gap-3 rounded-card"
                   >
-                    {IconComponent && (
-                      <IconComponent size={30} className="text-solar-400" />
-                    )}
-                    <span
-                      className="text-white font-semibold text-lg whitespace-nowrap"
-                      style={{
-                        writingMode: "vertical-rl",
-                        textOrientation: "mixed",
-                      }}
-                    >
+                    {IconComponent && <IconComponent className="size-7 text-solar-ink" aria-hidden />}
+                    <span className="font-display text-lg font-semibold whitespace-nowrap text-fg [writing-mode:vertical-rl]">
                       {service.title}
                     </span>
-                  </div>
-                  {/* Expanded: content */}
-                  <div
-                    className={`absolute inset-0 p-8 flex flex-col justify-end transition-opacity duration-400 ${isActive ? "opacity-100 delay-150" : "opacity-0 pointer-events-none"}`}
-                  >
+                  </button>
+                )}
+                {/* Expanded: content */}
+                {isActive && (
+                  <div className="absolute inset-0 flex flex-col justify-end p-8">
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() => toggleCard(index)}
+                      aria-expanded
+                      aria-label={`Collapse ${service.title}`}
+                      className="absolute top-4 right-4 text-fg-muted hover:bg-white/10 hover:text-fg"
+                    >
+                      <X className="size-4" aria-hidden />
+                    </Button>
                     {service.highlight && (
-                      <span className="text-solar-400 text-md font-bold uppercase tracking-widest mb-3">
-                        ★ Featured
-                      </span>
+                      <Badge tone="on-dark" className="mb-3 self-start">
+                        Featured
+                      </Badge>
                     )}
                     {IconComponent && (
-                      <div className="w-12 h-12 bg-solar-500/20 border border-solar-500/30 rounded-xl flex items-center justify-center mb-4">
-                        <IconComponent size={22} className="text-solar-400" />
+                      <div className="mb-4 grid size-12 place-items-center rounded-control border border-solar-500/30 bg-solar-500/20">
+                        <IconComponent className="size-6 text-solar-ink" aria-hidden />
                       </div>
                     )}
-                    <h3
-                      className="text-white text-4xl font-bold mb-2"
-                      style={{ fontFamily: "Poppins, sans-serif" }}
-                    >
-                      {service.title}
-                    </h3>
-                    <p className="text-white/75 text-lg leading-relaxed mb-5">
-                      {service.description}
-                    </p>
-                    <div className="flex items-center justify-between font-semibold text-md text-solar-400 hover:text-solar-300 transition-colors ">
-                      <a href={`/?service=${service.slug}#contact`}>
-                        <button
-                          onClick={(e) => e.stopPropagation()}
-                          className="inline-flex items-center gap-2 "
-                        >
-                          Inquire now <ArrowRight size={22} />
-                        </button>
-                      </a>
-                      <Link
-                        href={`/services/${service.slug}`}
-                        onClick={(e) => e.stopPropagation()}
-                      >
+                    <h3 className="text-h2 text-fg mb-2">{service.title}</h3>
+                    <p className="text-lead text-fg-muted mb-6 max-w-2xl">{service.description}</p>
+                    <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+                      <Button href={`/?service=${service.slug}#contact`}>
+                        Inquire now <ArrowRight className="size-4" aria-hidden />
+                      </Button>
+                      <Button href={`/services/${service.slug}`} variant="link" size="inline">
                         Learn more
-                      </Link>
+                      </Button>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-          {/* CTA */}
-          <div className="text-center">
-
-          </div>
-          {/* Who We Serve */}
-          <div className="max-w-10/13 mx-auto mt-24">
-            {/* Header */}
-            <motion.div
-              className="text-center max-w-2xl mx-auto mb-14"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-60px" }}
-              transition={{ duration: 0.5 }}
-            >
-              <span className="text-solar-600 font-semibold text-sm uppercase tracking-widest mb-4 block">
-                Who We Serve
-              </span>
-              <h2
-                className="text-navy-900 font-black text-3xl sm:text-4xl lg:text-5xl leading-tight mb-4"
-                style={{ fontFamily: "Poppins, sans-serif" }}
-              >
-                Solar for <span className="text-solar-500">Every Client</span>
-              </h2>
-              <p className="text-slate-600 text-lg leading-relaxed">
-                Whether you're a homeowner, business, farmer, or industrial operator
-                — we have the right solar solution for you.
-              </p>
-            </motion.div>
-            {/* Alternating rows */}
-            <div className="flex flex-col gap-16">
-              {clientTypes.map((client, index) => (
-                <WhoWeServeCard
-                  key={client.id}
-                  client={client}
-                  reversed={index % 2 !== 0}
-                />
-              ))}
-            </div>
-          </div>
+                )}
+              </div>
+            );
+          })}
         </div>
-      </section>
+      </Section>
+
+      {/* Who We Serve */}
+      <Section tone="tint">
+        <SectionHeader
+          title="Solar for every client"
+          lead="Whether you're a homeowner, business, farmer, or industrial operator — we have the right solar solution for you."
+        />
+        <div className="flex flex-col gap-16">
+          {clientTypes.map((client, index) => (
+            <WhoWeServeCard
+              key={client.id}
+              client={client}
+              reversed={index % 2 !== 0}
+            />
+          ))}
+        </div>
+      </Section>
+
+      <CtaBand
+        title="Not sure which service you need?"
+        body="Tell us about your site and energy use and we'll recommend the right system."
+      />
     </Layout>
   );
 }

@@ -64,3 +64,6 @@ CODE_REVIEW.md
 # local smoke-test scripts
 /scripts/test-email.mjs
 /scripts/test-reminders.mjs
+
+# design census report (scripts/design-census.mjs)
+.design-census.json

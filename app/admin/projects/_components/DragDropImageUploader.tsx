@@ -39,17 +39,17 @@ export default function DragDropImageUploader({ name = "images" }: { name?: stri
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
         onClick={() => inputRef.current?.click()}
-        className={`w-full border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
+        className={`w-full border-2 border-dashed rounded-control p-8 text-center cursor-pointer transition-colors ${
           isDragging
             ? "border-solar-500 bg-solar-50"
             : "border-slate-300 hover:border-slate-400 bg-slate-50 hover:bg-slate-100"
         }`}
       >
-        <UploadCloud className="mx-auto h-10 w-10 text-slate-400 mb-3" />
-        <p className="text-sm text-slate-600 font-medium">
+        <UploadCloud className="mx-auto h-10 w-10 text-slate-500 mb-3" aria-hidden />
+        <p className="text-sm text-fg-muted font-medium">
           Click or drag and drop images here
         </p>
-        <p className="text-xs text-slate-400 mt-1">
+        <p className="text-xs text-fg-subtle mt-1">
           Supports JPG, PNG, WEBP (multiple files allowed)
         </p>
       </div>
@@ -71,7 +71,7 @@ export default function DragDropImageUploader({ name = "images" }: { name?: stri
       {files.length > 0 && (
         <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
           {files.map((file, idx) => (
-            <div key={idx} className="relative group rounded-lg overflow-hidden border border-slate-200 aspect-video">
+            <div key={idx} className="relative group rounded-control overflow-hidden border border-line aspect-video">
               <img
                 src={URL.createObjectURL(file)}
                 alt={file.name}
@@ -83,9 +83,10 @@ export default function DragDropImageUploader({ name = "images" }: { name?: stri
                   e.stopPropagation();
                   setFiles((prev) => prev.filter((_, i) => i !== idx));
                 }}
-                className="absolute top-1.5 right-1.5 p-1 bg-black/60 hover:bg-black text-white rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                aria-label={`Remove ${file.name}`}
+                className="absolute top-1.5 right-1.5 p-1 bg-navy-950/60 hover:bg-navy-950 text-white rounded-full transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
               >
-                <X size={14} />
+                <X size={14} aria-hidden />
               </button>
             </div>
           ))}

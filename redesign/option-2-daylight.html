@@ -1,0 +1,816 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JMC Solar PH — Daylight, kept · Solar in Ormoc City, Leyte</title>
+<meta name="description" content="A day in a solar home in Leyte. JMC Solar PH designs hybrid and on-grid solar systems, solar pumps and EV chargers — engineered by a licensed electrical engineer in Ormoc City.">
+<link rel="icon" href="../public/JMC.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:ital,wght@0,400..700;1,400..700&family=Azeret+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ───────────────────────── tokens ───────────────────────── */
+:root{
+  --lime:#EDEBE6;         /* limewash wall */
+  --lime-2:#E2DFD7;
+  --lime-3:#D3CFC4;
+  --poche:#1A1D22;        /* section-cut charcoal */
+  --ink-mute:#565B66;     /* ≥4.5:1 on limewash */
+  --gold:#F4B223;         /* the travelling sunbeam (brand solar family) */
+  --gold-ink:#8A5A00;     /* small gold text on limewash */
+  --shadow:#1E3A6E;       /* brand navy-mid: withdrawn hours */
+  --night:#0F1F40;        /* brand navy-deep: the night ground */
+  --night-2:#162D5A;
+  --paper-on-night:#EDEBE6;
+  --mute-on-night:rgba(237,235,230,.68);
+  --gutter:clamp(20px,4.5vw,64px);
+  --maxw:1360px;
+  --sans:"Familjen Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"Azeret Mono", ui-monospace, Menlo, Consolas, monospace;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--lime);color:var(--poche);font:400 1.02rem/1.6 var(--sans);-webkit-font-smoothing:antialiased;transition:background 1.2s var(--ease)}
+body.is-night{background:var(--night)}
+img{max-width:100%;display:block}
+a{color:inherit}
+h1,h2,h3{margin:0;font-weight:700;font-style:italic;letter-spacing:-.02em;line-height:1;text-wrap:balance}
+h1{font-size:clamp(3rem,8vw,6rem);letter-spacing:-.03em;line-height:.94}
+h2{font-size:clamp(2.1rem,4.4vw,3.6rem);line-height:.98}
+h3{font-size:clamp(1.3rem,2vw,1.7rem);letter-spacing:-.015em;line-height:1.08}
+p{margin:0}
+.lead{font-size:clamp(1.08rem,1.4vw,1.3rem);line-height:1.5;color:var(--ink-mute);max-width:56ch;text-wrap:pretty}
+.mono{font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;font-weight:500;font-variant-numeric:tabular-nums}
+.wrap{width:min(100% - 2*var(--gutter),var(--maxw));margin-inline:auto}
+section{position:relative;padding-block:clamp(80px,10vw,150px)}
+.ts{display:inline-flex;align-items:center;gap:10px;color:var(--gold-ink);font-family:var(--mono);font-size:.74rem;letter-spacing:.06em;font-variant-numeric:tabular-nums;margin-bottom:22px}
+.ts::before{content:"";width:34px;height:2px;background:var(--gold)}
+.sec-head{display:grid;gap:18px;margin-bottom:clamp(40px,5vw,72px)}
+@media(min-width:960px){.sec-head{grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:56px;align-items:end}}
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+
+/* ───────────────────────── buttons ───────────────────────── */
+.btn{position:relative;display:inline-flex;align-items:center;gap:12px;padding:16px 24px;font:600 1rem/1 var(--sans);text-decoration:none;border:1.5px solid var(--poche);background:var(--poche);color:var(--lime);cursor:pointer;transition:transform .3s var(--ease),background .3s,color .3s,border-color .3s;isolation:isolate;overflow:hidden}
+.btn::after{content:"";position:absolute;inset:0;background:var(--gold);transform:scaleX(0);transform-origin:left;transition:transform .5s var(--ease);z-index:-1}
+.btn:hover::after{transform:scaleX(1)}
+.btn:hover{color:var(--poche);border-color:var(--gold)}
+.btn svg{width:16px;height:16px;flex:none}
+.btn-line{background:transparent;color:var(--poche)}
+.btn-line:hover{color:var(--poche)}
+.btn:active{transform:scale(.985)}
+.on-night .btn{border-color:var(--lime);background:var(--lime);color:var(--night)}
+.on-night .btn-line{background:transparent;color:var(--lime)}
+.on-night .btn:hover{color:var(--poche);border-color:var(--gold)}
+
+/* ───────────────────────── nav ───────────────────────── */
+.nav{position:fixed;top:0;left:0;right:0;z-index:70;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:18px var(--gutter);mix-blend-mode:normal;transition:background .5s var(--ease),box-shadow .5s}
+.nav.is-scrolled{background:rgba(237,235,230,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 1px 0 rgba(26,29,34,.12)}
+.dark-ui .nav{color:var(--lime)}
+.dark-ui .nav.is-scrolled{background:rgba(15,31,64,.78);box-shadow:0 1px 0 rgba(237,235,230,.14)}
+.dark-ui .nav .cta{border-color:var(--lime);background:var(--lime);color:var(--night)}
+.dark-ui .nav .cta:hover{color:var(--poche);border-color:var(--gold)}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;font-weight:700;letter-spacing:-.01em}
+.brand img{width:36px;height:36px}
+.brand span{font-size:1.08rem;line-height:1}
+.brand small{display:block;font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-mute);margin-top:4px;font-weight:500}
+.dark-ui .brand small{color:var(--mute-on-night)}
+.nav ul{display:none;list-style:none;margin:0;padding:0;gap:26px}
+.nav li a{text-decoration:none;font-weight:500;font-size:.98rem;position:relative}
+.nav li a::after{content:"";position:absolute;left:0;right:0;bottom:-6px;height:2px;background:var(--gold);transform:scaleX(0);transform-origin:left;transition:transform .35s var(--ease)}
+.nav li a:hover::after{transform:scaleX(1)}
+.nav .cta{display:none}
+@media(min-width:1040px){.nav ul{display:flex}.nav .cta{display:inline-flex;padding:12px 18px;font-size:.92rem}}
+.burger{background:none;border:1.5px solid currentColor;padding:10px 14px;font:600 .82rem var(--sans);cursor:pointer;color:inherit}
+@media(min-width:1040px){.burger{display:none}}
+.menu{position:fixed;inset:0;z-index:69;background:var(--poche);color:var(--lime);display:none;flex-direction:column;justify-content:center;padding:clamp(28px,7vw,80px)}
+.menu.is-open{display:flex}
+.menu a{color:var(--lime);text-decoration:none;font-size:clamp(2.2rem,9vw,4rem);font-weight:700;font-style:italic;letter-spacing:-.03em;line-height:1.12}
+.menu a:hover{color:var(--gold)}
+.menu .close{position:absolute;top:18px;right:20px;background:none;border:1.5px solid rgba(237,235,230,.5);color:var(--lime);padding:10px 14px;font:600 .82rem var(--sans);cursor:pointer}
+
+/* ───────────────────────── time rail ───────────────────────── */
+.rail{position:fixed;left:22px;top:50%;transform:translateY(-50%);z-index:60;display:none;flex-direction:column;align-items:center;gap:14px;pointer-events:none}
+@media(min-width:1180px){.rail{display:flex}}
+.rail .clock{font-family:var(--mono);font-size:.8rem;font-weight:500;letter-spacing:.06em;font-variant-numeric:tabular-nums;writing-mode:vertical-rl;transform:rotate(180deg);color:var(--poche)}
+.dark-ui .rail .clock{color:var(--lime)}
+.rail .track{position:relative;width:2px;height:260px;background:rgba(26,29,34,.18)}
+.dark-ui .rail .track{background:rgba(237,235,230,.2)}
+.rail .track i{position:absolute;left:-3px;width:8px;height:1px;background:currentColor;opacity:.5}
+.rail .track b{position:absolute;left:-5px;width:12px;height:12px;border-radius:50%;background:var(--gold);top:0;transform:translateY(-50%);box-shadow:0 0 0 3px var(--lime)}
+.dark-ui .rail .track b{box-shadow:0 0 0 3px var(--night)}
+.rail .lab{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;color:var(--ink-mute);writing-mode:vertical-rl;transform:rotate(180deg)}
+.dark-ui .rail .lab{color:var(--mute-on-night)}
+
+/* ───────────────────────── day scene (hero) ───────────────────────── */
+.day{padding:0;height:100svh;min-height:640px;overflow:hidden;color:var(--poche);background:var(--lime);transition:color .8s,background 1.2s var(--ease)}
+.day.night{color:var(--lime);background:var(--night)}
+.day.night .btn{border-color:var(--lime);background:var(--lime);color:var(--night)}
+.day.night .btn-line{background:transparent;color:var(--lime)}
+.day.night .btn:hover{color:var(--poche);border-color:var(--gold)}
+.stage{position:relative;height:100%;width:100%}
+.scene{position:absolute;inset:0;z-index:1}
+@media(max-width:759px){.scene{inset:0 0 118px 0}}
+.scene svg{width:100%;height:100%;display:block}
+.pche{fill:var(--poche)}
+.lime{fill:var(--lime)}
+.shd{fill:var(--shadow)}
+.thin{stroke:var(--poche);stroke-width:2;fill:none}
+.thin-l{stroke:var(--lime);stroke-width:2;fill:none}
+.glow{fill:var(--gold);opacity:0;transition:opacity .6s}
+.flowl{fill:none;stroke:var(--gold);stroke-width:3;stroke-dasharray:6 10;stroke-linecap:round;opacity:0;transition:opacity .5s;animation:dashm 1.2s linear infinite}
+.flowl.on{opacity:1}
+@keyframes dashm{to{stroke-dashoffset:-32}}
+.day.night .pche{fill:var(--lime)}
+.day.night .thin{stroke:var(--lime)}
+.day.night .shd{fill:#3B5A99}
+.copy{position:absolute;z-index:3;left:var(--gutter);right:var(--gutter);top:clamp(92px,13vh,150px);max-width:520px;min-height:1px}
+.beat{position:absolute;left:0;right:0;top:0;opacity:0;pointer-events:none;transform:translateY(10px);transition:opacity .6s var(--ease),transform .6s var(--ease)}
+.beat.is-on{opacity:1;pointer-events:auto;transform:none}
+.beat .lead{margin-top:20px;color:inherit;opacity:.78}
+.beat h2{max-width:14ch}
+.cta-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+@media(min-width:960px){.cta-row{flex-direction:column;align-items:flex-start}}
+.hint{position:absolute;right:var(--gutter);bottom:clamp(110px,16vh,170px);z-index:3;display:none;align-items:center;gap:12px;font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:inherit;opacity:.75}
+.hint i{width:1px;height:38px;background:currentColor;position:relative;overflow:hidden}
+.hint i::after{content:"";position:absolute;inset:0;background:var(--gold);animation:drop 1.8s var(--ease) infinite}
+@keyframes drop{0%{transform:translateY(-100%)}60%,100%{transform:translateY(100%)}}
+@media(min-width:960px){.hint{display:flex}}
+.ruler{position:absolute;left:var(--gutter);right:var(--gutter);bottom:clamp(28px,5vh,48px);z-index:3}
+.ruler .bar{position:relative;height:1px;background:currentColor;opacity:.35}
+.ruler .ticks{display:flex;justify-content:space-between;margin-top:8px;font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;opacity:.7;font-variant-numeric:tabular-nums;color:inherit}
+.ruler .mark{position:absolute;top:-9px;left:0;width:1px;height:19px;background:var(--gold)}
+.ruler .mark b{position:absolute;top:-30px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:.72rem;font-weight:500;letter-spacing:.06em;color:var(--gold-ink);white-space:nowrap;background:var(--lime);padding:2px 6px}
+.day.night .ruler .mark b{color:var(--gold);background:var(--night)}
+.ruler .now{position:absolute;top:0;left:0;height:1px;background:var(--gold);width:0}
+.nofx .beat{position:static;opacity:1;transform:none;pointer-events:auto}
+
+/* ───────────────────────── legend ───────────────────────── */
+.legend-grid{display:grid;grid-template-columns:1fr;gap:40px}
+@media(min-width:960px){.legend-grid{grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:64px;align-items:start}}
+.legend ol{list-style:none;margin:0;padding:0;counter-reset:leg}
+.legend li{display:grid;grid-template-columns:40px 1fr;gap:16px;padding:20px 0;border-top:1px solid rgba(26,29,34,.18);cursor:default;transition:transform .3s var(--ease)}
+.legend li:last-child{border-bottom:1px solid rgba(26,29,34,.18)}
+.legend li::before{counter-increment:leg;content:counter(leg,decimal-leading-zero);font-family:var(--mono);font-size:.78rem;font-weight:500;color:var(--gold-ink);padding-top:6px}
+.legend li b{display:block;font-size:1.15rem;font-weight:700;letter-spacing:-.01em;margin-bottom:4px}
+.legend li p{color:var(--ink-mute);font-size:.98rem;line-height:1.5;text-wrap:pretty}
+.legend li:hover,.legend li.is-hot{transform:translateX(8px)}
+.legend-photos{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+@media(min-width:640px){.legend-photos{grid-template-columns:repeat(3,1fr)}}
+.lp{position:relative;aspect-ratio:4/5;overflow:hidden;background:var(--lime-2);transition:transform .5s var(--ease)}
+.lp img{width:100%;height:100%;object-fit:cover;filter:saturate(.9);transition:transform 1s var(--ease),filter .5s}
+.lp:hover img,.lp.is-hot img{transform:scale(1.05);filter:saturate(1)}
+.lp span{position:absolute;left:10px;top:10px;font-family:var(--mono);font-size:.7rem;font-weight:500;background:var(--gold);color:var(--poche);padding:4px 7px}
+.lp:nth-child(2){transform:translateY(28px)}.lp:nth-child(5){transform:translateY(28px)}
+
+/* ───────────────────────── rooms (services) ───────────────────────── */
+.rooms{padding-top:0}
+.room{display:grid;grid-template-columns:1fr;gap:28px;padding:clamp(40px,6vw,72px) 0;border-top:1px solid rgba(26,29,34,.18)}
+@media(min-width:900px){.room{grid-template-columns:120px minmax(0,5fr) minmax(0,6fr);gap:40px;align-items:center}.room.flip{grid-template-columns:120px minmax(0,6fr) minmax(0,5fr)}.room.flip .r-txt{order:3}.room.flip .r-fig{order:2}}
+.room .r-ts{font-family:var(--mono);font-size:.78rem;font-weight:500;font-variant-numeric:tabular-nums;color:var(--gold-ink);letter-spacing:.04em}
+.room .r-ts small{display:block;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-mute);margin-top:4px;font-weight:500}
+.room .r-txt p{color:var(--ink-mute);margin-top:14px;max-width:48ch;text-wrap:pretty}
+.room .r-txt a{display:inline-flex;align-items:center;gap:8px;margin-top:22px;font-weight:600;text-decoration:none;border-bottom:2px solid var(--gold);padding-bottom:2px}
+.room .r-txt a svg{width:14px;height:14px;transition:transform .3s var(--ease)}
+.room .r-txt a:hover svg{transform:translateX(4px)}
+.room .r-fig{position:relative;aspect-ratio:16/10;overflow:hidden;background:var(--lime-2)}
+.room .r-fig img{width:100%;height:100%;object-fit:cover;transition:transform 1.2s var(--ease)}
+.room:hover .r-fig img{transform:scale(1.03)}
+.room .r-fig::after{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--gold);transform:scaleY(0);transform-origin:top;transition:transform .6s var(--ease)}
+.room:hover .r-fig::after{transform:scaleY(1)}
+
+/* ───────────────────────── occupation photos (projects) ───────────────────────── */
+.occ{padding-bottom:0}
+.rail-scroll{display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:var(--gutter);padding:6px var(--gutter) 40px;margin:0 calc(-1*var(--gutter));scrollbar-width:none;cursor:grab}
+.rail-scroll.dragging{cursor:grabbing;scroll-snap-type:none}
+.rail-scroll::-webkit-scrollbar{display:none}
+.shot{flex:0 0 min(78vw,520px);scroll-snap-align:start;display:flex;flex-direction:column;gap:12px;text-decoration:none;color:inherit}
+.shot.tall{flex-basis:min(62vw,380px)}
+.shot .fig{aspect-ratio:4/3;overflow:hidden;background:var(--lime-2);position:relative}
+.shot.tall .fig{aspect-ratio:3/4}
+.shot img{width:100%;height:100%;object-fit:cover;transition:transform 1.2s var(--ease);user-select:none;-webkit-user-drag:none}
+.shot:hover img{transform:scale(1.04)}
+.shot .cap{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.shot .cap b{font-weight:700;font-size:1.05rem;letter-spacing:-.01em}
+.shot .cap small{display:block;color:var(--ink-mute);font-size:.88rem;margin-top:2px}
+.shot .kw{font-family:var(--mono);font-size:.7rem;font-weight:500;white-space:nowrap;background:var(--gold);color:var(--poche);padding:4px 7px}
+.occ-foot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:14px;padding:22px 0 0;border-top:1px solid rgba(26,29,34,.18);color:var(--ink-mute)}
+
+/* ───────────────────────── brands ───────────────────────── */
+.brands{padding-block:clamp(56px,7vw,96px)}
+.brands ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid rgba(26,29,34,.18);border-left:1px solid rgba(26,29,34,.18)}
+@media(min-width:640px){.brands ul{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(min-width:960px){.brands ul{grid-template-columns:repeat(6,minmax(0,1fr))}}
+.brands li{min-width:0;height:96px;display:grid;place-items:center;padding:18px 14px;border-right:1px solid rgba(26,29,34,.18);border-bottom:1px solid rgba(26,29,34,.18)}
+.brands img{max-height:40px;max-width:min(120px,100%);width:auto;height:auto;object-fit:contain;mix-blend-mode:multiply;filter:grayscale(1);opacity:.7;transition:filter .3s,opacity .3s}
+.brands li:hover img{filter:none;opacity:1}
+
+/* ───────────────────────── dusk divider + night sections ───────────────────────── */
+.dusk{height:clamp(120px,18vw,220px);background:linear-gradient(180deg,var(--lime) 0%,var(--shadow) 55%,var(--night) 100%);margin-top:clamp(40px,6vw,96px)}
+.on-night{background:var(--night);color:var(--paper-on-night)}
+.on-night .lead,.on-night p{color:var(--mute-on-night)}
+.on-night .ts{color:var(--gold)}
+.on-night h2,.on-night h3,.on-night b{color:var(--paper-on-night)}
+
+/* ───────────────────────── field notes (reviews) ───────────────────────── */
+.notes-grid{display:grid;grid-template-columns:1fr;gap:16px}
+@media(min-width:720px){.notes-grid{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:1100px){.notes-grid{grid-template-columns:repeat(3,1fr)}}
+.note{position:relative;border:1px solid rgba(237,235,230,.22);padding:26px 24px 20px;display:flex;flex-direction:column;gap:16px;background:rgba(237,235,230,.03)}
+.note::before{content:"";position:absolute;top:-7px;left:24px;width:12px;height:12px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 4px var(--night)}
+.note q{quotes:"“" "”";font-size:1.12rem;line-height:1.45;font-weight:500;letter-spacing:-.005em;text-wrap:pretty;color:var(--paper-on-night)}
+.note q::before,.note q::after{color:var(--gold)}
+.note em{font-style:normal;font-size:.92rem;margin-top:-8px}
+.note .who{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:auto;padding-top:14px;border-top:1px solid rgba(237,235,230,.16)}
+.note .who b{font-size:.92rem}
+.note .src{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;border:1px solid rgba(237,235,230,.3);padding:4px 8px;color:var(--mute-on-night)}
+.notes-foot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:14px;margin-top:32px;color:var(--mute-on-night)}
+
+/* ───────────────────────── estimate ───────────────────────── */
+.est{display:grid;grid-template-columns:1fr;border:1px solid rgba(237,235,230,.22)}
+@media(min-width:1000px){.est{grid-template-columns:minmax(0,6fr) minmax(0,6fr)}}
+.est-in{padding:clamp(24px,3.2vw,40px);display:flex;flex-direction:column;gap:26px}
+.est-out{padding:clamp(24px,3.2vw,40px);background:var(--lime);color:var(--poche);display:flex;flex-direction:column;gap:22px}
+.est-out p{color:var(--ink-mute)}
+.field label{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-weight:600;margin-bottom:12px}
+.field label output{font-family:var(--mono);font-size:1.2rem;font-weight:500;font-variant-numeric:tabular-nums;color:var(--gold)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:28px;background:transparent;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:2px;background:rgba(237,235,230,.3)}
+input[type=range]::-moz-range-track{height:2px;background:rgba(237,235,230,.3)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--gold);border:3px solid var(--night);margin-top:-10px;box-shadow:0 0 0 2px var(--gold)}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--gold);border:3px solid var(--night);box-shadow:0 0 0 2px var(--gold)}
+.ticks{display:flex;justify-content:space-between;font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;color:var(--mute-on-night);margin-top:4px;font-variant-numeric:tabular-nums}
+.seg{display:grid;grid-template-columns:1fr 1fr;border:1px solid rgba(237,235,230,.3)}
+.seg label{position:relative;padding:14px 16px;cursor:pointer;display:flex;flex-direction:column;gap:4px;transition:background .25s,color .25s}
+.seg label+label{border-left:1px solid rgba(237,235,230,.3)}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg b{font-weight:700;font-size:.98rem}
+.seg small{font-size:.8rem;line-height:1.3;color:var(--mute-on-night)}
+.seg label:has(input:checked){background:var(--gold);color:var(--poche)}
+.seg label:has(input:checked) b,.seg label:has(input:checked) small{color:var(--poche)}
+.seg input:focus-visible~b{outline:2px solid var(--gold);outline-offset:6px}
+.assump{font-size:.86rem;line-height:1.5;padding-top:16px;border-top:1px solid rgba(237,235,230,.16)}
+.est-out .big{font-size:clamp(2.8rem,5.4vw,4.4rem);font-weight:700;font-style:italic;letter-spacing:-.035em;line-height:.95;font-variant-numeric:tabular-nums}
+.est-out .big u{text-decoration:none;font-size:.45em;font-style:normal;font-weight:500;color:var(--ink-mute);margin-left:6px}
+.est-out .kv{display:grid;grid-template-columns:1fr 1fr;gap:16px 20px}
+.est-out .kv div{border-top:1px solid rgba(26,29,34,.18);padding-top:10px}
+.est-out .kv small{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-mute);margin-bottom:4px}
+.est-out .kv b{font-size:1.4rem;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.est-out .kv b u{text-decoration:none;font-size:.72rem;color:var(--ink-mute);font-weight:500;margin-left:3px}
+.est-out .btn{align-self:flex-start;margin-top:auto;background:var(--poche);color:var(--lime);border-color:var(--poche)}
+.est-out .btn:hover{color:var(--poche)}
+
+/* ───────────────────────── contact ───────────────────────── */
+.contact-grid{display:grid;grid-template-columns:1fr;gap:44px}
+@media(min-width:1000px){.contact-grid{grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:72px}}
+.contact dl{margin:28px 0 0;display:grid;grid-template-columns:auto 1fr;gap:14px 20px;align-items:baseline}
+.contact dt{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mute-on-night);padding-top:5px}
+.contact dd{margin:0;font-weight:600}
+.contact dd a{text-decoration:none;border-bottom:1px solid rgba(237,235,230,.35)}
+.contact dd a:hover{border-color:var(--gold)}
+.areas{display:flex;flex-wrap:wrap;gap:6px;margin-top:28px}
+.areas span{font-size:.84rem;padding:6px 10px;border:1px solid rgba(237,235,230,.25)}
+.areas b{width:100%;font-family:var(--mono);font-weight:500;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mute-on-night);margin-top:8px}
+form.req{border:1px solid rgba(237,235,230,.22)}
+form.req .head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 22px;border-bottom:1px solid rgba(237,235,230,.22)}
+form.req .grid{display:grid;grid-template-columns:1fr;gap:20px;padding:24px 22px}
+@media(min-width:640px){form.req .grid{grid-template-columns:1fr 1fr}form.req .grid .full{grid-column:1/-1}}
+.f label{display:block;font-weight:600;font-size:.92rem;margin-bottom:8px}
+.f label small{font-weight:400;color:var(--mute-on-night);margin-left:6px}
+.f input,.f select,.f textarea{width:100%;font:500 1rem var(--sans);color:var(--paper-on-night);background:rgba(237,235,230,.06);border:1px solid rgba(237,235,230,.28);padding:14px;border-radius:0;transition:border-color .2s,background .2s,box-shadow .2s}
+.f input::placeholder,.f textarea::placeholder{color:rgba(237,235,230,.5)}
+.f input:focus,.f select:focus,.f textarea:focus{outline:none;border-color:var(--gold);background:rgba(237,235,230,.1);box-shadow:0 0 0 3px rgba(244,178,35,.3)}
+.f textarea{min-height:120px;resize:vertical}
+.f select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23EDEBE6' stroke-width='2.5'><path d='m6 9 6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 14px center}
+.f select option{color:var(--poche)}
+.f .err{display:none;color:#FF8A7A;font-size:.82rem;margin-top:6px;font-weight:600}
+.f.invalid input,.f.invalid select{border-color:#FF8A7A}
+.f.invalid .err{display:block}
+form.req .foot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:14px;padding:18px 22px;border-top:1px solid rgba(237,235,230,.22)}
+form.req .foot p{font-size:.86rem;max-width:44ch;text-wrap:pretty}
+.done{display:none;padding:40px 22px;text-align:center}
+.done svg{width:52px;height:52px;margin:0 auto 14px;display:block}
+.done h3{margin-bottom:8px}
+form.req.is-done .grid,form.req.is-done .foot{display:none}
+form.req.is-done .done{display:block}
+
+/* ───────────────────────── footer ───────────────────────── */
+footer{background:var(--night);color:var(--paper-on-night);padding:clamp(72px,9vw,120px) 0 40px;border-top:1px solid rgba(237,235,230,.14)}
+footer .big{font-size:clamp(2.6rem,7.5vw,6rem);font-weight:700;font-style:italic;letter-spacing:-.03em;line-height:.95;max-width:12ch}
+footer .big span{color:var(--gold)}
+.foot-grid{display:grid;grid-template-columns:1fr;gap:32px;margin-top:56px;padding-top:36px;border-top:1px solid rgba(237,235,230,.14)}
+@media(min-width:800px){.foot-grid{grid-template-columns:2fr 1fr 1fr 1.4fr;gap:40px}}
+footer h4{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;font-weight:500;color:var(--mute-on-night);margin:0 0 14px}
+footer ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+footer li a{text-decoration:none;font-weight:500}
+footer li a:hover{color:var(--gold)}
+footer .about p{color:var(--mute-on-night);max-width:40ch;margin-top:14px;text-wrap:pretty}
+.foot-end{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;margin-top:44px;padding-top:18px;border-top:1px solid rgba(237,235,230,.14);color:var(--mute-on-night)}
+
+/* ───────────────────────── reveals & motion prefs ───────────────────────── */
+html.gs [data-beam]{opacity:0}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+  .flowl{animation:none;stroke-dasharray:none}
+}
+</style>
+</head>
+<body>
+<!--
+DIRECTION CONTRACT — Option 2 "Daylight"
+THESIS: The homepage is one day in a solar home in Leyte, drawn as an architect's daylight section: the sun travels, rooms light up, the battery carries the evening, the street goes dark and the house does not. Refuses the split hero with stat cards and the icon-card grid.
+OWN-WORLD: limewash white ground that turns brand-navy at dusk, section-cut charcoal poché, one travelling gold sunbeam as the active band, inclined italic display lettering, tabular mono time stamps on a fixed rail, real occupation photos pinned to hours, sharp corners, hairline rules.
+STORY: a homeowner comparing installers on a phone understands what a hybrid system does hour by hour, sees real Leyte roofs and real reviews, and books a site assessment.
+FIRST VIEWPORT: full-bleed section drawing of a bungalow with carport EV, panels on the roof, inverter and battery on the wall, grid pole and a pump in the field; sun at 06:12 low left; headline "Daylight, kept." bottom-left with one line and two actions; a time ruler across the bottom. Scroll moves the sun.
+FORM: dealt challenger architecture-inhabitable-space-daylight-section, fused; seed key 26292401.
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
+-->
+<header class="nav" id="nav">
+  <a class="brand" href="#top" aria-label="JMC Solar PH home"><img src="../public/JMC.png" alt="" width="36" height="36"><span>JMC Solar PH<small>Ormoc City · Leyte</small></span></a>
+  <ul>
+    <li><a href="#legend">The system</a></li>
+    <li><a href="#rooms">Services</a></li>
+    <li><a href="#occ">Projects</a></li>
+    <li><a href="#notes">Reviews</a></li>
+    <li><a href="#estimate">Estimate</a></li>
+  </ul>
+  <div style="display:flex;gap:10px;align-items:center">
+    <a class="btn cta" href="#contact">Book a site assessment</a>
+    <button class="burger" id="burger" aria-expanded="false" aria-controls="menu">Menu</button>
+  </div>
+</header>
+<nav class="menu" id="menu" aria-label="Mobile">
+  <button class="close" id="menuClose">Close</button>
+  <a href="#legend">The system</a><a href="#rooms">Services</a><a href="#occ">Projects</a><a href="#notes">Reviews</a><a href="#estimate">Estimate</a><a href="#contact">Book a site assessment</a>
+  <p class="mono" style="margin-top:32px;color:rgba(237,235,230,.6)">Call <a href="tel:+639175088220" style="font-size:1rem;font-weight:700;font-style:normal">0917 508 8220</a></p>
+</nav>
+<aside class="rail" aria-hidden="true">
+  <span class="lab">06:00</span>
+  <div class="track"><i style="top:0"></i><i style="top:33.3%"></i><i style="top:66.6%"></i><i style="top:100%"></i><b id="railDot"></b></div>
+  <span class="lab">24:00</span>
+  <span class="clock" id="railClock">06:12</span>
+</aside>
+
+<main id="top">
+
+<!-- ═══════════════════════ THE DAY (pinned scene) ═══════════════════════ -->
+<section class="day" id="day" data-time="06:12" aria-label="A day in a solar home">
+  <div class="stage">
+    <div class="scene" aria-hidden="true">
+      <svg id="svg" viewBox="0 0 1600 640" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <filter id="blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="18"/></filter>
+          <linearGradient id="bandG" x1="0" x2="1"><stop offset="0" stop-color="#F4B223" stop-opacity="0"/><stop offset=".5" stop-color="#F4B223" stop-opacity=".5"/><stop offset="1" stop-color="#F4B223" stop-opacity="0"/></linearGradient>
+        </defs>
+        <!-- mountains (Leyte range) -->
+        <path class="shd" style="opacity:.14" d="M1110 520 L1190 442 L1250 468 L1330 396 L1400 430 L1470 372 L1540 418 L1600 392 L1600 520 Z"/>
+        <!-- sun + moon -->
+        <circle id="sunHalo" cx="120" cy="480" r="60" fill="#F4B223" opacity=".35" filter="url(#blur)"/>
+        <circle id="sun" cx="120" cy="480" r="26" fill="#F4B223"/>
+        <path id="moon" d="M1380 96 a22 22 0 1 0 22 30 a17 17 0 1 1 -22 -30 z" fill="#EDEBE6" opacity="0"/>
+        <!-- sunbeam onto the array -->
+        <polygon id="beam" points="120,480 832,190 1100,271" fill="#F4B223" opacity="0"/>
+        <!-- interior light band (sala floor) -->
+        <rect id="band" x="640" y="426" width="160" height="94" fill="url(#bandG)" opacity="0"/>
+        <!-- carport -->
+        <rect class="pche" x="210" y="336" width="220" height="12"/>
+        <rect class="pche" x="214" y="348" width="8" height="172"/>
+        <g id="ev">
+          <rect class="shd" x="250" y="458" width="152" height="44" rx="14"/>
+          <path class="shd" d="M282 458 q18 -30 60 -30 h30 q26 0 40 30 z"/>
+          <circle class="pche" cx="286" cy="504" r="14"/><circle class="lime" cx="286" cy="504" r="6"/>
+          <circle class="pche" cx="366" cy="504" r="14"/><circle class="lime" cx="366" cy="504" r="6"/>
+        </g>
+        <rect class="pche" x="430" y="392" width="14" height="26" rx="2"/>
+        <path class="thin" d="M437 418 C437 460 360 440 330 470"/>
+        <!-- house section -->
+        <rect class="pche" x="420" y="300" width="16" height="36"/><rect class="pche" x="420" y="426" width="16" height="94"/>
+        <line x1="428" y1="336" x2="428" y2="426" stroke="var(--shadow)" stroke-width="2"/>
+        <rect id="glowL" class="glow" x="418" y="336" width="20" height="90"/>
+        <rect class="pche" x="1104" y="300" width="16" height="36"/><rect class="pche" x="1104" y="426" width="16" height="94"/>
+        <line x1="1112" y1="336" x2="1112" y2="426" stroke="var(--shadow)" stroke-width="2"/>
+        <rect id="glowR" class="glow" x="1102" y="336" width="20" height="90"/>
+        <rect class="pche" x="800" y="300" width="10" height="130"/>
+        <line class="thin" x1="436" y1="300" x2="1104" y2="300"/>
+        <polygon class="pche" points="392,304 770,190 1148,304 1148,318 770,206 392,318"/>
+        <!-- pv array on the sun-facing slope -->
+        <g id="pv">
+          <line x1="846" y1="226" x2="850" y2="212" stroke="var(--poche)" stroke-width="3"/>
+          <line x1="922" y1="249" x2="926" y2="235" stroke="var(--poche)" stroke-width="3"/>
+          <line x1="999" y1="272" x2="1003" y2="258" stroke="var(--poche)" stroke-width="3"/>
+          <line x1="1076" y1="295" x2="1080" y2="281" stroke="var(--poche)" stroke-width="3"/>
+          <line x1="832" y1="190" x2="1100" y2="271" stroke="var(--shadow)" stroke-width="12"/>
+          <line id="pvHi" x1="832" y1="184" x2="1100" y2="265" stroke="#F4B223" stroke-width="3" opacity="0"/>
+        </g>
+        <!-- sala furniture -->
+        <rect class="pche" x="560" y="470" width="110" height="6"/><rect class="pche" x="566" y="476" width="5" height="44"/><rect class="pche" x="659" y="476" width="5" height="44"/>
+        <path class="pche" d="M518 482 h26 v5 h-20 v33 h-6 z"/><path class="pche" d="M712 482 h-26 v5 h20 v33 h6 z"/>
+        <line class="thin" x1="620" y1="300" x2="620" y2="322"/><rect class="pche" x="588" y="322" width="64" height="4"/>
+        <!-- bedroom -->
+        <rect class="pche" x="880" y="482" width="170" height="16" rx="3"/><rect class="pche" x="1044" y="452" width="8" height="46"/><rect class="lime" x="1008" y="474" width="30" height="8"/>
+        <rect class="shd" x="1056" y="330" width="42" height="16" rx="3"/>
+        <!-- inverter + battery on the partition wall -->
+        <rect class="shd" x="818" y="350" width="34" height="44" rx="3"/>
+        <rect x="818" y="410" width="48" height="72" rx="3" fill="none" stroke="var(--poche)" stroke-width="3"/>
+        <rect id="batFill" x="822" y="446" width="40" height="32" fill="#F4B223"/>
+        <!-- energy flows -->
+        <path id="flowPv" class="flowl" d="M966 246 L966 300 L835 300 L835 350"/>
+        <path id="flowExp" class="flowl" d="M852 372 L1124 372 L1124 400"/>
+        <path id="flowBat" class="flowl" d="M842 410 L842 300 L620 300"/>
+        <!-- meter + grid pole -->
+        <rect class="pche" x="1124" y="400" width="16" height="24"/>
+        <g id="gridG">
+          <rect class="pche" x="1236" y="290" width="8" height="230"/><rect class="pche" x="1210" y="306" width="60" height="6"/>
+          <path class="thin" d="M1236 312 Q1180 350 1140 400"/>
+          <path id="gridX" d="M1218 330 L1262 374 M1262 330 L1218 374" stroke="#FF6B57" stroke-width="5" stroke-linecap="round" opacity="0"/>
+        </g>
+        <!-- pump station in the field -->
+        <rect class="pche" x="1340" y="440" width="6" height="80"/><rect class="pche" x="1420" y="436" width="6" height="84"/>
+        <line x1="1318" y1="438" x2="1446" y2="416" stroke="var(--shadow)" stroke-width="10"/>
+        <rect class="pche" x="1362" y="492" width="36" height="28"/>
+        <path class="thin" d="M1398 506 H1500 v14"/>
+        <!-- ground / poché -->
+        <rect class="pche" x="0" y="520" width="1600" height="120"/>
+      </svg>
+    </div>
+    <div class="copy" id="copy">
+      <div class="beat is-on" data-beat="0">
+        <h1>Daylight, kept.</h1>
+        <p class="lead">Solar systems designed by a licensed electrical engineer in Ormoc City — and the battery that keeps the lights on after the street goes dark.</p>
+        <div class="cta-row">
+          <a class="btn" href="#contact">Book a site assessment<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a class="btn btn-line" href="tel:+639175088220">Call 0917 508 8220</a>
+        </div>
+      </div>
+      <div class="beat" data-beat="1">
+        <span class="ts">11:40 · noon</span>
+        <h2>Surplus goes back to the grid.</h2>
+        <p class="lead">Extra kilowatt-hours are exported and come back as credits on your LEYECO bill. DOE/ERC-compliant net metering, paperwork handled by us.</p>
+      </div>
+      <div class="beat" data-beat="2">
+        <span class="ts">18:30 · sunset</span>
+        <h2>Sunset, stored.</h2>
+        <p class="lead">A LiFePO4 battery carries the evening: lights, fans, the TV, the aircon in the kids' room. The grid becomes the backup, not the habit.</p>
+      </div>
+      <div class="beat" data-beat="3">
+        <span class="ts">22:05 · brownout</span>
+        <h2>Dark on the street. Not in here.</h2>
+        <p class="lead">A hybrid system islands from the grid and keeps running. “Sa JMC wala nay brownout.” — a customer on Facebook.</p>
+        <div class="cta-row"><a class="btn" href="#contact">Book a site assessment<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+      </div>
+    </div>
+    <div class="hint"><i></i>Scroll to move the sun</div>
+    <div class="ruler" aria-hidden="true">
+      <div class="bar"><div class="now" id="now"></div><div class="mark" id="mark"><b id="markT">06:12</b></div></div>
+      <div class="ticks"><span>06:00</span><span>09:00</span><span>12:00</span><span>15:00</span><span>18:00</span><span>21:00</span><span>24:00</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ LEGEND ═══════════════════════ -->
+<section id="legend" data-time="07:30">
+  <div class="wrap legend-grid">
+    <div class="legend">
+      <span class="ts" data-beam>07:30 · what is in the drawing</span>
+      <h2 data-beam>Six parts. One quiet system.</h2>
+      <ol data-beam>
+        <li data-k="1"><div><b>PV array</b><p>Rail-mounted modules on the sun-facing slope. Sized to your roof and your bill, not to a package.</p></div></li>
+        <li data-k="2"><div><b>Hybrid inverter</b><p>Turns DC from the roof into AC for the house, decides what to store, and islands the home when the grid drops.</p></div></li>
+        <li data-k="3"><div><b>LiFePO4 battery</b><p>Stored daylight for the evening and for brownouts. Wall-mounted, monitored from your phone.</p></div></li>
+        <li data-k="4"><div><b>Net meter</b><p>Exports surplus to LEYECO and credits it on your bill. We file the DOE/ERC and cooperative paperwork.</p></div></li>
+        <li data-k="5"><div><b>Solar pump</b><p>For farms: a ground-mounted array running the irrigation pump at zero fuel cost.</p></div></li>
+        <li data-k="6"><div><b>EV charger</b><p>A dedicated circuit in the carport, fed by your own daytime solar.</p></div></li>
+      </ol>
+    </div>
+    <div class="legend-photos" data-beam>
+      <div class="lp" data-k="1"><img src="../public/projects/10k.jpg" alt="Two rows of panels on a green corrugated roof among palms" loading="lazy"><span>01</span></div>
+      <div class="lp" data-k="2"><img src="../public/assets/services/on-grid.jpg" alt="Grid-tied inverters and breaker boxes on a white wall" loading="lazy"><span>02</span></div>
+      <div class="lp" data-k="3"><img src="../public/assets/services/hybrid.jpg" alt="Wall of hybrid inverters and LiFePO4 battery modules" loading="lazy"><span>03</span></div>
+      <div class="lp" data-k="4"><img src="../public/assets/clients/commercial.jpeg" alt="Commercial rooftop in Ormoc covered with panels, river beyond" loading="lazy"><span>04</span></div>
+      <div class="lp" data-k="5"><img src="../public/assets/services/pump.jpg" alt="Solar pump array in a Leyte rice field with mountains behind" loading="lazy"><span>05</span></div>
+      <div class="lp" data-k="6"><img src="../public/assets/services/ev.jpg" alt="Technician testing a wall-mounted EV charger" loading="lazy"><span>06</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ ROOMS (services) ═══════════════════════ -->
+<section class="rooms" id="rooms" data-time="09:00">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2 data-beam>Every room, every hour, a service.</h2>
+      <p class="lead" data-beam>From the first consultation to after-sales support. Homes, businesses, farms and industrial sites across Leyte, Southern Leyte and Cebu.</p>
+    </div>
+    <article class="room" data-beam>
+      <div class="r-ts">18:30<small>The sala</small></div>
+      <div class="r-txt"><h3>Hybrid solar systems</h3><p>6 kW to 100 kW+ systems combining solar generation, battery storage and a grid connection — for maximum reliability and energy savings, brownouts included.</p><a href="#contact">Inquire about hybrid<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+      <div class="r-fig"><img src="../public/projects/24kw.jpg" alt="Technicians installing a 24 kWp hybrid array on a new home's hip roof" loading="lazy"></div>
+    </article>
+    <article class="room flip" data-beam>
+      <div class="r-ts">11:40<small>The meter</small></div>
+      <div class="r-txt"><h3>On-grid / net-metered</h3><p>Feed excess solar back to the utility and earn credits on your electricity bill with DOE/ERC-compliant net-metering installations.</p><a href="#contact">Inquire about on-grid<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+      <div class="r-fig"><img src="../public/projects/100kwp.jpg" alt="Large on-grid array on a downtown Ormoc rooftop" loading="lazy"></div>
+    </article>
+    <article class="room" data-beam>
+      <div class="r-ts">09:00<small>The field</small></div>
+      <div class="r-txt"><h3>Solar pumping systems</h3><p>Cost-effective solar-powered water pumps for agricultural and irrigation applications. Zero electricity cost for your farm operations.</p><a href="#contact">Inquire about pumping<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+      <div class="r-fig"><img src="../public/assets/services/pump.jpg" alt="Ground-mounted solar pump beside flooded rice paddies" loading="lazy"></div>
+    </article>
+    <article class="room flip" data-beam>
+      <div class="r-ts">20:00<small>The carport</small></div>
+      <div class="r-txt"><h3>EV charger installation</h3><p>A dedicated circuit, a proper breaker and a wall charger in the carport, fed by your own daytime solar. Wired once, properly.</p><a href="#contact">Inquire about EV charging<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+      <div class="r-fig"><img src="../public/assets/services/ev.jpg" alt="JMC technician connecting an EV charging cable" loading="lazy"></div>
+    </article>
+    <article class="room" data-beam>
+      <div class="r-ts">Quarterly<small>The roof</small></div>
+      <div class="r-txt"><h3>Operation &amp; maintenance</h3><p>Panel cleaning, inverter diagnostics and performance audits that keep a long-term investment at peak output year-round — and fix issues fast when they happen.</p><a href="#contact">Book maintenance<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+      <div class="r-fig"><img src="../public/projects/100kwpagri.jpg" alt="Technicians on long panel rows over farm sheds" loading="lazy"></div>
+    </article>
+  </div>
+</section>
+
+<!-- ═══════════════════════ OCCUPATION PHOTOS (projects) ═══════════════════════ -->
+<section class="occ" id="occ" data-time="13:10">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2 data-beam>Roofs we have already lit.</h2>
+      <p class="lead" data-beam>Residential rooftops to 100 kWp farm sheds, photographed from the drone we plan them with. Drag to look around.</p>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="rail-scroll" id="rs" data-beam>
+      <a class="shot" href="#contact"><div class="fig"><img src="../public/projects/100kwpagri.jpg" alt="Broiler farm sheds with long panel rows" loading="lazy" draggable="false"></div><div class="cap"><div><b>Broiler farm, on-grid</b><small>Industrial · Leyte</small></div><span class="kw">100 kWp</span></div></a>
+      <a class="shot tall" href="#contact"><div class="fig"><img src="../public/projects/6kw.jpg" alt="Red-roofed home with two arrays and a courtyard" loading="lazy" draggable="false"></div><div class="cap"><div><b>Courtyard home</b><small>Residential</small></div><span class="kw">6 kW</span></div></a>
+      <a class="shot" href="#contact"><div class="fig"><img src="../public/projects/100kwpUBS.jpg" alt="School campus with panels on two roof wings" loading="lazy" draggable="false"></div><div class="cap"><div><b>Education institution</b><small>Commercial · on-grid</small></div><span class="kw">100 kW</span></div></a>
+      <a class="shot tall" href="#contact"><div class="fig"><img src="../public/projects/24kw.jpg" alt="Hip roof with installers placing panels" loading="lazy" draggable="false"></div><div class="cap"><div><b>3-phase hybrid home</b><small>Residential</small></div><span class="kw">24 kWp</span></div></a>
+      <a class="shot" href="#contact"><div class="fig"><img src="../public/projects/shell.jpg" alt="Fuel station roof with solar and festive buntings" loading="lazy" draggable="false"></div><div class="cap"><div><b>Fuel station</b><small>Commercial · on-grid</small></div><span class="kw">On-grid</span></div></a>
+      <a class="shot" href="#contact"><div class="fig"><img src="../public/projects/15k.jpg" alt="Green roof with two panel rows and a car in the driveway" loading="lazy" draggable="false"></div><div class="cap"><div><b>Family home</b><small>Residential · on-grid</small></div><span class="kw">15 kWp</span></div></a>
+      <a class="shot tall" href="#contact"><div class="fig"><img src="../public/projects/6kwp.jpg" alt="Beige roof with two small arrays beside a construction site" loading="lazy" draggable="false"></div><div class="cap"><div><b>Townhouse</b><small>Residential</small></div><span class="kw">6 kWp</span></div></a>
+      <a class="shot" href="#contact"><div class="fig"><img src="../public/assets/clients/industrial.jpg" alt="Long rows of panels on a teal warehouse roof" loading="lazy" draggable="false"></div><div class="cap"><div><b>Warehouse rows</b><small>Industrial</small></div><span class="kw">On-grid</span></div></a>
+    </div>
+    <div class="occ-foot mono" data-beam><span>6 kW → 1 MW · residential, commercial, agricultural, industrial</span><a href="#contact" class="btn btn-line" style="font-family:var(--sans);text-transform:none;letter-spacing:0;padding:12px 18px;font-size:.92rem">See all projects</a></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ BRANDS ═══════════════════════ -->
+<section class="brands" data-time="16:00" aria-label="Brand partners">
+  <div class="wrap">
+    <span class="ts" data-beam>16:00 · equipment we install</span>
+    <h2 data-beam style="margin-bottom:36px">Authorized multi-brand dealer.</h2>
+    <ul data-beam>
+      <li><img src="../public/Logos/JINKOSOLAR.png" alt="JinkoSolar" loading="lazy"></li>
+      <li><img src="../public/Logos/TRINASOLAR.png" alt="Trina Solar" loading="lazy"></li>
+      <li><img src="../public/Logos/DEYE.png" alt="Deye" loading="lazy"></li>
+      <li><img src="../public/Logos/GOODWE.png" alt="GoodWe" loading="lazy"></li>
+      <li><img src="../public/Logos/SOLIS.png" alt="Solis" loading="lazy"></li>
+      <li><img src="../public/Logos/LVTOPSUN.png" alt="LVTOPSUN" loading="lazy"></li>
+      <li><img src="../public/Logos/AIKO.png" alt="AIKO" loading="lazy"></li>
+      <li><img src="../public/Logos/REC.png" alt="REC" loading="lazy"></li>
+      <li><img src="../public/Logos/HYXIPOWER.png" alt="Hyxipower" loading="lazy"></li>
+      <li><img src="../public/Logos/SOFARSOLAR.png" alt="Sofar Solar" loading="lazy"></li>
+      <li><img src="../public/Logos/SOLAX.png" alt="SolaX Power" loading="lazy"></li>
+      <li><img src="../public/Logos/SRNE.png" alt="SRNE" loading="lazy"></li>
+      <li><img src="../public/Logos/LIVOLTEK.png" alt="Livoltek" loading="lazy"></li>
+      <li><img src="../public/Logos/THINK POWER.png" alt="Thinkpower" loading="lazy"></li>
+      <li><img src="../public/Logos/JAPAN SOLAR.png" alt="Japan Solar Philippines" loading="lazy"></li>
+      <li><img src="../public/Logos/SUNRI.png" alt="Sunri" loading="lazy"></li>
+      <li><img src="../public/Logos/VOLTRONICPOWER.png" alt="Voltronic Power" loading="lazy"></li>
+      <li><img src="../public/Logos/JMC SOLAR.png" alt="JMC Solar" loading="lazy"></li>
+    </ul>
+  </div>
+</section>
+
+<div class="dusk" data-time="18:30" aria-hidden="true"></div>
+
+<!-- ═══════════════════════ FIELD NOTES (reviews) ═══════════════════════ -->
+<section class="on-night" id="notes" data-time="19:20">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><span class="ts" data-beam>19:20 · field notes</span><h2 data-beam>What the people paying the bills say.</h2></div>
+      <p class="lead" data-beam>Real reviews from Facebook and Google, quoted as written. The one in Bisaya is the one we print on the van.</p>
+    </div>
+    <div class="notes-grid">
+      <article class="note" data-beam><q>Sa JMC wala nay brownout ky naka solar naman ka.</q><em>“At JMC, no more power outages because you're already on solar.”</em><div class="who"><b>Facebook reviewer</b><span class="src">Facebook</span></div></article>
+      <article class="note" data-beam><q>My bill was 10k before the solar, now I'm paying 2k only. I'm very happy with the results and after-sales support is excellent.</q><div class="who"><b>Facebook reviewer</b><span class="src">Facebook</span></div></article>
+      <article class="note" data-beam><q>The solar pump system JMC installed for our farm has been running perfectly. No more diesel expenses for irrigation!</q><div class="who"><b>Farm owner</b><span class="src">Google</span></div></article>
+      <article class="note" data-beam><q>Very professional team. From consultation to installation, they guided us through every step. Highly recommend JMC Solar PH!</q><div class="who"><b>Residential customer</b><span class="src">Google</span></div></article>
+      <article class="note" data-beam><q>Our electricity bill dropped significantly after JMC installed our solar system. Best investment we've made for our business.</q><div class="who"><b>Business owner</b><span class="src">Facebook</span></div></article>
+      <article class="note" data-beam><q>The owner and workers were approachable and know the best what they installed.</q><div class="who"><b>Facebook reviewer</b><span class="src">Facebook</span></div></article>
+    </div>
+    <div class="notes-foot mono" data-beam><span>10 reviews · 100% recommend rate · 3,300+ followers</span><a class="btn btn-line" href="https://www.facebook.com/" target="_blank" rel="noopener" style="font-family:var(--sans);text-transform:none;letter-spacing:0;padding:12px 18px;font-size:.92rem">See all reviews on Facebook</a></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ ESTIMATE ═══════════════════════ -->
+<section class="on-night" id="estimate" data-time="20:40">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><span class="ts" data-beam>20:40 · at the kitchen table</span><h2 data-beam>Size it from your bill.</h2></div>
+      <p class="lead" data-beam>Drag to your average monthly electric bill. We size a system from Leyte's sun hours and show what it could take off the bill — before an engineer measures the roof.</p>
+    </div>
+    <div class="est" data-beam>
+      <div class="est-in">
+        <div class="field">
+          <label for="bill">Monthly electric bill <output id="billOut">₱8,000</output></label>
+          <input type="range" id="bill" min="2000" max="60000" step="500" value="8000">
+          <div class="ticks"><span>₱2k</span><span>₱20k</span><span>₱40k</span><span>₱60k</span></div>
+        </div>
+        <div class="field">
+          <label>System type</label>
+          <div class="seg">
+            <label><input type="radio" name="type" value="ongrid" checked><b>On-grid</b><small>Net-metered. Lowest cost per kW.</small></label>
+            <label><input type="radio" name="type" value="hybrid"><b>Hybrid</b><small>Adds a battery. Runs through brownouts.</small></label>
+          </div>
+        </div>
+        <p class="assump">Assumes ₱14.50/kWh, 4.5 peak sun hours a day and an 80% performance ratio. On-grid offsets about 80% of consumption; hybrid about 90% with evening storage. An estimate, not a quotation — final sizing comes from the site assessment.</p>
+      </div>
+      <div class="est-out">
+        <div><span class="mono" style="color:var(--ink-mute)">Recommended system</span><div class="big" id="kwp">4.5<u>kWp</u></div></div>
+        <div class="kv">
+          <div><small>Modules</small><b id="mods">8<u>× 600 W-class</u></b></div>
+          <div><small>Your usage</small><b id="kwh">552<u>kWh / mo</u></b></div>
+          <div><small>Est. monthly savings</small><b id="save">₱6,400</b></div>
+          <div><small>Est. yearly savings</small><b id="saveY">₱76,800</b></div>
+        </div>
+        <p id="estNote">On-grid: daytime loads run on solar; surplus is exported for bill credits. Night loads stay on LEYECO.</p>
+        <a class="btn" href="#contact">Get this sized properly<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ CONTACT ═══════════════════════ -->
+<section class="on-night contact" id="contact" data-time="21:30">
+  <div class="wrap contact-grid">
+    <div>
+      <span class="ts" data-beam>21:30 · before the lights go out on the street</span>
+      <h2 data-beam>Book a site assessment.</h2>
+      <p class="lead" data-beam style="margin-top:18px">Tell us where the roof is and how much you pay a month. An engineer calls to schedule the visit. No pressure, no vague quotes.</p>
+      <dl data-beam>
+        <dt>Call</dt><dd><a href="tel:+639175088220">0917 508 8220</a></dd>
+        <dt>Email</dt><dd><a href="mailto:jmcsolarph@gmail.com">jmcsolarph@gmail.com</a></dd>
+        <dt>Office</dt><dd>Lilia Avenue, Cogon, Ormoc City, Leyte 6541</dd>
+        <dt>Hours</dt><dd>Mon – Fri, 9:00 AM – 5:00 PM</dd>
+        <dt>Facebook</dt><dd><a href="https://www.facebook.com/" target="_blank" rel="noopener">JMC Solar PH</a></dd>
+      </dl>
+      <div class="areas" data-beam>
+        <b>Leyte</b><span>Ormoc City</span><span>Tacloban City</span><span>Baybay City</span><span>Inopacan</span><span>Hindang</span><span>Hilongos</span><span>Bato</span><span>Matalom</span>
+        <b>Southern Leyte</b><span>Maasin City</span><span>Macrohon</span><span>Sogod</span>
+        <b>Cebu</b><span>Cebu City</span><span>Mandaue City</span><span>Talisay City</span><span>Liloan</span><span>Consolacion</span><span>Danao City</span><span>Carcar City</span><span>Minglanilla</span>
+      </div>
+    </div>
+    <form class="req" id="req" novalidate data-beam>
+      <div class="head"><span class="mono">Site assessment request</span><span class="mono" style="color:var(--mute-on-night)">Reply within 1 business day</span></div>
+      <div class="grid">
+        <div class="f"><label for="name">Full name</label><input id="name" name="name" placeholder="Juan Dela Cruz" autocomplete="name" required><div class="err">Please enter your name.</div></div>
+        <div class="f"><label for="phone">Mobile number</label><input id="phone" name="phone" placeholder="09XX XXX XXXX" inputmode="tel" autocomplete="tel" required><div class="err">Enter a valid PH mobile number.</div></div>
+        <div class="f"><label for="city">City / municipality</label>
+          <select id="city" name="city" required><option value="">Select your city</option><option>Ormoc City</option><option>Tacloban City</option><option>Baybay City</option><option>Inopacan</option><option>Hindang</option><option>Hilongos</option><option>Bato</option><option>Matalom</option><option>Maasin City</option><option>Macrohon</option><option>Sogod</option><option>Cebu City</option><option>Mandaue City</option><option>Talisay City</option><option>Liloan</option><option>Consolacion</option><option>Danao City</option><option>Carcar City</option><option>Minglanilla</option><option>Other</option></select><div class="err">Choose a city so we can route the visit.</div></div>
+        <div class="f"><label for="svc">Service</label><select id="svc" name="service"><option>Hybrid solar system</option><option>On-grid / net-metered</option><option>Solar pumping</option><option>EV charger</option><option>Operation &amp; maintenance</option><option>Not sure yet</option></select></div>
+        <div class="f full"><label for="msg">Message <small>optional</small></label><textarea id="msg" name="message" placeholder="Roof type, average monthly bill, anything that helps our engineer prepare."></textarea></div>
+      </div>
+      <div class="foot"><p>Your details are used only to schedule your assessment.</p><button class="btn" type="submit">Send request<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
+      <div class="done" aria-live="polite">
+        <svg viewBox="0 0 48 48" fill="none" stroke="var(--gold)" stroke-width="2.2"><circle cx="24" cy="24" r="21"/><path d="M15 25l6 6 12-13" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/></svg>
+        <h3>Request received.</h3><p>An engineer will call within one business day. Prototype note: connect this form to the booking flow.</p>
+      </div>
+    </form>
+  </div>
+</section>
+</main>
+
+<footer data-time="24:00">
+  <div class="wrap">
+    <p class="big" data-beam>24:00. <span>Lights still on.</span></p>
+    <div class="foot-grid">
+      <div class="about"><a class="brand" href="#top"><img src="../public/JMC.png" alt="" width="36" height="36"><span>JMC Solar PH<small style="color:var(--mute-on-night)">Future is Electric</small></span></a><p>Renewable energy advocates serving Ormoc City and Eastern Visayas. Providing free and clean energy for every Filipino home, farm and business.</p></div>
+      <div><h4>Sections</h4><ul><li><a href="#legend">The system</a></li><li><a href="#rooms">Services</a></li><li><a href="#occ">Projects</a></li><li><a href="#notes">Reviews</a></li><li><a href="#estimate">Estimate</a></li></ul></div>
+      <div><h4>Services</h4><ul><li><a href="#rooms">Hybrid solar</a></li><li><a href="#rooms">On-grid / net-metered</a></li><li><a href="#rooms">Solar pumping</a></li><li><a href="#rooms">EV chargers</a></li><li><a href="#rooms">O&amp;M</a></li></ul></div>
+      <div><h4>Contact</h4><ul><li><a href="tel:+639175088220">0917 508 8220</a></li><li><a href="mailto:jmcsolarph@gmail.com">jmcsolarph@gmail.com</a></li><li><a href="#contact">Lilia Avenue, Cogon, Ormoc City, Leyte 6541</a></li><li><a href="https://www.facebook.com/" target="_blank" rel="noopener">Facebook · 3,300+ followers</a></li></ul></div>
+    </div>
+    <div class="foot-end mono"><span>© <span id="yr">2026</span> JMC Solar PH · Ormoc City, Leyte</span><span>Licensed electrical engineer on every installation · DOE / ERC compliant</span></div>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
+<script>
+(function(){
+  'use strict';
+  const $=(s,c)=>(c||document).querySelector(s), $$=(s,c)=>Array.from((c||document).querySelectorAll(s));
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const hasGsap=!!(window.gsap&&window.ScrollTrigger);
+  document.getElementById('yr').textContent=new Date().getFullYear();
+  const hhmm=t=>{const hh=Math.floor(t)%24,mm=Math.round((t-Math.floor(t))*60)%60;return String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0')};
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+  const nav=$('#nav'),html=document.documentElement;
+  /* ── smooth scroll ── */
+  let lenis=null;
+  if(window.Lenis&&!reduce){
+    lenis=new Lenis({lerp:.09});
+    if(hasGsap){
+      gsap.registerPlugin(ScrollTrigger);
+      lenis.on('scroll',ScrollTrigger.update);
+      gsap.ticker.add(t=>lenis.raf(t*1000));gsap.ticker.lagSmoothing(0);
+      ScrollTrigger.addEventListener('refresh',()=>lenis.resize());
+    } else {
+      const raf=t=>{lenis.raf(t);requestAnimationFrame(raf)};requestAnimationFrame(raf);
+    }
+  }
+  const scrollTo=el=>{if(lenis)lenis.scrollTo(el,{offset:-70,duration:1.3});else el.scrollIntoView({behavior:reduce?'auto':'smooth'})};
+  $$('a[href^="#"]').forEach(a=>a.addEventListener('click',e=>{const id=a.getAttribute('href');if(id.length<2)return;const el=$(id);if(!el)return;e.preventDefault();closeMenu();scrollTo(el);history.replaceState(null,'',id)}));
+
+  /* ── nav ── */
+  const menu=$('#menu'),burger=$('#burger');
+  const onScroll=()=>nav.classList.toggle('is-scrolled',scrollY>30);onScroll();addEventListener('scroll',onScroll,{passive:true});
+  function openMenu(){menu.classList.add('is-open');burger.setAttribute('aria-expanded','true');lenis&&lenis.stop()}
+  function closeMenu(){menu.classList.remove('is-open');burger.setAttribute('aria-expanded','false');lenis&&lenis.start()}
+  burger.addEventListener('click',()=>menu.classList.contains('is-open')?closeMenu():openMenu());
+  $('#menuClose').addEventListener('click',closeMenu);addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu()});
+
+  /* ── the day scene ── */
+  const day=$('#day'),sun=$('#sun'),halo=$('#sunHalo'),moon=$('#moon'),beam=$('#beam'),band=$('#band'),pvHi=$('#pvHi'),batFill=$('#batFill'),glowL=$('#glowL'),glowR=$('#glowR'),gridX=$('#gridX'),gridG=$('#gridG');
+  const flowPv=$('#flowPv'),flowExp=$('#flowExp'),flowBat=$('#flowBat'),beats=$$('.beat'),now=$('#now'),mark=$('#mark'),markT=$('#markT'),railDot=$('#railDot'),railClock=$('#railClock'),svg=$('#svg');
+  const mobileBox=()=>{const m=innerWidth<760;svg.setAttribute('viewBox',m?'200 40 1300 600':'-520 0 2120 640');svg.setAttribute('preserveAspectRatio',m?'xMidYMax meet':'xMidYMid meet')};mobileBox();addEventListener('resize',mobileBox);
+  let curBeat=-1;
+  function render(q){ // q 0..1 → 06:00..24:00
+    const T=6+q*18,p=clamp((T-6)/12,0,1);
+    const sx=120+p*1360,sy=480-Math.sin(p*Math.PI)*400;
+    sun.setAttribute('cx',sx);sun.setAttribute('cy',sy);halo.setAttribute('cx',sx);halo.setAttribute('cy',sy);
+    const dayl=T<18.3?1:0;sun.style.opacity=dayl;halo.style.opacity=dayl*.35;
+    const strength=Math.sin(p*Math.PI);
+    beam.setAttribute('points',`${sx},${sy} 832,190 1100,271`);beam.style.opacity=(T>6.3&&T<17.8)?(.2*strength).toFixed(3):0;
+    pvHi.style.opacity=strength>.15?1:0;
+    const bx=660-clamp((T-8)/9,0,1)*224;band.setAttribute('x',bx);band.style.opacity=(T>7.5&&T<17.5)?(.8*strength).toFixed(3):0;
+    /* battery: charge to full by 15:00, discharge to 25% by 24:00 */
+    let soc=T<15?.4+.6*clamp((T-7)/8,0,1):1-.75*clamp((T-17)/7,0,1);const bh=64*soc;batFill.setAttribute('height',bh.toFixed(1));batFill.setAttribute('y',(478-bh).toFixed(1));
+    /* night */
+    const N=clamp((T-17.6)/1.4,0,1);day.classList.toggle('night',N>.5);html.classList.toggle('dark-ui',N>.5&&q<1);moon.style.opacity=N;
+    glowL.style.opacity=(N*.95).toFixed(2);glowR.style.opacity=(N*.95).toFixed(2);
+    /* brownout at 22:00 */
+    const out=T>=22;gridX.style.opacity=out?1:0;gridG.style.opacity=out?.45:1;
+    /* flows */
+    flowPv.classList.toggle('on',strength>.12);flowExp.classList.toggle('on',T>10&&T<15.5);flowBat.classList.toggle('on',T>=18.3);
+    /* copy beats */
+    const b=T<10.5?0:T<16.5?1:T<21.5?2:3;if(b!==curBeat){curBeat=b;beats.forEach(el=>el.classList.toggle('is-on',+el.dataset.beat===b))}
+    /* ruler + rail */
+    now.style.width=(q*100)+'%';mark.style.left=(q*100)+'%';markT.textContent=hhmm(T);
+    railClock.textContent=hhmm(T);railDot.style.top=(q*100)+'%';
+  }
+  if(hasGsap&&!reduce){
+    gsap.registerPlugin(ScrollTrigger);
+    document.documentElement.classList.add('gs');
+    ScrollTrigger.create({trigger:day,start:'top top',end:'+=380%',pin:true,scrub:.6,onUpdate:s=>render(s.progress),onLeave:()=>html.classList.remove('dark-ui'),onEnterBack:()=>html.classList.add('dark-ui')});
+    render(0.01);
+    /* the beam reaches each element: light wipe + settle */
+    const els=$$('[data-beam]');
+    els.forEach(el=>gsap.set(el,{clipPath:'inset(0 100% 0 0)',y:14}));
+    ScrollTrigger.batch(els,{start:'top 88%',onEnter:b=>gsap.to(b,{opacity:1,y:0,clipPath:'inset(0 0% 0 0)',duration:1.1,ease:'expo.out',stagger:.07,overwrite:true,onComplete(){b.forEach(el=>el.style.clipPath='')}})});
+    /* insurance: anything still hidden when it is on screen gets revealed */
+    if('IntersectionObserver' in window){const io=new IntersectionObserver(en2=>{en2.forEach(en=>{if(en.isIntersecting&&getComputedStyle(en.target).opacity==='0'){gsap.to(en.target,{opacity:1,y:0,clipPath:'inset(0 0% 0 0)',duration:.8,ease:'expo.out',overwrite:true,onComplete(){en.target.style.clipPath=''}})}if(en.isIntersecting)io.unobserve(en.target)})},{threshold:.15});els.forEach(el=>io.observe(el))}
+  } else {
+    day.classList.add('nofx');render(0.18);day.style.height='auto';day.style.minHeight='100svh';
+    $('.copy').style.position='relative';$('.copy').style.padding='120px 0 60px';
+  }
+  /* body turns night once past the dusk divider (keeps nav readable) */
+  const dusk=$('.dusk');
+  if('IntersectionObserver' in window){
+    const duskCheck=()=>{const past=dusk.getBoundingClientRect().top<innerHeight*.5;document.body.classList.toggle('is-night',past);if(past)html.classList.add('dark-ui');else if(!day.classList.contains('night')||scrollY>innerHeight*5)html.classList.remove('dark-ui')};
+    addEventListener('scroll',duskCheck,{passive:true});duskCheck();
+    /* time rail follows sections */
+    const timed=$$('[data-time]').filter(el=>el!==day);
+    const io2=new IntersectionObserver(es=>{es.forEach(en=>{if(en.isIntersecting){const t=en.target.dataset.time;railClock.textContent=t;const [h,m]=t.split(':').map(Number);railDot.style.top=(clamp(((h+m/60)-6)/18,0,1)*100)+'%'}})},{rootMargin:'-40% 0px -55% 0px'});
+    timed.forEach(el=>io2.observe(el));
+  }
+
+  /* ── legend hover pairing ── */
+  const hot=(k,on)=>{$$('[data-k="'+k+'"]').forEach(el=>el.classList.toggle('is-hot',on))};
+  $$('.legend li, .lp').forEach(el=>{el.addEventListener('mouseenter',()=>hot(el.dataset.k,true));el.addEventListener('mouseleave',()=>hot(el.dataset.k,false))});
+
+  /* ── drag to scroll the occupation rail ── */
+  const rs=$('#rs');let down=false,sx=0,sl=0,moved=false;
+  rs.addEventListener('pointerdown',e=>{if(e.pointerType==='touch')return;down=true;moved=false;sx=e.clientX;sl=rs.scrollLeft;rs.classList.add('dragging');rs.setPointerCapture(e.pointerId)});
+  rs.addEventListener('pointermove',e=>{if(!down)return;const dx=e.clientX-sx;if(Math.abs(dx)>4)moved=true;rs.scrollLeft=sl-dx});
+  const up=e=>{if(!down)return;down=false;rs.classList.remove('dragging')};rs.addEventListener('pointerup',up);rs.addEventListener('pointercancel',up);
+  rs.addEventListener('click',e=>{if(moved){e.preventDefault();e.stopPropagation()}},true);
+
+  /* ── estimate ── */
+  const bill=$('#bill'),billOut=$('#billOut'),kwp=$('#kwp'),mods=$('#mods'),kwh=$('#kwh'),save=$('#save'),saveY=$('#saveY'),estNote=$('#estNote');
+  const peso=n=>'₱'+Math.round(n).toLocaleString('en-PH');
+  function estimate(){const b=+bill.value,type=$('input[name=type]:checked').value;const rate=14.5,psh=4.5,pr=.8;const monthlyKwh=b/rate,daily=monthlyKwh/30;const offset=type==='hybrid'?.9:.8;const size=Math.max(2,(daily*offset)/(psh*pr));const sizeR=Math.round(size*2)/2;const n=Math.ceil(sizeR*1000/600);
+    billOut.value=peso(b);kwp.innerHTML=sizeR.toFixed(1)+'<u>kWp</u>';mods.innerHTML=n+'<u>× 600 W-class</u>';kwh.innerHTML=Math.round(monthlyKwh)+'<u>kWh / mo</u>';const s=b*offset;save.textContent=peso(s);saveY.textContent=peso(s*12);
+    estNote.textContent=type==='hybrid'?'Hybrid: daytime loads on solar, evenings on the battery, grid only as backup. Includes a battery sized for about one evening of typical loads.':'On-grid: daytime loads run on solar; surplus is exported for bill credits. Night loads stay on LEYECO.'}
+  bill.addEventListener('input',estimate);$$('input[name=type]').forEach(r=>r.addEventListener('change',estimate));estimate();
+
+  /* ── request form (prototype) ── */
+  const req=$('#req');
+  req.addEventListener('submit',e=>{e.preventDefault();let ok=true;const check=(id,test)=>{const f=$(id),w=f.closest('.f');const v=test(f.value.trim());w.classList.toggle('invalid',!v);if(!v)ok=false};
+    check('#name',v=>v.length>1);check('#phone',v=>/^(\+63|0)9\d{2}[\s-]?\d{3}[\s-]?\d{4}$/.test(v));check('#city',v=>v.length>0);
+    if(!ok){const first=$('.f.invalid input,.f.invalid select');first&&first.focus();return}req.classList.add('is-done')});
+  $$('#req input,#req select').forEach(el=>el.addEventListener('input',()=>el.closest('.f').classList.remove('invalid')));
+})();
+</script>
+</body>
+</html>

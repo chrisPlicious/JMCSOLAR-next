@@ -2,16 +2,18 @@
 
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { X, CheckCircle, Loader2, MessageSquarePlus } from 'lucide-react';
+import { X, CheckCircle, MessageSquarePlus } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+import { Field, Input, Textarea } from '@/components/ui/Field';
+import { cn } from '@/lib/utils';
+import { DURATION, EASE_OUT } from '@/lib/motion';
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const INPUT_CLASS =
-  'w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 text-slate-800 text-sm placeholder-slate-400 focus:outline-none focus:border-solar-400 focus:ring-2 focus:ring-solar-400/20 focus:bg-white transition-all duration-300';
-const LABEL_CLASS = 'block text-sm font-medium text-slate-700 mb-1.5';
+const GROUP_LABEL_CLASS = 'mb-1.5 block text-sm font-semibold text-fg';
 
 export default function ReviewSubmitDialog({ open, onOpenChange }: Props) {
   const [name, setName] = useState('');
@@ -86,114 +88,109 @@ export default function ReviewSubmitDialog({ open, onOpenChange }: Props) {
           {/* Backdrop */}
           <motion.div
             key="backdrop"
-            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 z-50 bg-navy-950/60 backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: DURATION.fast }}
             onClick={handleClose}
           />
 
           {/* Modal container */}
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div
               key="modal"
-              className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              transition={{ duration: 0.2 }}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="review-dialog-title"
+              className="pointer-events-auto max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-card bg-white shadow-elevated"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ duration: DURATION.base, ease: EASE_OUT }}
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-slate-100">
+              <div className="flex items-center justify-between border-b border-line px-6 pt-6 pb-4">
                 <div className="flex items-center gap-2">
-                  <MessageSquarePlus size={20} className="text-solar-500" />
-                  <h2 className="text-lg font-bold text-navy-900" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                  <MessageSquarePlus size={20} className="text-solar-ink" aria-hidden />
+                  <h2 id="review-dialog-title" className="text-h3 text-fg">
                     Share Your Experience
                   </h2>
                 </div>
-                <button
-                  onClick={handleClose}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-                  aria-label="Close"
-                >
-                  <X size={18} />
-                </button>
+                <Button variant="ghost" size="icon-sm" onClick={handleClose} aria-label="Close">
+                  <X size={18} aria-hidden />
+                </Button>
               </div>
 
               <div className="px-6 py-6">
                 {succeeded ? (
                   /* Success state */
-                  <div className="bg-green-50 border border-green-200 rounded-2xl p-8 text-center">
-                    <CheckCircle size={48} className="text-green-500 mx-auto mb-4" />
-                    <h3 className="text-lg font-bold text-green-800 mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                      Thank you for your review!
-                    </h3>
-                    <p className="text-green-700 text-sm mb-6">
+                  <div className="rounded-card border border-green-200 bg-green-eco-bg p-8 text-center">
+                    <CheckCircle size={48} className="mx-auto mb-4 text-green-eco" aria-hidden />
+                    <h3 className="mb-2 text-h3 text-green-800">Thank you for your review!</h3>
+                    <p className="mb-6 text-sm text-green-800">
                       Your feedback has been submitted and is pending approval.
                     </p>
-                    <button
-                      onClick={handleClose}
-                      className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2.5 rounded-xl text-sm transition-colors"
-                    >
+                    <Button variant="secondary" onClick={handleClose}>
                       Close
-                    </button>
+                    </Button>
                   </div>
                 ) : (
                   /* Form */
                   <form onSubmit={handleSubmit} className="space-y-5">
                     {error && (
-                      <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
+                      <div role="alert" className="rounded-control border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                         {error}
                       </div>
                     )}
 
-                    {/* Name */}
-                    <div>
-                      <label className={LABEL_CLASS}>
-                        Name <span className="text-red-500">*</span>
-                      </label>
-                      <input
+                    <Field id="review-name" label="Name" required>
+                      <Input
                         type="text"
-                        required
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Juan dela Cruz"
-                        className={INPUT_CLASS}
                       />
-                    </div>
+                    </Field>
 
-                    {/* Company Name */}
-                    <div>
-                      <label className={LABEL_CLASS}>Company Name <span className="text-slate-400 font-normal">(optional)</span></label>
-                      <input
+                    <Field
+                      id="review-company"
+                      label={
+                        <>
+                          Company Name <span className="font-normal text-fg-subtle">(optional)</span>
+                        </>
+                      }
+                    >
+                      <Input
                         type="text"
                         value={companyName}
                         onChange={(e) => setCompanyName(e.target.value)}
                         placeholder="Your company or business"
-                        className={INPUT_CLASS}
                       />
-                    </div>
+                    </Field>
 
                     {/* Contact preference */}
-                    <div>
-                      <label className={LABEL_CLASS}>
-                        Contact Preference <span className="text-red-500">*</span>
-                      </label>
+                    <div role="group" aria-labelledby="review-contact-pref">
+                      <p id="review-contact-pref" className={GROUP_LABEL_CLASS}>
+                        Contact Preference <span className="ml-0.5 text-red-600" aria-hidden>*</span>
+                      </p>
                       <div className="flex gap-2">
                         {(['email', 'phone'] as const).map((type) => (
                           <button
                             key={type}
                             type="button"
+                            aria-pressed={contactType === type}
                             onClick={() => {
                               setContactType(type);
                               setContactValue('');
                             }}
-                            className={`px-4 py-2 rounded-lg text-sm transition-colors capitalize ${
+                            className={cn(
+                              'cursor-pointer rounded-full px-4 py-2 text-sm transition-colors',
                               contactType === type
-                                ? 'bg-navy-900 text-white font-bold'
-                                : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                            }`}
+                                ? 'bg-navy-900 font-bold text-white'
+                                : 'bg-slate-100 font-medium text-fg-muted hover:bg-slate-200',
+                            )}
                           >
                             {type === 'email' ? 'Email' : 'Phone'}
                           </button>
@@ -201,27 +198,24 @@ export default function ReviewSubmitDialog({ open, onOpenChange }: Props) {
                       </div>
                     </div>
 
-                    {/* Contact value */}
-                    <div>
-                      <label className={LABEL_CLASS}>
-                        {contactType === 'email' ? 'Email Address' : 'Phone Number'}{' '}
-                        <span className="text-red-500">*</span>
-                      </label>
-                      <input
+                    <Field
+                      id="review-contact"
+                      label={contactType === 'email' ? 'Email Address' : 'Phone Number'}
+                      required
+                    >
+                      <Input
                         type={contactType === 'email' ? 'email' : 'tel'}
-                        required
                         value={contactValue}
                         onChange={(e) => setContactValue(e.target.value)}
                         placeholder={contactType === 'email' ? 'your@email.com' : '09XX XXX XXXX'}
-                        className={INPUT_CLASS}
                       />
-                    </div>
+                    </Field>
 
                     {/* Star rating */}
-                    <div>
-                      <label className={LABEL_CLASS}>
-                        Rating <span className="text-red-500">*</span>
-                      </label>
+                    <div role="group" aria-labelledby="review-rating-label">
+                      <p id="review-rating-label" className={GROUP_LABEL_CLASS}>
+                        Rating <span className="ml-0.5 text-red-600" aria-hidden>*</span>
+                      </p>
                       <div className="flex gap-1">
                         {[1, 2, 3, 4, 5].map((star) => {
                           const filled = star <= displayRating;
@@ -232,8 +226,9 @@ export default function ReviewSubmitDialog({ open, onOpenChange }: Props) {
                               onClick={() => setRating(star)}
                               onMouseEnter={() => setHoverRating(star)}
                               onMouseLeave={() => setHoverRating(0)}
-                              className="transition-transform hover:scale-110 focus:outline-none"
+                              className="cursor-pointer rounded-md transition-transform duration-150 hover:scale-110"
                               aria-label={`Rate ${star} out of 5`}
+                              aria-pressed={star === rating}
                             >
                               <svg
                                 width="28"
@@ -242,7 +237,8 @@ export default function ReviewSubmitDialog({ open, onOpenChange }: Props) {
                                 fill={filled ? 'currentColor' : 'none'}
                                 stroke="currentColor"
                                 strokeWidth="1.5"
-                                className={filled ? 'text-solar-500' : 'text-slate-300'}
+                                aria-hidden
+                                className={filled ? 'text-solar-500' : 'text-slate-500'}
                               >
                                 <path
                                   strokeLinecap="round"
@@ -253,42 +249,25 @@ export default function ReviewSubmitDialog({ open, onOpenChange }: Props) {
                             </button>
                           );
                         })}
-                        <span className="ml-2 text-sm text-slate-500 self-center">
+                        <span className="ml-2 self-center text-sm text-fg-subtle tabular-nums">
                           {displayRating} / 5
                         </span>
                       </div>
                     </div>
 
-                    {/* Quote / Review */}
-                    <div>
-                      <label className={LABEL_CLASS}>
-                        Your Review <span className="text-red-500">*</span>
-                      </label>
-                      <textarea
-                        required
+                    <Field id="review-quote" label="Your Review" required>
+                      <Textarea
                         rows={4}
                         value={quote}
                         onChange={(e) => setQuote(e.target.value)}
                         placeholder="Tell us about your experience with JMC Solar..."
-                        className={`${INPUT_CLASS} resize-none`}
+                        className="resize-none"
                       />
-                    </div>
+                    </Field>
 
-                    {/* Submit button */}
-                    <button
-                      type="submit"
-                      disabled={submitting}
-                      className="w-full bg-navy-900 hover:bg-navy-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold px-6 py-3.5 rounded-xl text-sm transition-colors flex items-center justify-center gap-2"
-                    >
-                      {submitting ? (
-                        <>
-                          <Loader2 size={16} className="animate-spin" />
-                          Submitting...
-                        </>
-                      ) : (
-                        'Submit Review'
-                      )}
-                    </button>
+                    <Button type="submit" variant="secondary" fullWidth loading={submitting}>
+                      {submitting ? 'Submitting...' : 'Submit review'}
+                    </Button>
                   </form>
                 )}
               </div>

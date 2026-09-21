@@ -6,9 +6,10 @@ import type { DbBooking, DbBookingType } from '@/lib/firebase/types';
 import { formatCentavos } from '@/lib/bookings/pricing';
 import { RefundButton } from './RefundButton';
 import { BookingDrawer } from './BookingDrawer';
+import Badge from '@/components/ui/Badge';
 import {
-  STATUS_STYLES, BOOKING_TYPE_STYLES, BOOKING_TYPE_LABELS,
-  BOOKING_TYPE_ICONS, PAYMENT_STATUS_STYLES, PAYMENT_STATUS_LABELS,
+  STATUS_TONES, BOOKING_TYPE_TONES, BOOKING_TYPE_LABELS,
+  BOOKING_TYPE_ICONS, PAYMENT_STATUS_TONES, PAYMENT_STATUS_LABELS,
 } from './booking-meta';
 
 export function BookingsList({ bookings }: { bookings: DbBooking[] }) {
@@ -19,12 +20,12 @@ export function BookingsList({ bookings }: { bookings: DbBooking[] }) {
 
   if (bookings.length === 0) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center">
-        <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <Calendar size={24} className="text-slate-400" />
+      <div className="bg-white rounded-card border border-line shadow-soft p-12 text-center">
+        <div className="w-14 h-14 bg-slate-50 rounded-card flex items-center justify-center mx-auto mb-4">
+          <Calendar size={24} className="text-slate-500" aria-hidden />
         </div>
-        <p className="text-navy-900 font-semibold mb-1">No bookings yet</p>
-        <p className="text-slate-500 text-sm">Booking requests will appear here.</p>
+        <p className="text-fg font-semibold mb-1">No bookings yet</p>
+        <p className="text-fg-muted text-sm">Booking requests will appear here.</p>
       </div>
     );
   }
@@ -59,12 +60,12 @@ function BookingCard({ booking: b, onOpen }: { booking: DbBooking; onOpen: () =>
       return (
         <>
           {b.issue_category && (
-            <span className="flex items-center gap-1.5 text-sm text-slate-500">
+            <span className="flex items-center gap-1.5 text-sm text-fg-subtle">
               <Wrench size={12} className="shrink-0" />
               {b.issue_category}
             </span>
           )}
-          {b.system_size_kw && <span className="text-sm text-slate-500">{b.system_size_kw} kW</span>}
+          {b.system_size_kw && <span className="text-sm text-fg-subtle">{b.system_size_kw} kW</span>}
         </>
       );
     }
@@ -72,19 +73,19 @@ function BookingCard({ booking: b, onOpen }: { booking: DbBooking; onOpen: () =>
       return (
         <>
           {b.roof_type && (
-            <span className="flex items-center gap-1.5 text-sm text-slate-500">
+            <span className="flex items-center gap-1.5 text-sm text-fg-subtle">
               <MapPinned size={12} className="shrink-0" />
               {b.roof_type}
             </span>
           )}
-          {b.property_age_years && <span className="text-sm text-slate-500">{b.property_age_years}</span>}
+          {b.property_age_years && <span className="text-sm text-fg-subtle">{b.property_age_years}</span>}
         </>
       );
     }
     return (
       <>
         {b.service_type && (
-          <span className="flex items-center gap-1.5 text-sm text-slate-500">
+          <span className="flex items-center gap-1.5 text-sm text-fg-subtle">
             <Zap size={12} className="shrink-0" />
             {b.service_type}
           </span>
@@ -99,30 +100,30 @@ function BookingCard({ booking: b, onOpen }: { booking: DbBooking; onOpen: () =>
       tabIndex={0}
       onClick={onOpen}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); } }}
-      className="bg-white rounded-2xl border border-slate-100 p-5 hover:border-slate-200 hover:shadow-card transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-300"
+      className="bg-white rounded-card border border-line shadow-soft p-5 hover:border-slate-300 hover:shadow-card transition-[border-color,box-shadow] cursor-pointer"
     >
       <div className="flex flex-wrap items-start gap-4 justify-between">
         {/* Left: identity */}
         <div className="flex items-start gap-4 min-w-0">
-          <div className="w-10 h-10 bg-navy-50 rounded-xl flex items-center justify-center shrink-0">
-            <User size={16} className="text-navy-700" />
+          <div className="w-10 h-10 bg-navy-50 rounded-control flex items-center justify-center shrink-0">
+            <User size={16} className="text-navy-700" aria-hidden />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <p className="font-semibold text-navy-900">{b.name}</p>
-              <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full border ${BOOKING_TYPE_STYLES[bookingType]}`}>
+              <p className="font-semibold text-fg">{b.name}</p>
+              <Badge tone={BOOKING_TYPE_TONES[bookingType]}>
                 {BOOKING_TYPE_ICONS[bookingType]}
                 {BOOKING_TYPE_LABELS[bookingType]}
-              </span>
-              <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${STATUS_STYLES[b.status]}`}>
+              </Badge>
+              <Badge tone={STATUS_TONES[b.status]}>
                 {b.status.charAt(0).toUpperCase() + b.status.slice(1)}
-              </span>
+              </Badge>
               {b.payment_status && b.payment_status !== 'not_required' && (
-                <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full border ${PAYMENT_STATUS_STYLES[b.payment_status]}`}>
-                  <CreditCard size={10} />
+                <Badge tone={PAYMENT_STATUS_TONES[b.payment_status]}>
+                  <CreditCard size={10} aria-hidden />
                   {PAYMENT_STATUS_LABELS[b.payment_status]}
                   {b.payment_status === 'paid' && b.payment_amount != null ? ` · ${formatCentavos(b.payment_amount)}` : ''}
-                </span>
+                </Badge>
               )}
               {b.payment_reference && (
                 <a
@@ -131,34 +132,34 @@ function BookingCard({ booking: b, onOpen }: { booking: DbBooking; onOpen: () =>
                   rel="noopener noreferrer"
                   onClick={stop}
                   title="View payment in PayMongo dashboard"
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-slate-600 border border-slate-200 bg-white hover:bg-slate-50 px-2.5 py-0.5 rounded-full transition-colors"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-fg-muted border border-line bg-white hover:bg-slate-50 px-2.5 py-0.5 rounded-full transition-colors"
                 >
-                  <ExternalLink size={10} />
+                  <ExternalLink size={10} aria-hidden />
                   PayMongo
                 </a>
               )}
             </div>
             <div className="flex items-center gap-4 mt-1 flex-wrap">
-              <span className="flex items-center gap-1.5 text-sm text-slate-500">
-                <Phone size={12} className="shrink-0" />
+              <span className="flex items-center gap-1.5 text-sm text-fg-subtle">
+                <Phone size={12} className="shrink-0" aria-hidden />
                 {b.phone}
               </span>
               {secondaryInfo()}
-              <span className="text-sm text-slate-500">{b.city_name}</span>
+              <span className="text-sm text-fg-subtle">{b.city_name}</span>
             </div>
           </div>
         </div>
 
         {/* Right: schedule + meta */}
         <div className="text-right shrink-0">
-          <div className="flex items-center gap-1.5 text-navy-900 font-semibold text-sm justify-end mb-1">
-            <Calendar size={13} className="text-slate-400" />
+          <div className="flex items-center gap-1.5 text-fg font-semibold text-sm justify-end mb-1">
+            <Calendar size={13} className="text-slate-500" aria-hidden />
             {dateDisplay}
-            <Clock size={13} className="text-slate-400 ml-1" />
+            <Clock size={13} className="text-slate-500 ml-1" aria-hidden />
             {b.preferred_time}
           </div>
-          <p className="text-xs text-slate-400">Ref: {refNumber}</p>
-          <p className="text-xs text-slate-400">Submitted {createdDisplay}</p>
+          <p className="text-xs text-fg-subtle">Ref: {refNumber}</p>
+          <p className="text-xs text-fg-subtle">Submitted {createdDisplay}</p>
           {b.payment_status === 'paid' && b.payment_reference && b.payment_amount != null && (
             <div className="mt-2" onClick={stop}>
               <RefundButton bookingId={b.id} paymentAmount={b.payment_amount} />
@@ -168,8 +169,8 @@ function BookingCard({ booking: b, onOpen }: { booking: DbBooking; onOpen: () =>
       </div>
 
       {(b.notes || (bookingType === 'maintenance' && b.issue_description)) && (
-        <div className="mt-4 pt-4 border-t border-slate-100">
-          <p className="text-sm text-slate-500 italic line-clamp-2">
+        <div className="mt-4 pt-4 border-t border-line">
+          <p className="text-sm text-fg-subtle italic line-clamp-2">
             &ldquo;{bookingType === 'maintenance' ? b.issue_description : b.notes}&rdquo;
           </p>
         </div>

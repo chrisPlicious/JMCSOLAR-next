@@ -1,276 +1,240 @@
 ---
 name: JMC Solar PH
 description: "Future is Electric — solar installation services, Ormoc City, Leyte, Philippines"
+source-of-truth: "app/globals.css (tokens) + components/ui (primitives). This file is the prose. lib/design-guard.test.ts enforces it."
 colors:
-  navy-midnight: "#0a1428"
-  navy-deep: "#0f1f40"
-  navy-authority: "#162d5a"
-  navy-mid: "#1e3a6e"
-  navy-active: "#3b4f8a"
-  navy-tint: "#eef2ff"
-  solar-ignition: "#f59e0b"
-  solar-warm: "#fbbf24"
-  solar-glow: "#fcd34d"
-  solar-deep: "#d97706"
-  solar-burnt: "#b45309"
-  green-field: "#22c55e"
-  green-field-bg: "#dcfce7"
-  surface-white: "#ffffff"
-  surface-warm: "#fbf9f6"
-  ink-primary: "#0a1428"
-  ink-secondary: "#1e3a6e"
-  ink-muted: "#64748b"
+  navy-950: "#0a1428"   # ink, dark bands, footer
+  navy-900: "#0f1f40"   # dark cards, secondary button
+  navy-800: "#162d5a"
+  navy-700: "#1e3a6e"   # info text on navy-50
+  navy-600: "#2c4479"
+  navy-500: "#3b4f8a"   # focus ring on light surfaces, input focus
+  navy-400: "#6b80a6"
+  navy-300: "#97a8c4"
+  navy-200: "#c3cedf"
+  navy-100: "#e1e7f0"
+  navy-50: "#f1f4f9"    # the only tinted surface
+  solar-700: "#b45309"  # amber text on light surfaces
+  solar-600: "#d97706"
+  solar-500: "#f59e0b"  # CTA fill
+  solar-400: "#fbbf24"  # amber text on navy, focus ring on navy
+  solar-300: "#fcd34d"  # interactive hover border
+  solar-200: "#fde68a"
+  solar-100: "#fef3c7"
+  solar-50: "#fffbeb"
+  green-eco: "#22c55e"
+  green-eco-bg: "#dcfce7"
+  neutral: "slate (only)"
+roles:
+  fg: "navy-950 | white on dark"
+  fg-muted: "slate-600 | white/80 on dark"
+  fg-subtle: "slate-500 (white backgrounds only) | white/60 on dark"
+  line: "slate-200 | white/10 on dark"
+  solar-ink: "solar-700 | solar-400 on dark"
 typography:
-  display:
-    fontFamily: "Poppins, ui-sans-serif, sans-serif"
-    fontSize: "clamp(2.5rem, 5vw, 5rem)"
-    fontWeight: 900
-    lineHeight: 1.05
-    letterSpacing: "-0.02em"
-  headline:
-    fontFamily: "Poppins, ui-sans-serif, sans-serif"
-    fontSize: "clamp(1.5rem, 3vw, 2.5rem)"
-    fontWeight: 700
-    lineHeight: 1.15
-    letterSpacing: "-0.015em"
-  title:
-    fontFamily: "Plus Jakarta Sans, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "1.125rem"
-    fontWeight: 600
-    lineHeight: 1.4
-  body:
-    fontFamily: "Plus Jakarta Sans, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "1rem"
-    fontWeight: 400
-    lineHeight: 1.65
-  label:
-    fontFamily: "Montserrat, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "0.75rem"
-    fontWeight: 600
-    letterSpacing: "0.08em"
+  display: { font: Poppins, size: "clamp(2.25rem, 1.2rem + 4.4vw, 5rem)", weight: 900, leading: 1.02, tracking: "-0.025em", use: "home hero h1 only" }
+  h1:      { font: Poppins, size: "clamp(2rem, 1.5rem + 2.2vw, 3.75rem)", weight: 900, leading: 1.06, tracking: "-0.02em" }
+  h2:      { font: Poppins, size: "clamp(1.625rem, 1.3rem + 1.4vw, 2.75rem)", weight: 800, leading: 1.12, tracking: "-0.015em" }
+  h3:      { font: Poppins, size: "clamp(1.25rem, 1.1rem + 0.5vw, 1.5rem)", weight: 700, leading: 1.25, tracking: "-0.01em" }
+  title:   { font: Geist, size: "1.125rem", weight: 600, leading: 1.4 }
+  lead:    { font: Geist, size: "clamp(1.0625rem, 1rem + 0.3vw, 1.25rem)", weight: 400, leading: 1.6 }
+  body:    { font: Geist, size: "1rem", weight: 400, leading: 1.65 }
+  eyebrow: { font: Geist, size: "0.75rem", weight: 600, tracking: "0.08em", case: uppercase }
+  wordmark: { font: Montserrat, weights: [500, 800], use: "JMC SOLAR logotype only" }
 rounded:
-  none: "0px"
-  sm: "4px"
-  md: "8px"
-  lg: "12px"
-  xl: "16px"
-  full: "9999px"
+  control: "12px"   # inputs, chips, icon tiles, list rows
+  card: "20px"
+  panel: "28px"     # CTA band, large feature panels
+  full: "9999px"    # every button
+shadows:
+  soft: "0 1px 2px rgb(15 31 64 / .04), 0 2px 12px rgb(15 31 64 / .05)"
+  card: "0 4px 24px rgb(15 31 64 / .07)"
+  card-hover: "0 12px 40px rgb(15 31 64 / .12)"
+  elevated: "0 16px 48px rgb(15 31 64 / .12)"
+  glow-solar: "0 8px 28px rgb(245 158 11 / .28)"
 spacing:
-  xs: "4px"
-  sm: "8px"
-  md: "16px"
-  lg: "24px"
-  xl: "40px"
-  2xl: "64px"
-components:
-  button-primary:
-    backgroundColor: "{colors.solar-ignition}"
-    textColor: "{colors.navy-deep}"
-    rounded: "{rounded.full}"
-    padding: "12px 28px"
-  button-primary-hover:
-    backgroundColor: "{colors.solar-warm}"
-    textColor: "{colors.navy-deep}"
-  button-secondary:
-    backgroundColor: "{colors.navy-deep}"
-    textColor: "{colors.surface-white}"
-    rounded: "{rounded.full}"
-    padding: "12px 28px"
-  button-secondary-hover:
-    backgroundColor: "{colors.navy-authority}"
-    textColor: "{colors.surface-white}"
-  button-ghost:
-    backgroundColor: "transparent"
-    textColor: "{colors.navy-mid}"
-    rounded: "{rounded.full}"
-    padding: "12px 28px"
-  card-service:
-    backgroundColor: "{colors.surface-white}"
-    textColor: "{colors.ink-primary}"
-    rounded: "{rounded.none}"
-    padding: "24px 32px"
-  input-field:
-    backgroundColor: "{colors.surface-white}"
-    textColor: "{colors.ink-primary}"
-    rounded: "{rounded.md}"
-    padding: "12px 16px"
+  gutter: "16 / 24 / 32px (px-4 sm:px-6 lg:px-8)"
+  section: "64 / 80 / 96px (py-16 sm:py-20 lg:py-24)"
+  container: "wide 80rem · narrow 64rem · prose 48rem"
 ---
 
 # Design System: JMC Solar PH
 
 ## 1. Overview
 
-**Creative North Star: "The Sun Contractor"**
+**Creative North Star: "The Sun Contractor."** A licensed expert who works in the field, not a showroom. Deep navy is the structural bedrock: JMC has been at this long enough to know what it is doing. Solar amber is the activation signal. It fires only where there is a decision to make.
 
-A licensed expert who works in the field, not a showroom. The design system holds two registers in deliberate tension: the institutional weight of a proven trade business and the electric confidence of a brand pushing its region toward the energy transition. Deep navy provides structural bedrock — it communicates that JMC has been at this long enough to know what they're doing. Solar amber is the activation signal — it fires when there's a decision to make, a button to press, an appointment to book.
+This is a Filipino engineering firm at the frontier of the energy transition in the Visayas. It is not a wellness brand and not a SaaS startup. Every visual decision passes one test: would a licensed engineer from Ormoc City approve of it as a craft decision made with purpose?
 
-This is not a wellness brand. It is not a SaaS startup. It is a Filipino engineering firm operating at the frontier of energy transition in the Visayas. Every visual decision passes one test: would a licensed engineer from Ormoc City approve of this? Not as ornamentation — as a craft decision made with purpose. The brand is assertive about the work without being theatrical about itself.
+The site's job is to earn trust fast enough to get a booking.
 
-The site's job is to earn trust fast enough to get a booking. That means typography that reads with authority, color that signals expertise over hype, and components that feel tactile and confident — like tools, not toys.
+**How the system is enforced:**
+- `app/globals.css` holds every token.
+- `components/ui/` holds every primitive.
+- `lib/design-guard.test.ts` fails the test run when code bypasses them. It catches inline fonts, arbitrary sizes, radii and shadows, hex colours, purple, gray, amber, low-contrast text, and internal `<a href>`.
 
-**Key Characteristics:**
-- Navy midnight as brand bedrock; solar amber as ignition and action
-- Pill-shaped buttons with genuine tactile feedback (scale-down on press)
-- Poppins headlines at heavy weight with tight tracking — engineered, not decorative
-- Shadows are diffuse and navy-tinted; they describe depth, not drama
-- Backdrop-blur navbar that earns its effect through genuine layering
-- Booking flows feel inevitable: each step is visually clear, never cluttered
-- Framer Motion used for purposeful micro-interactions, not ambient choreography
+If you need something the system doesn't have, add a token or primitive. Don't write a one-off.
 
-## 2. Colors: The Authority + Ignition Palette
+## 2. Colour: authority + ignition
 
-A two-force palette: institutional navy authority anchors the system; solar amber ignites it at points of action and brand identity. Eco green appears sparingly as a status and environmental signal — never as the lead.
+- **Navy is the brand.** `navy-950` is the ink colour for headings and strong text on light surfaces, and the fill for dark bands and the footer. The light tints (`navy-50`…`400`) are derived from the navy hue itself. They replaced Tailwind indigo values that rendered lavender.
+- **Solar amber is action.**
+  - `solar-500` fills primary buttons and marks active states.
+  - Amber *text* is `solar-700` on light surfaces and `solar-400` on navy. `text-solar-ink` switches between them automatically.
+- **Green is status only.** `green-eco` and `green-eco-bg` are for success and "system active". Never structural.
+- **Slate is the only neutral.** `gray-*`, `zinc-*`, `neutral-*` and `amber-*` are not used. Neither are purple, violet or indigo.
 
-### Primary (Brand Identity — Navy)
+### Surfaces
 
-- **Navy Midnight** (`#0a1428`): The deepest structural color. Used for full-bleed section backgrounds, the booking split-layout left panel, and display text on light surfaces. This is the brand's visual weight.
-- **Navy Deep** (`#0f1f40`): Section backgrounds, secondary panel fills, button secondary background.
-- **Navy Authority** (`#162d5a`): Hover states for secondary buttons, border accents on dark surfaces.
-- **Navy Mid** (`#1e3a6e`): Muted text and icon tints on dark backgrounds; divider lines on light surfaces.
-- **Navy Active** (`#3b4f8a`): Interactive state for secondary elements, focus rings on dark contexts.
-- **Navy Tint** (`#eef2ff`): Hover backgrounds for nav links, chip backgrounds in light contexts.
+There are three surfaces, and only three:
 
-### Secondary (Action — Solar Amber)
+| Surface | Class | Use |
+|---|---|---|
+| White | `bg-white` | Default |
+| Tint | `bg-navy-50` | Alternating bands, product photo stages |
+| Dark | `surface-dark bg-navy-950` | Page heroes, CTA band, reviews, footer |
 
-- **Solar Ignition** (`#f59e0b`): The primary CTA color. All `default` and `primary` button backgrounds. Active nav state tint. The brand's forward-looking signal. Used for ≤15% of any given surface.
-- **Solar Warm** (`#fbbf24`): Button hover state for primary. Slightly lighter, maintains amber character.
-- **Solar Glow** (`#fcd34d`): Hover accents on interactive service cards; background of active tag chips.
-- **Solar Deep** (`#d97706`): Darker amber for body text that needs amber warmth without losing contrast.
-- **Solar Burnt** (`#b45309`): Dark amber text on amber backgrounds, or high-contrast amber details.
+Neighbouring sections alternate so each one reads as its own band. Never put two identical tones back to back. There is no cream, beige or "warm" surface.
 
-### Tertiary (Status — Eco Green)
+### Text roles (surface-aware)
 
-- **Field Green** (`#22c55e`): Status indicators for eco credentials, "active system" badges, success states. Never structural.
-- **Field Green Background** (`#dcfce7`): Background tint behind green badge text only.
+Use these instead of raw colours. `.surface-dark` redefines them, so one component works on both surfaces.
 
-### Neutral
+| Role | Light | Dark (`.surface-dark`) |
+|---|---|---|
+| `text-fg` | navy-950 | white |
+| `text-fg-muted` | slate-600 (7.5:1) | white/80 |
+| `text-fg-subtle` | slate-500 (4.76:1), **white backgrounds only** | white/60 |
+| `border-line` | slate-200 | white/10 |
+| `text-solar-ink` | solar-700 | solar-400 |
 
-- **Surface White** (`#ffffff`): Form backgrounds, card surfaces, the right-panel of split layouts.
-- **Surface Warm** (`#fbf9f6`): Body background. A barely-there warm off-white — not cream, not paper. Chroma is minimal; warmth comes from the amber accent system, not the background.
-- **Ink Primary** (`#0a1428`): All body text on light surfaces. Same value as Navy Midnight; text and background share the same root.
-- **Ink Secondary** (`#1e3a6e`): Supporting text, metadata, subdued labels on light surfaces.
-- **Ink Muted** (`#64748b`): Placeholder text, helper text, tertiary labels. Never body copy.
+- `slate-300` and `slate-400` are never used for text; they fail AA.
+- White on navy uses only /100, /80 and /60.
 
-### Named Rules
+### Named rules
 
-**The Ignition Rule.** Solar amber is used on ≤15% of any given screen. A CTA button, an active nav item, a hover border. Never as a background for full sections or as the dominant color in a layout block. Its rarity is the point — when amber fires, it means "act now."
+**The Ignition Rule.** Amber covers 15% or less of any screen: a primary button, an active state, a focus ring on navy. A two-tone "accent word" inside a heading is allowed only in the home hero h1 and in headings on a navy band. Amber-500 text on white fails contrast.
 
-**The Navy Bedrock Rule.** Navy is not a background color of last resort. It is the brand's primary expression. Use navy full-bleed sections with white type as a deliberate choice, not as decoration. If a section looks like it could be any color, choose navy or white — never the default tinted-neutral gray.
+**The Navy Bedrock Rule.** If a section could be any colour, choose white or navy, never a tinted grey.
 
 ## 3. Typography
 
-**Display Font:** Poppins (700–900 weight), with ui-sans-serif fallback
-**Body Font:** Plus Jakarta Sans (400–600 weight), with ui-sans-serif fallback
-**Label Font:** Montserrat (500–600 weight) — used for tags, form labels, nav logo
+| Role | Family | Weights | Class |
+|---|---|---|---|
+| Headings | Poppins | 700 / 800 / 900 | `font-display` (default on h1–h3) |
+| Body | Geist | 400–600 | `font-sans` (default) |
+| Wordmark | Montserrat | 500 / 800 | `font-wordmark`, only for the JMC SOLAR logotype |
 
-**Character:** Poppins at heavy weight reads like a contractor's stamped plan: assured, legible under any conditions, with a slight geometric stiffness that signals expertise without stuffiness. Plus Jakarta Sans opens it up for reading — it has enough humanist warmth for a local business without being informal. Together they say: "We know what we're doing and we'll take the time to explain it."
+Poppins at heavy weight reads like a contractor's stamped plan. Geist opens it up for reading.
 
-### Hierarchy
+### Scale
 
-- **Display** (900 weight, `clamp(2.5rem, 5vw, 5rem)`, line-height 1.05, letter-spacing -0.02em): Hero headlines, section-defining statements. Maximum 1 display element per page section. Text-wrap: balance.
-- **Headline** (700 weight, `clamp(1.5rem, 3vw, 2.5rem)`, line-height 1.15, letter-spacing -0.015em): Section headings, feature titles, booking step headings.
-- **Title** (600 weight, 1.125rem, line-height 1.4): Card headings, service names, form section labels.
-- **Body** (400 weight, 1rem, line-height 1.65): All prose. Maximum line length 65ch. Text-wrap: pretty on long passages.
-- **Label** (Montserrat, 600 weight, 0.75rem, letter-spacing 0.08em): Service tags, form labels, nav logo wordmark. Uppercase when used as a status chip; sentence case when inline.
+Every heading uses a token that bundles size, line-height, tracking and weight:
 
-### Named Rules
+| Token | Weight | Use |
+|---|---|---|
+| `text-display` | 900 | Home hero h1 only |
+| `text-h1` | 900 | One per page (PageHero does this) |
+| `text-h2` | 800 | Section headings (SectionHeader, CtaBand) |
+| `text-h3` | 700 | Card and feature titles |
+| `text-title` | 600, Geist | List-item and form-section titles |
+| `text-lead` | 400 | Intro paragraphs, max 60ch |
+| `text-base` / `text-sm` / `text-xs` | — | Body, secondary, captions |
 
-**The Poppins Weight Rule.** Display and headline headings use 700 or 900 weight only. 400 or 500 weight Poppins reads as unresolved — the font earns its keep when pushed. For body-weight display elements (subtitles, supporting taglines), switch to Plus Jakarta Sans rather than using Poppins at low weight.
+Weight steps down one level at a time (900, 800, 700), so each heading level differs in weight as well as size. Sizes are fluid with `clamp()`. The display size bottoms out at 36px so "Installation" fits a 375px screen.
 
-**The Tight Heading Floor.** Display letter-spacing floor is -0.02em. Headline floor is -0.015em. Never loosen tracking on heavy display type to "air it out" — that is the opposite of The Sun Contractor's register. Tight tracking is the precision signal.
+- Nothing is set below `text-xs` (12px).
+- There are no arbitrary `text-[Npx]` sizes.
+- Body copy is at most 65ch wide. Headings balance their line breaks (the h1–h3 base style), and paragraphs avoid orphans (`text-pretty`).
 
-## 4. Elevation
+### Eyebrows
 
-Shadows are diffuse, ambient, and navy-tinted. They describe depth — a lifted surface, a hovered card — without theatrics. The system is not flat; it uses shadow to confirm interaction and hierarchy. But shadows appear in response to state, not as decoration.
+The `eyebrow` utility (12px / 600 / uppercase / 0.08em / `solar-ink`) appears **at most once per page, and only when it carries information**: a service category, a city, a count. Decorative section kickers ("Who we are", "Trusted brands") are not used. Dense UI such as admin table headers uses the `caps` utility, which is the same shape in `fg-subtle`.
 
-### Shadow Vocabulary
+## 4. Shape and elevation
 
-- **Shadow Soft** (`0 2px 16px rgba(15, 31, 64, 0.06)`): Subtle resting state for cards that need slight lift from a white background. The navy tint (`#0f1f40`) in the rgba keeps the shadow from reading as generic gray.
-- **Shadow Card** (`0 4px 24px 0 rgb(0 0 0 / 0.06)`): Default elevated surface — service cards at rest, form containers.
-- **Shadow Card Hover** (`0 12px 40px 0 rgb(0 0 0 / 0.12)`): Elevated on hover interaction. Double the blur, double the opacity. Never animated suddenly — transitions at 300ms.
-- **Shadow Elevated** (`0 16px 48px rgba(15, 31, 64, 0.10)`): Navbar on scroll, dropdown menus, dialogs. Signals a surface that is definitively above the page.
-- **Shadow Glow Solar** (`0 8px 32px rgba(245, 158, 11, 0.18)`): Exclusive to solar-amber interactive elements. Primary buttons on hover, active CTAs. The amber glow reinforces the ignition signal without being theatrical.
+- **Radius:**
+  - `rounded-control` (12px): inputs, chips, icon tiles, list rows
+  - `rounded-card` (20px): cards
+  - `rounded-panel` (28px): the CTA band and large panels
+  - `rounded-full`: every button
+  - No other radii.
+- **Shadows** are navy-tinted and respond to state:
+  - `shadow-soft` for resting cards
+  - `shadow-card` for floating forms
+  - `shadow-card-hover` on hover
+  - `shadow-elevated` for navbar, menus and dialogs
+  - `shadow-glow-solar` for primary button hover
+  - Tailwind's `shadow-sm`…`2xl` are not used.
+- **Borders:** `border-line` for hairlines, and `solar-300` on interactive hover. `border-left`/`border-right` accent stripes are not used.
 
-### Named Rules
+## 5. Layout
 
-**The State-Triggered Shadow Rule.** Surfaces are flat or softly raised at rest. The heavier shadows (`card-hover`, `elevated`) exist only as state responses: hover, active, dialog-open. Never use `shadow-elevated` on a static, non-interactive element.
+- **`Container`:** `wide` (80rem), `narrow` (64rem) or `prose` (48rem), always with the site gutter (16 / 24 / 32px).
+- **`Section`:** `tone` of white, tint or dark; `spacing` of default (64 / 80 / 96px) or compact.
+- **Page top:** `PageHero` owns the space that clears the fixed navbar. Pages never add their own `pt-28`/`pt-32`.
 
-**The Navy Tint Rule.** Prefer navy-tinted shadow values over pure black. `rgba(15, 31, 64, ...)` instead of `rgba(0, 0, 0, ...)`. This keeps shadows reading as part of the same color system rather than floating, generic darkness.
+## 6. Components (`components/ui/`)
 
-## 5. Components
+| Component | Contract |
+|---|---|
+| `Button` | Variants: `primary` (solar fill, navy-950 text; never white text on amber), `secondary` (navy), `outline` (light surfaces), `outline-dark` (navy surfaces), `ghost`, `link`, `danger`. Sizes: `sm` / `md` / `lg` / `icon` / `inline`. Pill only. Press scales to 0.97. `href="/…"` renders `next/link`. `loading` shows a spinner and blocks interaction. Raw styled `<button>`s are not used. |
+| `Field`, `Input`, `Select`, `Textarea`, `Label`, `FieldError`, `FieldHint` | One boxed style everywhere: white fill, slate-300 border, 44px tall, 16px text, slate-500 placeholder, navy-500 border plus ring on focus. Errors show an icon and text. `Field` wires `id`, `aria-invalid` and `aria-describedby`. |
+| `Card` / `cardVariants` | Variants: `default`, `interactive` (lift, `card-hover` shadow, solar-300 border), `tint`, `dark`, `link-row`. |
+| `Badge` | Tones carry meaning: `neutral`, `solar`, `success`, `danger`, `info`, `dark`, `on-dark`. Category strings map to tones through `badgeToneFor`. |
+| `PageHero` | The one interior header. Navy band, a single h1, a lead, optional actions, optional photo `media` behind a navy scrim, and `size="compact"` for transactional pages. There's no visible breadcrumb trail by choice; breadcrumb JSON-LD for search engines stays in the pages. |
+| `SectionHeader` / `Eyebrow` | An h2 plus an optional lead. Left-aligned by default; centred only for short interstitials. |
+| `CtaBand` | The one closing CTA. Primary action "Get a quote" → `/booking`; secondary "Message us" → `/#contact`. |
+| `EmptyState` | States what is missing and what to do next. |
+| `StatusCard` | Confirmation and stub-checkout pages. Always inside the site Layout. |
+| `MotionProvider` + `lib/motion.ts` | `reducedMotion="user"`. Shared `fadeUp` / `stagger` / `revealOnScroll`. Ease-out only. |
 
-### Buttons
+### The signature: the module grid
 
-A pill system — all variants use `rounded-full`. The shape is consistent across the entire button vocabulary; the differentiation is in fill, border, and color. Buttons have active scale-down (`scale-[0.97]`) for tactile feedback.
+Page heroes and the CTA band carry one faint line texture (`texture-module`). It is drawn from real PV module geometry: 28px cells, 6 × 10 cells to a module, with a heavier module frame. It fades out toward the left-aligned copy. It is the system's only decorative element. Don't add dot grids, glow blobs or gradients beside it.
 
-- **Shape:** Pill (9999px / `rounded-full`). No exceptions within the Button component system.
-- **Primary (Solar):** Solar Ignition background (`#f59e0b`), Navy Deep text (`#0f1f40`), bold weight. Shadow-md at rest, shadow-glow-solar on hover. The brand's primary action signal.
-- **Secondary (Navy):** Navy Deep background (`#0f1f40`), white text, bold weight. Shadow-md at rest, shadow-elevated on hover. Used when the action is confirmatory rather than primary CTA.
-- **Outline:** Transparent background, `border-2 border-white/30`, white text. Used on dark (navy) backgrounds only — hero sections, split-layout left panels. Backdrop blur for glass effect.
-- **Ghost:** No background, no border. Navy Mid text (`#1e3a6e`), hover to solar-500. Tertiary actions, link-level interactions.
-- **Sizes:** sm (`px-5 py-2 text-sm`), default/md (`px-7 py-3 text-base`), lg (`px-8 py-4 text-base`). All share the same pill radius.
+### Home hero
 
-### Service Link Cards (Booking page)
+The full-bleed photo hero is the one page top that isn't a `PageHero`. It carries:
+- the `text-display` h1, with the rotating "Future is…" tagline as the page's single eyebrow
+- four stat cards in a staggered, floating arrangement on desktop (a 2 × 2 grid on mobile), made of the `frosted` sky-blue glass material
 
-A distinct pattern from the Button component — flat, sharp-cornered list items for selecting booking service types.
-
-- **Shape:** No border radius (`rounded-none`). Sharp corners communicate the seriousness of a service selection.
-- **Background:** White (`#ffffff`).
-- **Border:** `border border-slate-200` at rest; `border-solar-300` on hover.
-- **Hover:** `hover:-translate-y-1 hover:shadow-lg` — a subtle lift with the border color shift confirming interaction.
-- **Index Numbers:** Serif, font-light, 30px, slate-300 — a numbered marker that earns its place because the order actually matters (it IS a sequential list of services).
-
-### Cards / Containers
-
-- **Standard Card:** White bg, card shadow at rest, card-hover shadow on hover. Gently curved corners (`rounded-lg`, 12px).
-- **Split Layout:** Navy Midnight left column (30% wide, sticky), white/warm-surface right column. Poppins font-black title at 65px on left. The definitive layout for all booking flows.
-- **Dropdown Menu:** White/95 bg, `rounded-2xl` (16px), shadow-elevated, `border border-slate-100/80`, backdrop-blur. Animated with Framer Motion (opacity + scale + y, 0.18s, ease standard).
-
-### Inputs / Fields
-
-- **Style:** White background, 1px border (slate-200 at rest), rounded-md (8px). Internal padding 12px 16px.
-- **Focus:** Border shifts to navy-active (`#3b4f8a`); optional focus ring in navy tint. Never solar amber on focus — that's for action, not input state.
-- **Placeholder:** Ink Muted (`#64748b`) — this must meet 4.5:1 against the white background. Verify before shipping.
-- **Error:** Border red, helper text in red below the field. Never rely on color alone — include an error icon or label prefix.
-- **Labels:** Montserrat, 600 weight, 0.75rem, for form section labels. Plus Jakarta Sans, 500 weight, for inline field labels.
+`frosted` is kept deliberately from the original hero and is used nowhere else.
 
 ### Navigation
 
-- **Transparent mode** (homepage, not scrolled): Transparent background, white/90 link text, white/10 hover backgrounds. Pill-shaped nav links.
-- **Scrolled/Opaque mode:** `bg-white/80 backdrop-blur-xl`, navy-900 link text, navy-50 hover backgrounds, solar-500/10 active backgrounds with solar-500 text. Shadow: `0 1px 20px rgba(15, 31, 64, 0.08)`.
-- **Active link:** Solar Ignition text (`#f59e0b`), solar-500/10 background pill.
-- **Logo:** "JMC" in Montserrat font-black, 2xl, navy-900 (or white when transparent). "SOLAR" in Montserrat medium, 2xl, navy-500 (or white/70 when transparent). Weight contrast within one wordmark is intentional.
-- **Mobile:** Hamburger menu. Services expand to a sub-list inline. Booking CTA button preserved.
+- **Navbar:** transparent over the home hero, solid `bg-white` with `shadow-soft` everywhere else. Translucent white turns into a grey band over the navy page heroes and the booking panel. The active link is navy-950 text with a solar underline indicator (not amber text).
+- **CTA:** "Get a quote" is the same solar pill on desktop and mobile.
+- **Links:** all internal links use `next/link`.
 
-### Service Tags / Chips
+## 7. Motion and accessibility
 
-Small status chips used on booking cards and service listings.
+- **Contrast:** WCAG AA. 4.5:1 for text; 3:1 for large text and UI boundaries.
+- **Focus:** every interactive element shows the global `:focus-visible` ring. It is navy-500 on light surfaces and solar-400 inside `.surface-dark`. Never remove the outline without a replacement.
+- **Reduced motion:** `prefers-reduced-motion` is honoured globally. The CSS media block makes animations instant, and framer-motion drops transforms and keeps fades.
+- **Easing:** ease-out only, no bounce or elastic. Durations are 150 / 300 / 450ms. Reveals play once.
 
-- **Shape:** Rounded-full, small padding (4px 10px).
-- **Variants:** Solar (solar-600 text, solar-50 bg, solar-100 border), Blue (service type), Emerald (on-site/field). Each variant is intentionally distinct — these chips carry categorical meaning, not decoration.
+## 8. Do / Don't
 
-## 6. Do's and Don'ts
+**Do:**
+- Use the tokens and primitives.
+- Alternate section tones.
+- Put one h1 on each page.
+- Label only what carries information.
+- Use `tabular-nums` for prices, kW/kWh figures and stats.
 
-### Do:
-
-- **Do** use solar amber exclusively for CTAs, active states, and interactive signals. Its rarity earns its authority.
-- **Do** use Poppins at 700 or 900 weight for all headings. Light-weight Poppins is prohibited.
-- **Do** use navy-tinted shadow values (`rgba(15, 31, 64, ...)`) over generic black (`rgba(0,0,0,...)`).
-- **Do** keep body text at `#0a1428` (Navy Midnight) on light surfaces. Muted gray body text on near-white fails both contrast and brand register.
-- **Do** include `@media (prefers-reduced-motion: reduce)` on every animation — typically a crossfade or instant transition.
-- **Do** use the split-layout (navy left / content right) pattern for all booking flows. It is the brand's signature product pattern.
-- **Do** maintain 65ch max line length for all body copy.
-- **Do** use `text-wrap: balance` on display and headline headings. Overflow is a failure.
-- **Do** verify placeholder text contrast at 4.5:1 before shipping any form — shadcn defaults often fail this.
-
-### Don't:
-
-- **Don't** use generic green eco-brand aesthetics: leaf icons as primary decoration, soft sage as a dominant color, nonprofit warmth as the brand register. JMC is a trade business.
-- **Don't** use loud solar stock-photo visual language: neon yellow CTAs, clip-art solar panel imagery, discount-heavy typography, star/burst badge shapes.
-- **Don't** produce generic AI slop: eyebrow labels on every section, identical card grids with icon + heading + text repeated endlessly, gradient text (`background-clip: text`), hero-metric templates (big number + small label + gradient accent), numbered section markers (`01 / 02 / 03`) on non-sequential content.
-- **Don't** use western minimalism that reads as foreign to a Filipino local business: sterile all-white pages with zero warmth, personality-free typography, designs that could belong to any country.
-- **Don't** use `border-left` or `border-right` greater than 1px as a colored accent stripe on cards or callouts. Use background tints or full borders instead.
-- **Don't** use the warm-neutral band (`oklch(L 0.84–0.97, C < 0.06, hue 40–100)`) as a body background — cream, sand, paper, parchment reads as the saturated AI default of 2026. `#fbf9f6` is the approved barely-there warm surface; below that chroma level only.
-- **Don't** use bounce or elastic easing on any animation. Ease-out only (`ease-out-quart` or `cubic-bezier(0.4, 0, 0.2, 1)`).
-- **Don't** nest cards within cards. Booking service selection uses flat list items, not card-in-card grids.
-- **Don't** use purple, lavender, or blue-purple anywhere in the UI. The navy-to-indigo range is the navy brand's own hue space; purple drifts into SaaS territory.
+**Don't:**
+- Inline `fontFamily`.
+- Arbitrary `text-[…]`, `rounded-[…]` or `shadow-[…]` values.
+- Hex colours in components.
+- Purple.
+- Gray and slate mixed together.
+- Amber text on white.
+- `slate-400` body copy.
+- Numbered markers (01 / 02 / 03) on non-sequential content.
+- Gradient text.
+- Identical icon-card grids repeated endlessly.
+- Cream or beige backgrounds.
+- `border-left` accent stripes.
+- Nested cards.
+- Bounce easing.

@@ -3,6 +3,7 @@
 import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/Button';
 import { deleteService } from '../actions';
 
 export default function DeleteServiceButton({ id }: { id: string }) {
@@ -23,12 +24,8 @@ export default function DeleteServiceButton({ id }: { id: string }) {
   }
 
   return (
-    <button
-      onClick={handleDelete}
-      disabled={isPending}
-      className="text-red-400 hover:text-red-600 text-sm transition-colors disabled:opacity-40"
-    >
+    <Button variant="ghost" size="sm" onClick={handleDelete} loading={isPending} className="text-red-700 hover:bg-red-50">
       {isPending ? 'Deleting…' : 'Delete'}
-    </button>
+    </Button>
   );
 }

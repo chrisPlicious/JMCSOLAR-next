@@ -3,6 +3,8 @@
 import { useState, useTransition } from 'react';
 import { refundBookingAction } from '../actions';
 import { formatCentavos } from '@/lib/bookings/pricing';
+import { Button } from '@/components/ui/Button';
+import Badge from '@/components/ui/Badge';
 
 interface RefundButtonProps {
   bookingId: string;
@@ -25,22 +27,18 @@ export function RefundButton({ bookingId, paymentAmount }: RefundButtonProps) {
   }
 
   if (result?.success) {
-    return (
-      <span className="text-xs font-semibold text-purple-700 bg-purple-50 border border-purple-200 px-2.5 py-0.5 rounded-full">
-        Refunded
-      </span>
-    );
+    return <Badge tone="neutral">Refunded</Badge>;
   }
 
   return (
     <>
-      <button
-        type="button"
+      <Button
+        variant="outline"
+        size="sm"
         onClick={() => { setOpen(true); setResult(null); }}
-        className="text-xs font-semibold text-slate-600 border border-slate-200 bg-white hover:bg-slate-50 px-2.5 py-0.5 rounded-full transition-colors"
       >
         Refund
-      </button>
+      </Button>
 
       {open && (
         <div
@@ -50,48 +48,34 @@ export function RefundButton({ bookingId, paymentAmount }: RefundButtonProps) {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
           onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}
         >
-          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4">
-            <h2
-              id="refund-dialog-title"
-              className="text-base font-bold text-navy-900 mb-2"
-              style={{ fontFamily: 'Poppins, sans-serif' }}
-            >
+          <div className="bg-white rounded-card shadow-elevated p-6 w-full max-w-sm mx-4">
+            <h2 id="refund-dialog-title" className="font-display text-base font-bold text-fg mb-2">
               Confirm Refund
             </h2>
-            <p className="text-sm text-slate-600 mb-1">
+            <p className="text-sm text-fg-muted mb-1">
               Refund{' '}
-              <span className="font-semibold text-navy-900">
+              <span className="font-semibold text-fg">
                 {formatCentavos(paymentAmount)}
               </span>{' '}
               to the customer?
             </p>
-            <p className="text-xs text-slate-400 mb-5">
+            <p className="text-xs text-fg-subtle mb-5">
               This will call PayMongo and cannot be undone.
             </p>
 
             {result?.error && (
-              <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-4">
+              <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-control px-3 py-2 mb-4">
                 {result.error}
               </p>
             )}
 
             <div className="flex gap-2 justify-end">
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                disabled={isPending}
-                className="text-sm font-semibold text-slate-600 border border-slate-200 bg-white hover:bg-slate-50 px-4 py-2 rounded-xl transition-colors disabled:opacity-50"
-              >
+              <Button variant="outline" size="sm" onClick={() => setOpen(false)} disabled={isPending}>
                 Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirm}
-                disabled={isPending}
-                className="text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-xl transition-colors disabled:opacity-50"
-              >
+              </Button>
+              <Button variant="danger" size="sm" onClick={handleConfirm} loading={isPending}>
                 {isPending ? 'Processing…' : 'Confirm Refund'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

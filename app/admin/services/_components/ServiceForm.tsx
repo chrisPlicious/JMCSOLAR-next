@@ -3,12 +3,16 @@
 import { type ComponentType, type ReactNode, useActionState, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import Link from 'next/link';
 import * as Icons from 'lucide-react';
-import { ArrowRight, CheckCircle, ExternalLink, Upload, X } from 'lucide-react';
+import { CheckCircle, ChevronDown, ChevronRight, ExternalLink, Plus, Upload, X } from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
 import type { DbService, DbServiceDetail } from '@/lib/firebase/types';
 import type { ServiceFormState } from '../actions';
+import { Button } from '@/components/ui/Button';
+import { Field, Input, Label, Select, Textarea } from '@/components/ui/Field';
+import {
+  AdminFormCard, AdminFormHeader, FormErrorBanner, FormSection, StickySaveBar,
+} from '../../_components/AdminForm';
 
 type IconName = keyof typeof Icons;
 
@@ -17,19 +21,36 @@ function DynIcon({ name, ...props }: { name: string } & LucideProps) {
   return IC ? <IC {...props} /> : null;
 }
 
-function SectionLabel({ children, variant = 'solar' }: { children: ReactNode; variant?: 'solar' | 'slate' }) {
+/** Group header for a detail-page section: small label + the heading the public page will show. */
+function DetailSectionHeader({ label, children }: { label: string; children?: ReactNode }) {
   return (
-    <span className={`font-semibold text-sm uppercase tracking-widest mb-3 block ${variant === 'solar' ? 'text-solar-600' : 'text-slate-500'}`}>
-      {children}
-    </span>
+    <div className="mb-4">
+      <span className="caps block">{label}</span>
+      {children && <h2 className="text-h3 text-fg mt-1">{children}</h2>}
+    </div>
   );
 }
 
-function SectionHeading({ children }: { children: ReactNode }) {
+function AddRowButton({ onClick, children }: { onClick: () => void; children: ReactNode }) {
   return (
-    <h2 className="text-navy-900 font-black text-2xl leading-tight mt-2 mb-4">
+    <Button variant="outline" size="sm" onClick={onClick}>
+      <Plus size={14} aria-hidden />
       {children}
-    </h2>
+    </Button>
+  );
+}
+
+function RemoveRowButton({ onClick, label, className }: { onClick: () => void; label: string; className?: string }) {
+  return (
+    <Button
+      variant="ghost"
+      size="icon-sm"
+      onClick={onClick}
+      aria-label={label}
+      className={`shrink-0 text-red-700 hover:bg-red-50 ${className ?? ''}`}
+    >
+      <X size={16} aria-hidden />
+    </Button>
   );
 }
 
@@ -43,16 +64,6 @@ const ICON_OPTIONS = [
   'SlidersHorizontal',
   'Wrench',
 ] as const;
-
-const inputCls =
-  'w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-navy-950 outline-none focus:ring-2 focus:ring-solar-500/30 focus:border-solar-500 transition-colors';
-const inputClsHero =
-  'w-full bg-transparent border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/40 text-sm outline-none focus:ring-2 focus:ring-solar-500/30 transition-colors';
-const inputClsTransparent =
-  'w-full bg-transparent border-0 px-4 py-2.5 text-sm text-navy-950 outline-none focus:ring-2 focus:ring-solar-500/20 rounded-none transition-colors';
-const labelCls = 'block text-sm font-medium text-slate-700 mb-1.5';
-const addBtnCls = 'text-solar-600 border border-solar-300 hover:bg-solar-50 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors';
-const removeBtnCls = 'text-red-400 hover:text-red-600 transition-colors text-sm px-2';
 
 type ServiceFormProps = {
   action: (prevState: ServiceFormState, fd: FormData) => Promise<ServiceFormState>;
@@ -144,116 +155,52 @@ export default function ServiceForm({ action, service, detail }: ServiceFormProp
 
   return (
     <>
-      <div className="flex items-center gap-3 mb-6">
-        <Link
-          href="/admin/services"
-          className="text-slate-400 hover:text-slate-600 transition-colors"
-        >
-          <svg width="20" height="20" fill="none" viewBox="0 0 20 20">
-            <path
-              d="M12 15l-5-5 5-5"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </Link>
-        <h1 className="font-display font-black text-navy-950 text-2xl">
-          {isEdit ? 'Edit Service' : 'New Service'}
-        </h1>
-      </div>
+      <AdminFormHeader title={isEdit ? 'Edit Service' : 'New Service'} backHref="/admin/services" />
 
-      <div className={`bg-white rounded-2xl border border-slate-200 shadow-[0_4px_24px_0_rgb(0_0_0/0.06)] p-8 mb-24 transition-all duration-300 ${detailOpen ? 'max-w-5xl' : 'max-w-3xl'}`}>
-        {state && 'error' in state && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
-            {state.error}
-          </div>
-        )}
+      <AdminFormCard className={`mb-24 transition-[max-width] duration-300 ${detailOpen ? 'max-w-5xl' : 'max-w-3xl'}`}>
+        <FormErrorBanner>{state && 'error' in state ? state.error : null}</FormErrorBanner>
 
         <form id="main-form" action={dispatch} className="space-y-5">
-          {/* Section: Basic Info */}
-          <div className="flex items-center gap-3 my-6">
-            <span className="text-xs font-bold uppercase tracking-widest text-slate-400 whitespace-nowrap">
-              Basic Info
-            </span>
-            <hr className="flex-1 border-slate-100" />
-          </div>
+          <FormSection title="Basic Info" />
 
           {/* Icon */}
-          <div>
-            <label className={labelCls}>
-              Icon <span className="text-red-400">*</span>
-            </label>
-            <select
-              name="icon"
-              required
-              value={icon}
-              onChange={(e) => setIcon(e.target.value)}
-              className={inputCls}
-            >
+          <Field id="service-icon" label="Icon" required>
+            <Select name="icon" value={icon} onChange={(e) => setIcon(e.target.value)}>
               {ICON_OPTIONS.map((ic) => (
                 <option key={ic} value={ic}>
                   {ic}
                 </option>
               ))}
-            </select>
-          </div>
+            </Select>
+          </Field>
 
           {/* Title */}
-          <div>
-            <label className={labelCls}>
-              Title <span className="text-red-400">*</span>
-            </label>
-            <input
-              name="title"
-              required
-              value={title}
-              onChange={handleTitleChange}
-              className={inputCls}
-            />
-          </div>
+          <Field id="service-title" label="Title" required>
+            <Input name="title" value={title} onChange={handleTitleChange} />
+          </Field>
 
           {/* Slug */}
           <div>
-            <label className={labelCls}>
-              Slug <span className="text-red-400">*</span>
-            </label>
-            <input
-              name="slug_display"
-              required
-              value={slug}
-              onChange={handleSlugChange}
-              className={inputCls}
-              placeholder="auto-derived from title"
-            />
+            <Field id="service-slug" label="Slug" required>
+              <Input
+                name="slug_display"
+                value={slug}
+                onChange={handleSlugChange}
+                placeholder="auto-derived from title"
+              />
+            </Field>
             <input type="hidden" name="slug" value={slug} />
           </div>
 
           {/* Description */}
-          <div>
-            <label className={labelCls}>
-              Description <span className="text-red-400">*</span>
-            </label>
-            <textarea
-              name="description"
-              required
-              rows={4}
-              defaultValue={service?.description ?? ''}
-              className={inputCls}
-            />
-          </div>
+          <Field id="service-description" label="Description" required>
+            <Textarea name="description" rows={4} defaultValue={service?.description ?? ''} />
+          </Field>
 
           {/* Display Order */}
-          <div>
-            <label className={labelCls}>Display Order</label>
-            <input
-              name="display_order"
-              type="number"
-              defaultValue={service?.display_order ?? 0}
-              className={inputCls}
-            />
-          </div>
+          <Field id="service-display-order" label="Display Order">
+            <Input name="display_order" type="number" defaultValue={service?.display_order ?? 0} />
+          </Field>
 
           {/* Highlight */}
           <div className="flex items-center gap-3">
@@ -264,24 +211,25 @@ export default function ServiceForm({ action, service, detail }: ServiceFormProp
               defaultChecked={service?.highlight ?? false}
               className="w-4 h-4 accent-solar-500"
             />
-            <label htmlFor="highlight" className="text-sm font-medium text-slate-700">
+            <label htmlFor="highlight" className="text-sm font-medium text-fg">
               Highlight (featured service)
             </label>
           </div>
 
           {/* Accordion Photo */}
           <div>
-            <label className={labelCls}>Accordion Background Photo</label>
+            <Label>Accordion Background Photo</Label>
             <input type="hidden" name="photo_url" value={photoUrl} />
             {photoUrl ? (
-              <div className="relative w-full h-40 rounded-xl overflow-hidden border border-slate-200">
+              <div className="relative w-full aspect-[5/2] rounded-control overflow-hidden border border-line">
                 <img src={photoUrl} alt="Accordion preview" className="w-full h-full object-cover" loading="lazy" decoding="async" />
                 <button
                   type="button"
                   onClick={() => { setPhotoUrl(''); if (fileInputRef.current) fileInputRef.current.value = ''; }}
-                  className="absolute top-2 right-2 bg-white/90 hover:bg-white rounded-full p-1 shadow transition-colors"
+                  aria-label="Remove photo"
+                  className="absolute top-2 right-2 bg-white/90 hover:bg-white rounded-full p-1 shadow-soft transition-colors"
                 >
-                  <X size={14} className="text-slate-600" />
+                  <X size={14} className="text-slate-600" aria-hidden />
                 </button>
               </div>
             ) : (
@@ -289,9 +237,9 @@ export default function ServiceForm({ action, service, detail }: ServiceFormProp
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploadProgress !== null}
-                className="w-full h-32 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center gap-2 text-slate-400 hover:border-solar-400 hover:text-solar-500 transition-colors disabled:opacity-60"
+                className="w-full h-32 border-2 border-dashed border-slate-300 rounded-control flex flex-col items-center justify-center gap-2 text-fg-subtle hover:border-solar-400 hover:text-solar-ink transition-colors disabled:opacity-60"
               >
-                <Upload size={22} />
+                <Upload size={22} aria-hidden />
                 <span className="text-sm font-medium">
                   {uploadProgress !== null ? `Uploading… ${uploadProgress}%` : 'Click to upload photo'}
                 </span>
@@ -308,94 +256,83 @@ export default function ServiceForm({ action, service, detail }: ServiceFormProp
           </div>
 
           {/* ── Detail Page Section ── */}
-          <hr className="border-slate-100 my-6" />
+          <hr className="border-line my-6" />
 
           <button
             type="button"
             onClick={() => setDetailOpen((o) => !o)}
-            className="flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-slate-900 transition-colors"
+            aria-expanded={detailOpen}
+            className="flex items-center gap-2 rounded-control text-sm font-semibold text-fg hover:text-navy-700 transition-colors"
           >
-            <span>{detailOpen ? '▼' : '▶'}</span>
+            {detailOpen ? <ChevronDown size={16} aria-hidden /> : <ChevronRight size={16} aria-hidden />}
             <span>Detail Page</span>
           </button>
 
           {detailOpen && (
             <div className="space-y-12 pt-4">
 
-              {/* ── Hero Preview ── */}
-              <div className="bg-navy-900 rounded-2xl p-8 space-y-5">
-                <div className="flex items-center gap-2 text-white/40 text-xs mb-2">
+              {/* ── Hero ── */}
+              <section className="bg-navy-50 rounded-card p-6 space-y-5">
+                <div className="flex items-center gap-2 text-fg-muted text-xs">
                   <span>Home</span>
                   <span>/</span>
                   <span>Services</span>
                   <span>/</span>
-                  <span className="text-white/70">{title || 'Service Title'}</span>
+                  <span className="text-fg">{title || 'Service Title'}</span>
                 </div>
 
-                <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                  <DynIcon name={icon} size={28} className="text-white" />
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 bg-white rounded-control border border-line flex items-center justify-center">
+                    <DynIcon name={icon} size={28} className="text-navy-700" aria-hidden />
+                  </div>
+                  <h2 className="text-h3 text-fg">{title || 'Service Title'}</h2>
                 </div>
 
-                <h2 className="text-white font-black text-3xl leading-tight">
-                  {title || 'Service Title'}
-                </h2>
-
-                <div>
-                  <label className="block text-white/40 text-xs mb-1.5">Tagline</label>
-                  <input
+                <Field id="service-tagline" label="Tagline">
+                  <Input
                     name="tagline"
                     defaultValue={detail?.tagline ?? ''}
                     placeholder="Short tagline shown below the title..."
-                    className={inputClsHero}
                   />
-                </div>
+                </Field>
 
-                <span className="inline-flex items-center gap-2 bg-solar-500 text-white font-bold px-5 py-2.5 rounded-xl text-sm opacity-60 cursor-default">
-                  Get a Free Quote <ArrowRight size={16} />
-                </span>
-                <p className="text-white/30 text-xs italic">(auto-generated CTA button)</p>
-              </div>
+                <p className="text-fg-muted text-xs italic">The quote button in the hero is auto-generated.</p>
+              </section>
 
               {/* ── Overview Section ── */}
               <section className="space-y-4">
-                <SectionLabel>Overview</SectionLabel>
-                <SectionHeading>What Is {title || '...'}?</SectionHeading>
+                <DetailSectionHeader label="Overview">What Is {title || '...'}?</DetailSectionHeader>
 
-                <div>
-                  <label className="block text-xs text-slate-400 mb-1.5">Overview paragraph</label>
-                  <textarea
+                <Field id="service-overview" label="Overview paragraph">
+                  <Textarea
                     name="overview"
                     rows={5}
                     defaultValue={detail?.overview ?? ''}
                     placeholder="General overview of the service..."
-                    className={inputCls}
                   />
-                </div>
-                <div>
-                  <label className="block text-xs text-slate-400 mb-1.5">Detailed explanation</label>
-                  <textarea
+                </Field>
+                <Field id="service-what-is-it" label="Detailed explanation">
+                  <Textarea
                     name="what_is_it"
                     rows={6}
                     defaultValue={detail?.what_is_it ?? ''}
                     placeholder="More detailed description of what this service is..."
-                    className={inputCls}
                   />
-                </div>
+                </Field>
               </section>
 
               {/* ── How It Works ── */}
               <section className="space-y-4">
-                <SectionLabel>Process</SectionLabel>
-                <SectionHeading>How It Works</SectionHeading>
+                <DetailSectionHeader label="Process">How It Works</DetailSectionHeader>
 
                 <div className="space-y-4 mt-4">
                   {howItWorks.map((row, i) => (
                     <div key={i} className="flex gap-5 items-start">
-                      <div className="shrink-0 w-10 h-10 bg-solar-500 rounded-full flex items-center justify-center text-white font-bold text-sm mt-1">
+                      <div className="shrink-0 w-10 h-10 bg-solar-500 rounded-full flex items-center justify-center text-navy-950 font-bold text-sm mt-1">
                         {i + 1}
                       </div>
                       <div className="flex-1 space-y-2">
-                        <input
+                        <Input
                           name={`hw_step_${i}`}
                           value={row.step}
                           onChange={(e) => {
@@ -404,9 +341,10 @@ export default function ServiceForm({ action, service, detail }: ServiceFormProp
                             setHowItWorks(next);
                           }}
                           placeholder="Step title"
-                          className={`${inputCls} font-bold`}
+                          aria-label={`Step ${i + 1} title`}
+                          className="font-bold"
                         />
-                        <input
+                        <Input
                           name={`hw_desc_${i}`}
                           value={row.description}
                           onChange={(e) => {
@@ -415,49 +353,40 @@ export default function ServiceForm({ action, service, detail }: ServiceFormProp
                             setHowItWorks(next);
                           }}
                           placeholder="Step description"
-                          className={inputCls}
+                          aria-label={`Step ${i + 1} description`}
                         />
                       </div>
-                      <button
-                        type="button"
+                      <RemoveRowButton
+                        label={`Remove step ${i + 1}`}
                         onClick={() => setHowItWorks(howItWorks.filter((_, j) => j !== i))}
-                        className={`${removeBtnCls} mt-3`}
-                      >
-                        ✕
-                      </button>
+                        className="mt-1.5"
+                      />
                     </div>
                   ))}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setHowItWorks([...howItWorks, { step: '', description: '' }])}
-                  className={addBtnCls}
-                >
-                  + Add Step
-                </button>
+                <AddRowButton onClick={() => setHowItWorks([...howItWorks, { step: '', description: '' }])}>
+                  Add Step
+                </AddRowButton>
               </section>
 
               {/* ── Benefits ── */}
               <section className="space-y-4">
-                <SectionLabel>Why It Matters</SectionLabel>
-                <SectionHeading>Key Benefits</SectionHeading>
+                <DetailSectionHeader label="Why It Matters">Key Benefits</DetailSectionHeader>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
                   {benefits.map((row, i) => (
-                    <div key={i} className="relative bg-slate-50 rounded-2xl p-5 border border-slate-100">
-                      <button
-                        type="button"
-                        onClick={() => setBenefits(benefits.filter((_, j) => j !== i))}
-                        className={`${removeBtnCls} absolute top-3 right-3`}
-                      >
-                        ✕
-                      </button>
-
-                      <div className="w-11 h-11 bg-solar-500/10 rounded-xl flex items-center justify-center mb-3">
-                        <DynIcon name={row.iconName || 'Star'} size={22} className="text-solar-600" />
+                    <div key={i} className="relative bg-slate-50 rounded-card p-5 border border-line space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="w-11 h-11 bg-solar-100 rounded-control flex items-center justify-center">
+                          <DynIcon name={row.iconName || 'Star'} size={22} className="text-solar-700" aria-hidden />
+                        </div>
+                        <RemoveRowButton
+                          label={`Remove benefit ${i + 1}`}
+                          onClick={() => setBenefits(benefits.filter((_, j) => j !== i))}
+                        />
                       </div>
 
-                      <input
+                      <Input
                         name={`ben_icon_${i}`}
                         value={row.iconName}
                         onChange={(e) => {
@@ -466,9 +395,9 @@ export default function ServiceForm({ action, service, detail }: ServiceFormProp
                           setBenefits(next);
                         }}
                         placeholder="Icon name (e.g. Zap)"
-                        className="w-full text-xs text-slate-400 bg-transparent border-0 outline-none px-0 py-1 focus:text-slate-600 transition-colors"
+                        aria-label={`Benefit ${i + 1} icon name`}
                       />
-                      <input
+                      <Input
                         name={`ben_title_${i}`}
                         value={row.title}
                         onChange={(e) => {
@@ -477,9 +406,10 @@ export default function ServiceForm({ action, service, detail }: ServiceFormProp
                           setBenefits(next);
                         }}
                         placeholder="Benefit title"
-                        className="w-full font-bold text-navy-900 text-base bg-transparent border-0 outline-none px-0 py-1 focus:ring-0 placeholder-slate-300"
+                        aria-label={`Benefit ${i + 1} title`}
+                        className="font-bold"
                       />
-                      <input
+                      <Input
                         name={`ben_desc_${i}`}
                         value={row.description}
                         onChange={(e) => {
@@ -488,30 +418,25 @@ export default function ServiceForm({ action, service, detail }: ServiceFormProp
                           setBenefits(next);
                         }}
                         placeholder="Short description"
-                        className="w-full text-sm text-slate-600 bg-transparent border-0 outline-none px-0 py-1 focus:ring-0 placeholder-slate-300"
+                        aria-label={`Benefit ${i + 1} description`}
                       />
                     </div>
                   ))}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setBenefits([...benefits, { iconName: '', title: '', description: '' }])}
-                  className={addBtnCls}
-                >
-                  + Add Benefit
-                </button>
+                <AddRowButton onClick={() => setBenefits([...benefits, { iconName: '', title: '', description: '' }])}>
+                  Add Benefit
+                </AddRowButton>
               </section>
 
               {/* ── Use Cases ── */}
               <section className="space-y-4">
-                <SectionLabel>Applications</SectionLabel>
-                <SectionHeading>Common Use Cases</SectionHeading>
+                <DetailSectionHeader label="Applications">Common Use Cases</DetailSectionHeader>
 
                 <div className="space-y-3 mt-4">
                   {useCases.map((row, i) => (
                     <div key={i} className="flex items-center gap-3">
-                      <CheckCircle size={18} className="text-green-eco shrink-0" />
-                      <input
+                      <CheckCircle size={18} className="text-green-eco shrink-0" aria-hidden />
+                      <Input
                         name={`uc_item_${i}`}
                         value={row.item}
                         onChange={(e) => {
@@ -520,36 +445,29 @@ export default function ServiceForm({ action, service, detail }: ServiceFormProp
                           setUseCases(next);
                         }}
                         placeholder="Use case description"
-                        className={`${inputCls} flex-1`}
+                        aria-label={`Use case ${i + 1}`}
+                        className="flex-1"
                       />
-                      <button
-                        type="button"
+                      <RemoveRowButton
+                        label={`Remove use case ${i + 1}`}
                         onClick={() => setUseCases(useCases.filter((_, j) => j !== i))}
-                        className={removeBtnCls}
-                      >
-                        ✕
-                      </button>
+                      />
                     </div>
                   ))}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setUseCases([...useCases, { item: '' }])}
-                  className={addBtnCls}
-                >
-                  + Add Use Case
-                </button>
+                <AddRowButton onClick={() => setUseCases([...useCases, { item: '' }])}>
+                  Add Use Case
+                </AddRowButton>
               </section>
 
               {/* ── Specs ── */}
               <section className="space-y-4">
-                <SectionLabel>Technical Details</SectionLabel>
-                <SectionHeading>Typical Specifications</SectionHeading>
+                <DetailSectionHeader label="Technical Details">Typical Specifications</DetailSectionHeader>
 
-                <div className="rounded-2xl border border-slate-200 mt-4">
+                <div className="space-y-2 mt-4">
                   {specs.map((row, i) => (
-                    <div key={i} className={`grid grid-cols-[1fr_2fr_auto] items-center ${i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}`}>
-                      <input
+                    <div key={i} className="grid grid-cols-[1fr_2fr_auto] items-center gap-2">
+                      <Input
                         name={`spec_label_${i}`}
                         value={row.label}
                         onChange={(e) => {
@@ -558,9 +476,10 @@ export default function ServiceForm({ action, service, detail }: ServiceFormProp
                           setSpecs(next);
                         }}
                         placeholder="Label"
-                        className={`${inputClsTransparent} border-r border-slate-100 font-semibold text-navy-900`}
+                        aria-label={`Spec ${i + 1} label`}
+                        className="font-semibold"
                       />
-                      <input
+                      <Input
                         name={`spec_value_${i}`}
                         value={row.value}
                         onChange={(e) => {
@@ -569,48 +488,41 @@ export default function ServiceForm({ action, service, detail }: ServiceFormProp
                           setSpecs(next);
                         }}
                         placeholder="Value"
-                        className={`${inputClsTransparent} text-slate-600`}
+                        aria-label={`Spec ${i + 1} value`}
                       />
-                      <button
-                        type="button"
+                      <RemoveRowButton
+                        label={`Remove spec ${i + 1}`}
                         onClick={() => setSpecs(specs.filter((_, j) => j !== i))}
-                        className={`${removeBtnCls} pr-3`}
-                      >
-                        ✕
-                      </button>
+                      />
                     </div>
                   ))}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setSpecs([...specs, { label: '', value: '' }])}
-                  className={addBtnCls}
-                >
-                  + Add Spec
-                </button>
+                <AddRowButton onClick={() => setSpecs([...specs, { label: '', value: '' }])}>
+                  Add Spec
+                </AddRowButton>
               </section>
 
               {/* ── CTA Preview (non-editable) ── */}
-              <div className="bg-navy-900 rounded-3xl px-5 py-8 text-center">
-                <h2 className="text-white font-black text-2xl mb-2">
+              <div className="bg-navy-50 rounded-card px-5 py-8 text-center">
+                <h2 className="text-h3 text-fg mb-2">
                   Ready to install {title || '...'}?
                 </h2>
-                <p className="text-white/50 text-sm">
+                <p className="text-fg-muted text-sm">
                   JMC Solar PH serves Ormoc City and all of Eastern Visayas. Get a free site assessment and quote.
                 </p>
-                <p className="text-white/30 text-xs mt-3 italic">(This section is auto-generated on the public page)</p>
+                <p className="text-fg-muted text-xs mt-3 italic">(This section is auto-generated on the public page)</p>
               </div>
 
               {/* ── Sources ── */}
-              <section className="border-t border-slate-100 pt-8 space-y-4">
-                <SectionLabel variant="slate">References &amp; Sources</SectionLabel>
+              <section className="border-t border-line pt-8 space-y-4">
+                <DetailSectionHeader label="References & Sources" />
 
                 <div className="space-y-4">
                   {sources.map((row, i) => (
                     <div key={i} className="flex items-start gap-3">
-                      <ExternalLink size={14} className="mt-3 shrink-0 text-slate-400" />
+                      <ExternalLink size={14} className="mt-4 shrink-0 text-slate-500" aria-hidden />
                       <div className="flex-1 space-y-2">
-                        <input
+                        <Input
                           name={`src_pub_${i}`}
                           value={row.publisher}
                           onChange={(e) => {
@@ -619,9 +531,9 @@ export default function ServiceForm({ action, service, detail }: ServiceFormProp
                             setSources(next);
                           }}
                           placeholder="Publisher (e.g. DOE Philippines)"
-                          className={`${inputCls} text-sm`}
+                          aria-label={`Source ${i + 1} publisher`}
                         />
-                        <input
+                        <Input
                           name={`src_title_${i}`}
                           value={row.title}
                           onChange={(e) => {
@@ -630,9 +542,9 @@ export default function ServiceForm({ action, service, detail }: ServiceFormProp
                             setSources(next);
                           }}
                           placeholder="Source title"
-                          className={`${inputCls} text-sm`}
+                          aria-label={`Source ${i + 1} title`}
                         />
-                        <input
+                        <Input
                           name={`src_url_${i}`}
                           value={row.url}
                           onChange={(e) => {
@@ -641,54 +553,32 @@ export default function ServiceForm({ action, service, detail }: ServiceFormProp
                             setSources(next);
                           }}
                           placeholder="https://..."
-                          className={`${inputCls} text-sm`}
+                          aria-label={`Source ${i + 1} URL`}
                         />
                       </div>
-                      <button
-                        type="button"
+                      <RemoveRowButton
+                        label={`Remove source ${i + 1}`}
                         onClick={() => setSources(sources.filter((_, j) => j !== i))}
-                        className={`${removeBtnCls} mt-3`}
-                      >
-                        ✕
-                      </button>
+                        className="mt-1.5"
+                      />
                     </div>
                   ))}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setSources([...sources, { title: '', url: '', publisher: '' }])}
-                  className={addBtnCls}
-                >
-                  + Add Source
-                </button>
+                <AddRowButton onClick={() => setSources([...sources, { title: '', url: '', publisher: '' }])}>
+                  Add Source
+                </AddRowButton>
               </section>
 
             </div>
           )}
         </form>
-      </div>
+      </AdminFormCard>
 
-      {/* Sticky save bar */}
-      <div className="fixed bottom-0 left-64 right-0 bg-white border-t border-slate-200 shadow-[0_-4px_16px_0_rgb(0_0_0/0.06)] px-8 py-4 flex items-center justify-end gap-3 z-30">
-        <Link
-          href="/admin/services"
-          className="text-slate-500 hover:text-slate-700 text-sm transition-colors"
-        >
-          Cancel
-        </Link>
-        <button
-          type="submit"
-          form="main-form"
-          disabled={isPending}
-          className="bg-solar-500 hover:bg-solar-400 disabled:opacity-60 text-navy-950 font-bold px-6 py-2.5 rounded-xl text-sm transition-colors"
-        >
-          {isPending
-            ? 'Saving…'
-            : isEdit
-              ? 'Update Service'
-              : 'Create Service'}
-        </button>
-      </div>
+      <StickySaveBar
+        cancelHref="/admin/services"
+        pending={isPending}
+        label={isEdit ? 'Update Service' : 'Create Service'}
+      />
     </>
   );
 }

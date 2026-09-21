@@ -1,18 +1,7 @@
+import { Sun } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+import { Field, Input } from '@/components/ui/Field';
 import { loginAction } from './actions';
-
-const SunIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="11" cy="11" r="4" fill="currentColor" />
-    <line x1="11" y1="1" x2="11" y2="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    <line x1="11" y1="18" x2="11" y2="21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    <line x1="1" y1="11" x2="4" y2="11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    <line x1="18" y1="11" x2="21" y2="11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    <line x1="3.929" y1="3.929" x2="6.05" y2="6.05" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    <line x1="15.95" y1="15.95" x2="18.071" y2="18.071" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    <line x1="18.071" y1="3.929" x2="15.95" y2="6.05" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    <line x1="6.05" y1="15.95" x2="3.929" y2="18.071" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-  </svg>
-);
 
 export default async function LoginPage({
   searchParams,
@@ -30,28 +19,28 @@ export default async function LoginPage({
     <div
       className="min-h-screen flex items-center justify-center p-4"
     >
-      <div className="bg-white rounded-2xl p-10 w-full max-w-sm shadow-2xl">
+      <div className="bg-white rounded-card border border-line p-10 w-full max-w-sm shadow-elevated">
         {/* Icon badge */}
-        <div className="bg-solar-500 w-10 h-10 rounded-xl flex items-center justify-center text-navy-950 mb-6">
-          <SunIcon />
+        <div className="bg-solar-500 w-10 h-10 rounded-control flex items-center justify-center text-navy-950 mb-6">
+          <Sun size={22} aria-hidden />
         </div>
 
         {/* Heading */}
-        <h1 className="font-display font-black text-navy-950 text-2xl mb-1">
+        <h1 className="font-display text-2xl font-black text-fg mb-1">
           JMC Solar Admin
         </h1>
-        <p className="text-slate-400 text-sm mb-8">
+        <p className="text-fg-muted text-sm mb-8">
           Enter password to access the control panel
         </p>
 
         {/* Error */}
         {params.error === '1' && (
-          <div className="mb-6 px-4 py-2.5 bg-red-50 text-red-600 text-sm rounded-full text-center font-medium">
+          <div role="alert" className="mb-6 px-4 py-2.5 bg-red-50 border border-red-200 text-red-700 text-sm rounded-control text-center font-medium">
             Incorrect password. Please try again.
           </div>
         )}
         {params.error === '2' && (
-          <div className="mb-6 px-4 py-2.5 bg-red-50 text-red-600 text-sm rounded-full text-center font-medium">
+          <div role="alert" className="mb-6 px-4 py-2.5 bg-red-50 border border-red-200 text-red-700 text-sm rounded-control text-center font-medium">
             Too many attempts. Please wait 15 minutes before trying again.
           </div>
         )}
@@ -60,27 +49,20 @@ export default async function LoginPage({
         <form action={loginAction} className="space-y-4">
           {/* H4: forward intended path so action can redirect back after auth */}
           {nextPath && <input type="hidden" name="next" value={nextPath} />}
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            required
-            className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-solar-500 focus:border-transparent transition-shadow"
-          />
-          <label className="flex items-center gap-2 text-sm text-slate-500 select-none cursor-pointer">
+          <Field id="admin-password" label="Password" required>
+            <Input type="password" name="password" placeholder="Password" autoComplete="current-password" />
+          </Field>
+          <label className="flex items-center gap-2 text-sm text-fg-muted select-none cursor-pointer">
             <input
               type="checkbox"
               name="remember"
-              className="h-4 w-4 rounded border-slate-300 text-solar-500 focus:ring-solar-500"
+              className="h-4 w-4 rounded border-slate-300 accent-solar-500"
             />
             Remember me for 30 days
           </label>
-          <button
-            type="submit"
-            className="w-full bg-solar-500 hover:bg-solar-600 text-navy-950 font-bold py-3 rounded-xl transition-colors duration-200 text-sm"
-          >
+          <Button type="submit" fullWidth>
             Sign in
-          </button>
+          </Button>
         </form>
       </div>
     </div>

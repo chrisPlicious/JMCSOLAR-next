@@ -13,7 +13,13 @@ import { products } from "@/data/products";
 import Link from "next/link";
 import { Phone, Mail, MapPin, Facebook, Send, Clock, CreditCard } from "lucide-react";
 import Button from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Field, Input, Select, Textarea } from "@/components/ui/Field";
+import { Section } from "@/components/ui/Section";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 import { getMunicipalityLocations } from "@/data/locations";
+import { FACEBOOK_URL } from "@/lib/seo/site";
+import { DURATION, EASE_OUT, fadeUp, revealOnScroll, stagger } from "@/lib/motion";
 
 const systemTypes = [
   "Hybrid Solar System",
@@ -183,127 +189,78 @@ export default function Contact() {
   };
 
   return (
-    <section id="contact" className="relative py-16 sm:py-20 lg:py-24 bg-warm overflow-hidden scroll-mt-20">
+    <Section id="contact" tone="tint" className="scroll-mt-20 overflow-hidden">
+      <motion.div variants={fadeUp} {...revealOnScroll}>
+        <SectionHeader
+          title="Ready to Go Solar?"
+          lead="Send us a message and our team will get back to you with a free consultation and system recommendation tailored to your needs."
+        />
+      </motion.div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <motion.div
-          className="text-center max-w-2xl mx-auto mb-10 lg:mb-16"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.5 }}
-        >
-          <span className="inline-flex items-center gap-2 text-solar-600 font-semibold text-sm uppercase tracking-widest mb-5">
-            <span className="w-8 h-px bg-solar-500" />
-            Get Started
-            <span className="w-8 h-px bg-solar-500" />
-          </span>
-          <h2
-            className="text-navy-900 font-black text-3xl sm:text-4xl lg:text-5xl leading-tight mb-5"
-            style={{ fontFamily: "Poppins, sans-serif" }}
-          >
-            Ready to <span className="text-solar-500">Go Solar?</span>
-          </h2>
-          <p className="text-slate-500 text-lg leading-relaxed">
-            Send us a message and our team will get back to you with a free
-            consultation and system recommendation tailored to your needs.
-          </p>
-        </motion.div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12">
-          {/* Contact Info (left) */}
-          <div className="lg:col-span-2 flex flex-col gap-8">
-            <div>
-              <h3
-                className="text-navy-900 font-bold text-xl mb-6"
-                style={{ fontFamily: "Poppins, sans-serif" }}
-              >
-                Contact Information
-              </h3>
-              <ul className="space-y-5">
-                <ContactItem icon={<Phone size={18} />} href="tel:+639175088220" delay={0}>
-                  0917 508 8220
-                </ContactItem>
-                <ContactItem
-                  icon={<Mail size={18} />}
-                  href="mailto:jmcsolarph@gmail.com"
-                  delay={0.07}
-                >
-                  jmcsolarph@gmail.com
-                </ContactItem>
-                <ContactItem icon={<MapPin size={18} />} delay={0.14}>
-                  Lilia Avenue, Cogon,
-                  <br />
-                  Ormoc City, Leyte 6541
-                  <br />
-                  Philippines
-                </ContactItem>
-                <ContactItem
-                  icon={<Facebook size={18} />}
-                  href="https://www.facebook.com/JMCSolarPH"
-                  external
-                  delay={0.21}
-                >
-                  JMC Solar PH on Facebook
-                </ContactItem>
-                <ContactItem icon={<Clock size={18} />} delay={0.28}>
-                  Monday - Friday: 8:00 AM - 5:00 PM
-                </ContactItem>
-                <ContactItem icon={<CreditCard size={18} />} delay={0.35}>
-                  We accept credit card payments and installment options
-                </ContactItem>
-              </ul>
-            </div>
-
-            {/* Service Areas Box */}
-            <motion.div
-              className="bg-linear-to-br from-navy-900 to-navy-800 rounded-3xl p-6 text-white shadow-elevated"
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-40px' }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-            >
-              <h4
-                className="font-semibold mb-4"
-                style={{ fontFamily: "Poppins, sans-serif" }}
-              >
-                We Serve
-              </h4>
-              <ul className="text-white/60 text-sm grid grid-cols-2 gap-x-3 gap-y-2">
-                {getMunicipalityLocations().map((loc) => (
-                  <li key={loc.slug} className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-solar-400 shrink-0" />
-                    <Link href={`/locations/${loc.slug}`} className="hover:text-solar-400 transition-colors truncate">
-                      {loc.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-5 lg:gap-12">
+        {/* Contact Info (left) */}
+        <div className="flex flex-col gap-8 lg:col-span-2">
+          <div>
+            <h3 className="mb-6 text-h3 text-fg">Contact Information</h3>
+            <motion.ul className="space-y-5" variants={stagger(0.07)} {...revealOnScroll}>
+              <ContactItem icon={<Phone size={18} />} href="tel:+639175088220">
+                0917 508 8220
+              </ContactItem>
+              <ContactItem icon={<Mail size={18} />} href="mailto:jmcsolarph@gmail.com">
+                jmcsolarph@gmail.com
+              </ContactItem>
+              <ContactItem icon={<MapPin size={18} />}>
+                Lilia Avenue, Cogon,
+                <br />
+                Ormoc City, Leyte 6541
+                <br />
+                Philippines
+              </ContactItem>
+              <ContactItem icon={<Facebook size={18} />} href={FACEBOOK_URL} external>
+                JMC Solar PH on Facebook
+              </ContactItem>
+              <ContactItem icon={<Clock size={18} />}>
+                Monday - Friday: 8:00 AM - 5:00 PM
+              </ContactItem>
+              <ContactItem icon={<CreditCard size={18} />}>
+                We accept credit card payments and installment options
+              </ContactItem>
+            </motion.ul>
           </div>
 
-          {/* Inquiry Form (right) */}
-          <div className="lg:col-span-3">
-            <AnimatePresence mode="wait">
+          {/* Service Areas Box */}
+          <Card as={motion.div} variant="dark" padding="md" variants={fadeUp} {...revealOnScroll}>
+            <h3 className="mb-4 text-title text-fg">We Serve</h3>
+            <ul className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm text-fg-muted">
+              {getMunicipalityLocations().map((loc) => (
+                <li key={loc.slug} className="flex items-center gap-2">
+                  <span className="size-1.5 shrink-0 rounded-full bg-solar-500" aria-hidden />
+                  <Link href={`/locations/${loc.slug}`} className="truncate transition-colors hover:text-fg">
+                    {loc.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        </div>
+
+        {/* Inquiry Form (right) */}
+        <div className="lg:col-span-3">
+          <AnimatePresence mode="wait">
             {succeeded ? (
               <motion.div
                 key="success"
-                initial={{ opacity: 0, scale: 0.96, y: 10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                transition={{ duration: 0.35 }}
-                className="bg-green-eco/8 border border-green-eco/20 rounded-3xl p-6 sm:p-10 text-center"
+                role="status"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: DURATION.base, ease: EASE_OUT }}
+                className="rounded-card border border-green-200 bg-green-eco-bg p-6 text-center sm:p-10"
               >
-                <div className="w-16 h-16 bg-green-eco/15 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Send size={28} className="text-green-eco" />
+                <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-white">
+                  <Send size={28} className="text-green-eco" aria-hidden />
                 </div>
-                <h3
-                  className="text-navy-900 font-bold text-2xl mb-2"
-                  style={{ fontFamily: "Poppins, sans-serif" }}
-                >
-                  Message Sent!
-                </h3>
-                <p className="text-slate-600">
+                <h3 className="mb-2 text-h3 text-fg">Message Sent!</h3>
+                <p className="text-fg-muted">
                   Thank you for reaching out. Our team will get back to you within
                   24 hours.
                 </p>
@@ -312,203 +269,142 @@ export default function Contact() {
               <motion.form
                 key="form"
                 initial={{ opacity: 1 }}
-                exit={{ opacity: 0, transition: { duration: 0.2 } }}
+                exit={{ opacity: 0, transition: { duration: DURATION.fast } }}
                 onSubmit={handleSubmit}
-                className="bg-white rounded-3xl p-5 sm:p-7 lg:p-9 border border-slate-100 shadow-soft space-y-5"
+                className="space-y-5 rounded-card border border-line bg-white p-5 shadow-card sm:p-7 lg:p-9"
               >
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <FormField label="Full Name *" htmlFor="name">
-                    <input
-                      id="name"
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                  <Field id="name" label="Full Name" required>
+                    <Input
                       name="name"
                       type="text"
-                      required
+                      autoComplete="name"
                       placeholder="Juan Dela Cruz"
                       value={formData.name}
                       onChange={handleChange}
-                      className={inputClass}
                     />
-                  </FormField>
-                  <FormField label="Phone Number *" htmlFor="phone">
-                    <input
-                      id="phone"
+                  </Field>
+                  <Field id="phone" label="Phone Number" required>
+                    <Input
                       name="phone"
                       type="tel"
-                      required
+                      autoComplete="tel"
                       placeholder="09XX XXX XXXX"
                       value={formData.phone}
                       onChange={handleChange}
-                      className={inputClass}
                     />
-                  </FormField>
+                  </Field>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <FormField label="Email Address" htmlFor="email">
-                    <input
-                      id="email"
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                  <Field id="email" label="Email Address">
+                    <Input
                       name="email"
                       type="email"
+                      autoComplete="email"
                       placeholder="juan@email.com"
                       value={formData.email}
                       onChange={handleChange}
-                      className={inputClass}
                     />
-                  </FormField>
-                  <FormField label="City / Municipality" htmlFor="city">
-                    <input
-                      id="city"
+                  </Field>
+                  <Field id="city" label="City / Municipality">
+                    <Input
                       name="city"
                       type="text"
                       placeholder="Ormoc City"
                       value={formData.city}
                       onChange={handleChange}
-                      className={inputClass}
                     />
-                  </FormField>
+                  </Field>
                 </div>
 
-                <FormField label="System Type" htmlFor="systemType">
-                  <select
-                    id="systemType"
-                    name="systemType"
-                    value={formData.systemType}
-                    onChange={handleChange}
-                    className={inputClass}
-                  >
+                <Field id="systemType" label="System Type">
+                  <Select name="systemType" value={formData.systemType} onChange={handleChange}>
                     <option value="">Select a service...</option>
                     {systemTypes.map((s) => (
                       <option key={s} value={s}>
                         {s}
                       </option>
                     ))}
-                  </select>
-                </FormField>
+                  </Select>
+                </Field>
 
-                <FormField label="Message" htmlFor="message">
-                  <textarea
-                    id="message"
+                <Field id="message" label="Message">
+                  <Textarea
                     name="message"
                     rows={4}
                     placeholder="Tell us about your property, current electricity bill, or any questions..."
                     value={formData.message}
                     onChange={handleChange}
-                    className={`${inputClass} resize-none`}
+                    className="resize-none"
                   />
-                </FormField>
+                </Field>
 
                 <Button
                   type="submit"
-                  variant="primary"
                   size="lg"
-                  className="w-full overflow-hidden send-btn"
-                  disabled={submitting}
+                  fullWidth
+                  loading={submitting}
+                  className="send-btn overflow-hidden"
                 >
-                  <AnimatePresence mode="wait" initial={false}>
-                    {submitting ? (
-                      <motion.span
-                        key="loading"
-                        className="inline-flex items-center justify-center gap-2"
-                        initial={{ opacity: 0, scale: 0.7 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <motion.span
-                          className="block w-[18px] h-[18px] rounded-full border-2 border-white/40 border-t-white"
-                          animate={{ rotate: 360 }}
-                          transition={{ repeat: Infinity, duration: 0.7, ease: "linear" }}
-                        />
-                        Sending...
-                      </motion.span>
-                    ) : (
-                      <motion.span
-                        key="idle"
-                        className="inline-flex items-center"
-                        exit={{ opacity: 0, transition: { duration: 0.15 } }}
-                      >
-                        <span className="send-fly">
-                          <span className="send-icon">
-                            <Send size={18} />
-                          </span>
+                  {submitting ? (
+                    "Sending..."
+                  ) : (
+                    <span className="inline-flex items-center">
+                      <span className="send-fly">
+                        <span className="send-icon">
+                          <Send size={18} aria-hidden />
                         </span>
-                        <span className="send-text">Send Inquiry</span>
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
+                      </span>
+                      <span className="send-text">Send inquiry</span>
+                    </span>
+                  )}
                 </Button>
 
-                <p className="text-slate-400 text-xs text-center">
+                <p className="text-center text-xs text-fg-subtle">
                   We respect your privacy. Your information will never be shared
                   with third parties.
                 </p>
               </motion.form>
             )}
-            </AnimatePresence>
-          </div>
+          </AnimatePresence>
         </div>
-
-        {/* Map Embed */}
-        <motion.div
-          className="mt-16"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-60px' }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 bg-solar-500/10 rounded-lg flex items-center justify-center">
-              <MapPin size={16} className="text-solar-500" />
-            </div>
-            <span className="text-navy-900 font-semibold text-sm">
-              Find Us — Lilia Avenue, Cogon, Ormoc City, Leyte 6541
-            </span>
-          </div>
-          <div className="rounded-3xl overflow-hidden border border-slate-100 shadow-soft">
-            <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d788.1558470516892!2d124.60600752736785!3d11.016442895645005!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3307f1ac0bb65341%3A0x5a61c31ee45ed6d3!2sJMC%20Solar%20Ormoc!5e1!3m2!1sen!2sph!4v1772197675888!5m2!1sen!2sph"
-              className="w-full h-[40vh] sm:h-[55vh] lg:h-[70vh] border-0"
-              allowFullScreen
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
-          </div>
-          <p className="text-slate-400 text-xs mt-3 text-center">
-            Map data ©{" "}
-            <a
-              href="https://www.openstreetmap.org/copyright"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-slate-600"
-            >
-              OpenStreetMap
-            </a>{" "}
-            contributors · Lilia Avenue, Cogon, Ormoc City, Leyte 6541
-          </p>
-        </motion.div>
       </div>
-    </section>
-  );
-}
 
-const inputClass =
-  "w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 text-slate-800 text-sm placeholder-slate-400 focus:outline-none focus:border-solar-400 focus:ring-2 focus:ring-solar-400/20 focus:bg-white transition-all duration-300";
-
-function FormField({
-  label,
-  htmlFor,
-  children,
-}: {
-  label: string;
-  htmlFor: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-2">
-      <label htmlFor={htmlFor} className="text-navy-900 font-medium text-sm">
-        {label}
-      </label>
-      {children}
-    </div>
+      {/* Map Embed */}
+      <motion.div className="mt-16" variants={fadeUp} {...revealOnScroll}>
+        <div className="mb-4 flex items-center gap-2">
+          <span className="flex size-8 items-center justify-center rounded-control bg-white text-solar-ink">
+            <MapPin size={16} aria-hidden />
+          </span>
+          <span className="text-sm font-semibold text-fg">
+            Find Us — Lilia Avenue, Cogon, Ormoc City, Leyte 6541
+          </span>
+        </div>
+        <div className="overflow-hidden rounded-card border border-line shadow-soft">
+          <iframe
+            title="JMC Solar Ormoc on Google Maps"
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d788.1558470516892!2d124.60600752736785!3d11.016442895645005!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3307f1ac0bb65341%3A0x5a61c31ee45ed6d3!2sJMC%20Solar%20Ormoc!5e1!3m2!1sen!2sph!4v1772197675888!5m2!1sen!2sph"
+            className="h-[40vh] w-full border-0 sm:h-[55vh] lg:h-[70vh]"
+            allowFullScreen
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          />
+        </div>
+        <p className="mt-3 text-center text-xs text-fg-muted">
+          Map data ©{" "}
+          <a
+            href="https://www.openstreetmap.org/copyright"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-fg"
+          >
+            OpenStreetMap
+          </a>{" "}
+          contributors · Lilia Avenue, Cogon, Ormoc City, Leyte 6541
+        </p>
+      </motion.div>
+    </Section>
   );
 }
 
@@ -516,52 +412,39 @@ function ContactItem({
   icon,
   href,
   external,
-  delay = 0,
   children,
 }: {
   icon: ReactNode;
   href?: string;
   external?: boolean;
-  delay?: number;
   children: ReactNode;
 }) {
   const content = (
     <div className="flex items-start gap-3">
-      <div className="w-9 h-9 bg-solar-500/8 rounded-xl flex items-center justify-center shrink-0 text-solar-600 mt-0.5">
+      <span
+        aria-hidden
+        className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-control border border-line bg-white text-solar-ink"
+      >
         {icon}
-      </div>
-      <span className="text-slate-600 text-sm leading-relaxed">{children}</span>
+      </span>
+      <span className="text-sm text-fg-muted transition-colors group-hover:text-fg">{children}</span>
     </div>
   );
 
-  if (href) {
-    return (
-      <motion.li
-        initial={{ opacity: 0, x: -16 }}
-        whileInView={{ opacity: 1, x: 0 }}
-        viewport={{ once: true, margin: '-40px' }}
-        transition={{ duration: 0.4, delay }}
-      >
+  return (
+    <motion.li variants={fadeUp}>
+      {href ? (
         <a
           href={href}
           target={external ? "_blank" : undefined}
           rel={external ? "noopener noreferrer" : undefined}
-          className="hover:opacity-80 transition-opacity"
+          className="group block rounded-control"
         >
           {content}
         </a>
-      </motion.li>
-    );
-  }
-
-  return (
-    <motion.li
-      initial={{ opacity: 0, x: -16 }}
-      whileInView={{ opacity: 1, x: 0 }}
-      viewport={{ once: true, margin: '-40px' }}
-      transition={{ duration: 0.4, delay }}
-    >
-      {content}
+      ) : (
+        content
+      )}
     </motion.li>
   );
 }

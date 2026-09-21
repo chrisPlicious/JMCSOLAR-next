@@ -1,48 +1,47 @@
-'use client';
-
 import { Star } from 'lucide-react';
-import { motion } from 'framer-motion';
 import type { Review } from '../../types';
+import { Card } from '@/components/ui/Card';
+import Badge from '@/components/ui/Badge';
 
 interface ReviewCardProps {
   review: Review;
 }
 
+/** Dark review tile. Carries its own `surface-dark`, so it reads the same on any band. */
 export default function ReviewCard({ review }: ReviewCardProps) {
   return (
-    <motion.div
-      className="bg-linear-to-br from-navy-800 to-navy-900 rounded-3xl p-6 flex flex-col gap-4 border border-white/6 hover:border-solar-500/20 transition-colors duration-300"
-      whileHover={{ y: -4, scale: 1.02 }}
-      transition={{ duration: 0.2, ease: 'easeOut' }}
+    <Card
+      variant="dark"
+      padding="md"
+      className="flex h-full flex-col gap-4 transition-colors duration-300 hover:border-white/15"
     >
       {/* Stars */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1" role="img" aria-label={`${review.rating} out of 5 stars`}>
         {Array.from({ length: review.rating }).map((_, i) => (
-          <Star key={i} size={14} className="text-solar-400 fill-solar-400" />
+          <Star key={i} size={14} className="fill-solar-400 text-solar-400" aria-hidden />
         ))}
       </div>
 
       {/* Quote */}
-      <blockquote className="text-white/70 text-sm leading-relaxed flex-1">
-        &ldquo;{review.quote}&rdquo;
-      </blockquote>
+      <blockquote className="flex-1 text-sm text-fg-muted">&ldquo;{review.quote}&rdquo;</blockquote>
 
       {/* Author */}
-      <div className="flex items-center justify-between pt-2 border-t border-white/6">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-linear-to-br from-solar-500/30 to-solar-600/10 rounded-full flex items-center justify-center text-solar-400 font-bold text-sm">
+      <div className="flex items-center justify-between gap-3 border-t border-line pt-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <span
+            aria-hidden
+            className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-sm font-bold text-solar-ink"
+          >
             {review.name.charAt(0)}
-          </div>
-          <span className="text-white/90 font-medium text-sm">{review.name}</span>
+          </span>
+          <span className="truncate text-sm font-medium text-fg">{review.name}</span>
         </div>
-        <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${
-          review.source?.toLowerCase() === 'google'
-            ? 'bg-white/6 text-white/50'
-            : 'bg-blue-500/15 text-blue-300/80'
-        }`}>
-          {review.source}
-        </span>
+        {review.source && (
+          <Badge tone="on-dark" caps>
+            {review.source}
+          </Badge>
+        )}
       </div>
-    </motion.div>
+    </Card>
   );
 }

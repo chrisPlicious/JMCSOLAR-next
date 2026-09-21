@@ -1,40 +1,41 @@
 'use client';
 
-import { ReactNode } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { type ReactNode } from 'react';
+import { motion } from 'framer-motion';
+import { DURATION, EASE_OUT } from '@/lib/motion';
 
 interface Props {
-  leftTag?: string;
   leftTitle: ReactNode;
   leftDescription?: string;
   children: ReactNode;
 }
 
-const easeExpo: [number, number, number, number] = [0.16, 1, 0.3, 1];
-
+/**
+ * The booking funnel's signature split: a sticky navy panel (title) beside a
+ * white work area. The panel widens at `lg` so the longest single-word titles
+ * ("Consultation.") fit at text-h2 without clipping; below `lg` it stacks on
+ * top at text-h1.
+ */
 export default function BookingSplitLayout({ leftTitle, leftDescription, children }: Props) {
-  const reduce = useReducedMotion();
-
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row bg-[#FBF9F6]">
-      {/* Left Column */}
-      <div className="w-full lg:w-[30%] bg-navy-950 text-white p-8 lg:p-16 flex flex-col justify-center relative overflow-hidden shrink-0 min-h-[400px] lg:h-screen lg:self-start lg:sticky lg:top-0">
-        <div className="relative z-10">
+    <div className="flex min-h-screen flex-col bg-white lg:flex-row">
+      {/* Left panel */}
+      <div className="surface-dark texture-module relative flex w-full shrink-0 flex-col justify-center overflow-hidden bg-navy-950 px-6 pt-28 pb-12 sm:px-10 lg:sticky lg:top-0 lg:h-screen lg:w-[34%] lg:self-start lg:px-10 lg:pt-24 lg:pb-16 xl:w-[30%] xl:px-12">
+        <div className="relative min-w-0">
           <motion.h1
-            className="text-4xl lg:text-[65px] font-black mb-6 leading-[1.05] tracking-tight"
-            style={{ fontFamily: 'Poppins, sans-serif' }}
-            initial={{ opacity: 0, y: reduce ? 0 : 22 }}
+            className="mb-5 text-h1 break-words text-fg lg:text-h2"
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: easeExpo, delay: 0.1 }}
+            transition={{ duration: DURATION.slow, ease: EASE_OUT, delay: 0.1 }}
           >
             {leftTitle}
           </motion.h1>
           {leftDescription && (
             <motion.p
-              className="text-white/70 text-md leading-relaxed max-w-sm"
-              initial={{ opacity: 0, y: reduce ? 0 : 14 }}
+              className="max-w-sm text-base leading-relaxed text-fg-muted"
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: easeExpo, delay: 0.28 }}
+              transition={{ duration: DURATION.slow, ease: EASE_OUT, delay: 0.2 }}
             >
               {leftDescription}
             </motion.p>
@@ -42,10 +43,9 @@ export default function BookingSplitLayout({ leftTitle, leftDescription, childre
         </div>
       </div>
 
-      {/* Right Column */}
-      <div className="flex-1 w-full flex flex-col min-h-screen">
-        {children}
-      </div>
+      {/* Right column — clears the fixed navbar on desktop (the panel stacks
+          above it on mobile and already carries the clearance). */}
+      <div className="flex w-full min-w-0 flex-1 flex-col lg:min-h-screen lg:pt-20">{children}</div>
     </div>
   );
 }

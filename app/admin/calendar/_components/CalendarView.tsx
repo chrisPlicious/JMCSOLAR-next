@@ -5,6 +5,8 @@ import { ChevronLeft, ChevronRight, Clock, Phone, MapPin } from 'lucide-react';
 import type { DbBooking, DbBookingType, DbBookingStatus, DbBookingPaymentStatus } from '@/lib/firebase/types';
 import { fetchBookingAction } from '../../bookings/actions';
 import { BookingDrawer } from '../../bookings/_components/BookingDrawer';
+import { Button } from '@/components/ui/Button';
+import Badge from '@/components/ui/Badge';
 
 export type CalEvent = {
   id: string;
@@ -19,25 +21,10 @@ export type CalEvent = {
 };
 
 // One color per service type (the three booking categories).
-const TYPE_META: Record<DbBookingType, { label: string; dot: string; chip: string; cell: string }> = {
-  consultation: {
-    label: 'Consultation',
-    dot: 'bg-solar-500',
-    chip: 'bg-solar-400/10 text-solar-700 border-solar-400/30',
-    cell: 'bg-solar-400/10',
-  },
-  maintenance: {
-    label: 'Maintenance',
-    dot: 'bg-blue-500',
-    chip: 'bg-blue-50 text-blue-700 border-blue-200',
-    cell: 'bg-blue-50',
-  },
-  site_assessment: {
-    label: 'Site Assessment',
-    dot: 'bg-emerald-500',
-    chip: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    cell: 'bg-emerald-50',
-  },
+const TYPE_META: Record<DbBookingType, { label: string; dot: string; tone: 'solar' | 'info' | 'success' }> = {
+  consultation: { label: 'Consultation', dot: 'bg-solar-500', tone: 'solar' },
+  maintenance: { label: 'Maintenance', dot: 'bg-navy-500', tone: 'info' },
+  site_assessment: { label: 'Site Assessment', dot: 'bg-green-eco', tone: 'success' },
 };
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -112,33 +99,30 @@ export function CalendarView({ events }: { events: CalEvent[] }) {
   const monthCount = events.filter((e) => e.preferred_date?.startsWith(`${year}-${pad(month + 1)}`)).length;
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-card overflow-hidden">
+    <div className="bg-white rounded-card border border-line shadow-soft overflow-hidden">
       {/* Toolbar */}
-      <div className="flex items-center justify-between gap-4 p-5 border-b border-slate-100 flex-wrap">
+      <div className="flex items-center justify-between gap-4 p-5 border-b border-line flex-wrap">
         <div className="flex items-center gap-3">
-          <h2 className="text-lg font-bold text-navy-900">{MONTHS[month]} {year}</h2>
-          <span className="text-xs text-slate-400">{monthCount} this month</span>
+          <h2 className="text-title text-fg">{MONTHS[month]} {year}</h2>
+          <span className="text-xs text-fg-subtle">{monthCount} this month</span>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={goToday}
-            className="text-xs font-semibold text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg transition-colors"
-          >
+          <Button variant="outline" size="sm" onClick={goToday}>
             Today
-          </button>
-          <button onClick={goPrev} aria-label="Previous month" className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors">
-            <ChevronLeft size={16} />
-          </button>
-          <button onClick={goNext} aria-label="Next month" className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors">
-            <ChevronRight size={16} />
-          </button>
+          </Button>
+          <Button variant="outline" size="icon-sm" onClick={goPrev} aria-label="Previous month">
+            <ChevronLeft size={16} aria-hidden />
+          </Button>
+          <Button variant="outline" size="icon-sm" onClick={goNext} aria-label="Next month">
+            <ChevronRight size={16} aria-hidden />
+          </Button>
         </div>
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-4 px-5 py-3 border-b border-slate-100 flex-wrap">
+      <div className="flex items-center gap-4 px-5 py-3 border-b border-line flex-wrap">
         {(Object.keys(TYPE_META) as DbBookingType[]).map((t) => (
-          <span key={t} className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600">
+          <span key={t} className="inline-flex items-center gap-1.5 text-xs font-medium text-fg-muted">
             <span className={`w-2.5 h-2.5 rounded-full ${TYPE_META[t].dot}`} />
             {TYPE_META[t].label}
           </span>
@@ -146,9 +130,9 @@ export function CalendarView({ events }: { events: CalEvent[] }) {
       </div>
 
       {/* Weekday header */}
-      <div className="grid grid-cols-7 border-b border-slate-100">
+      <div className="grid grid-cols-7 border-b border-line">
         {WEEKDAYS.map((w) => (
-          <div key={w} className="px-2 py-2 text-center text-[11px] font-bold uppercase tracking-wider text-slate-400">
+          <div key={w} className="caps px-2 py-2 text-center">
             {w}
           </div>
         ))}
@@ -175,13 +159,13 @@ export function CalendarView({ events }: { events: CalEvent[] }) {
               <div className="flex items-center justify-between">
                 <span
                   className={`inline-flex items-center justify-center text-xs font-semibold rounded-full w-6 h-6 ${
-                    isToday ? 'bg-navy-900 text-white' : 'text-slate-600'
+                    isToday ? 'bg-navy-900 text-white' : 'text-fg-muted'
                   }`}
                 >
                   {d}
                 </span>
                 {dayEvents.length > 0 && (
-                  <span className="text-[10px] font-bold text-slate-400">{dayEvents.length}</span>
+                  <span className="text-xs font-bold text-fg-subtle">{dayEvents.length}</span>
                 )}
               </div>
 
@@ -190,7 +174,7 @@ export function CalendarView({ events }: { events: CalEvent[] }) {
                 {dayEvents.slice(0, 3).map((e) => (
                   <div
                     key={e.id}
-                    className="flex items-center gap-1 text-[10px] leading-tight text-slate-600 truncate"
+                    className="flex items-center gap-1 text-xs leading-tight text-fg-muted truncate"
                   >
                     <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${TYPE_META[e.booking_type].dot}`} />
                     <span className="truncate">{e.preferred_time} {e.name}</span>
@@ -201,7 +185,7 @@ export function CalendarView({ events }: { events: CalEvent[] }) {
                     {types.map((t) => (
                       <span key={t} className={`w-1.5 h-1.5 rounded-full ${TYPE_META[t].dot}`} />
                     ))}
-                    <span className="text-[10px] text-slate-400">+{dayEvents.length - 3} more</span>
+                    <span className="text-xs text-fg-subtle">+{dayEvents.length - 3} more</span>
                   </div>
                 )}
               </div>
@@ -212,12 +196,12 @@ export function CalendarView({ events }: { events: CalEvent[] }) {
 
       {/* Selected-day detail */}
       {selected && (
-        <div className="border-t border-slate-100 p-5 bg-slate-50/40">
-          <p className="text-sm font-bold text-navy-900 mb-3">
+        <div className="border-t border-line p-5 bg-slate-50">
+          <p className="text-sm font-bold text-fg mb-3">
             {new Date(selected + 'T00:00:00').toLocaleDateString('en-PH', {
               weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
             })}
-            <span className="ml-2 text-xs font-medium text-slate-400">
+            <span className="ml-2 text-xs font-medium text-fg-muted">
               {selectedEvents.length} booking{selectedEvents.length !== 1 ? 's' : ''}
             </span>
           </p>
@@ -227,18 +211,16 @@ export function CalendarView({ events }: { events: CalEvent[] }) {
                 key={e.id}
                 type="button"
                 onClick={() => openBooking(e.id)}
-                className="w-full text-left flex items-center gap-3 bg-white rounded-xl border border-slate-100 p-3 hover:border-slate-200 hover:shadow-card transition-all cursor-pointer"
+                className="w-full text-left flex items-center gap-3 bg-white rounded-control border border-line p-3 hover:border-slate-300 hover:shadow-card transition-[border-color,box-shadow] cursor-pointer"
               >
                 <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${TYPE_META[e.booking_type].dot}`} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-semibold text-navy-900 text-sm">{e.name}</span>
-                    <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${TYPE_META[e.booking_type].chip}`}>
-                      {TYPE_META[e.booking_type].label}
-                    </span>
-                    <span className="text-[11px] text-slate-400 capitalize">{e.status}</span>
+                    <span className="font-semibold text-fg text-sm">{e.name}</span>
+                    <Badge tone={TYPE_META[e.booking_type].tone}>{TYPE_META[e.booking_type].label}</Badge>
+                    <span className="text-xs text-fg-subtle capitalize">{e.status}</span>
                   </div>
-                  <div className="flex items-center gap-3 mt-1 text-xs text-slate-500 flex-wrap">
+                  <div className="flex items-center gap-3 mt-1 text-xs text-fg-subtle flex-wrap">
                     <span className="inline-flex items-center gap-1"><Clock size={11} />{e.preferred_time}</span>
                     <span className="inline-flex items-center gap-1"><Phone size={11} />{e.phone}</span>
                     <span className="inline-flex items-center gap-1"><MapPin size={11} />{e.city_name}</span>

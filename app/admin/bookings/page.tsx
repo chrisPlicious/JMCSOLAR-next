@@ -2,6 +2,7 @@ import { adminDb } from '@/lib/firebase/admin';
 import { requireAdminAuth } from '@/lib/auth';
 import type { DbBooking } from '@/lib/firebase/types';
 import { BookingsList } from './_components/BookingsList';
+import AdminPageHeader from '../_components/AdminPageHeader';
 
 export const metadata = { title: 'Bookings — Admin' };
 
@@ -19,18 +20,11 @@ export default async function AdminBookingsPage() {
   const bookings = await getBookings();
 
   return (
-    <div className="p-8 max-w-6xl">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-black text-navy-900" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            Bookings
-          </h1>
-          <p className="text-slate-500 text-sm mt-0.5">
-            {bookings.length} total booking{bookings.length !== 1 ? 's' : ''}
-          </p>
-        </div>
-      </div>
+    <div>
+      <AdminPageHeader
+        title="Bookings"
+        description={`${bookings.length} total booking${bookings.length !== 1 ? 's' : ''}`}
+      />
 
       <BookingsList bookings={bookings} />
     </div>

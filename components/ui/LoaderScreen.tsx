@@ -218,11 +218,11 @@ export default function LoaderScreen() {
         {/* Brand text — centred over the SVG */}
         <div className="loader-v2-brand absolute inset-0 flex items-center justify-center">
           <div className="flex items-baseline gap-1.5">
-            <span className="font-montserrat font-extrabold text-[22px] tracking-[3px] text-white">
+            <span className="font-wordmark font-extrabold text-[22px] tracking-[3px] text-white">
               JMC
             </span>
             <span
-              className="font-montserrat font-normal text-[22px] tracking-[2px]"
+              className="font-wordmark font-medium text-[22px] tracking-[2px]"
               style={{ color: '#6b9fd4' }}
             >
               SOLAR
@@ -247,7 +247,7 @@ export default function LoaderScreen() {
           />
         </div>
         <span
-          className="font-montserrat text-[11px] font-medium tracking-[1px] tabular-nums min-w-[32px]"
+          className="font-wordmark text-[11px] font-medium tracking-[1px] tabular-nums min-w-[32px]"
           style={{ color: 'rgba(255,255,255,0.3)' }}
         >
           {pct}%

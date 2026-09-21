@@ -9,11 +9,19 @@ import {
   Zap,
   SlidersHorizontal,
   Shuffle,
-  ArrowRight,
   ArrowUpRight,
   Package,
 } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
+import PageHero from '@/components/ui/PageHero';
+import { Section } from '@/components/ui/Section';
+import { SectionHeader } from '@/components/ui/SectionHeader';
+import { cardVariants } from '@/components/ui/Card';
+import Badge from '@/components/ui/Badge';
+import CtaBand from '@/components/ui/CtaBand';
+import EmptyState from '@/components/ui/EmptyState';
+import { EASE_OUT } from '@/lib/motion';
+import { cn } from '@/lib/utils';
 import type { Product, ProductCategory } from '@/types';
 
 const productCategories: { id: ProductCategory | 'all'; label: string }[] = [
@@ -26,88 +34,66 @@ const productCategories: { id: ProductCategory | 'all'; label: string }[] = [
 ];
 
 const categoryIcon: Record<ProductCategory, (size: number) => React.ReactNode> = {
-  panels:      (s) => <Sun size={s} strokeWidth={1.2} />,
-  batteries:   (s) => <Battery size={s} strokeWidth={1.2} />,
-  inverters:   (s) => <Zap size={s} strokeWidth={1.2} />,
-  controllers: (s) => <SlidersHorizontal size={s} strokeWidth={1.2} />,
-  converters:  (s) => <Shuffle size={s} strokeWidth={1.2} />,
+  panels:      (s) => <Sun size={s} strokeWidth={1.2} aria-hidden />,
+  batteries:   (s) => <Battery size={s} strokeWidth={1.2} aria-hidden />,
+  inverters:   (s) => <Zap size={s} strokeWidth={1.2} aria-hidden />,
+  controllers: (s) => <SlidersHorizontal size={s} strokeWidth={1.2} aria-hidden />,
+  converters:  (s) => <Shuffle size={s} strokeWidth={1.2} aria-hidden />,
 };
 
 function ProductCard({ product, index }: { product: Product; index: number }) {
-  const number = String(index + 1).padStart(2, '0');
   // Link to the detail page once the product has a slug (backfilled); until then fall
   // back to the inquiry deep-link so nothing breaks pre-backfill.
   const detailHref = product.slug ? `/products/${product.slug}` : null;
+  const href = detailHref ?? `/?product=${product.id}&service=${product.related_service}#contact`;
 
   return (
     <motion.div
-      className="group"
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, delay: index * 0.07, ease: [0.25, 0.46, 0.45, 0.94] }}
+      transition={{ duration: 0.4, delay: Math.min(index, 8) * 0.05, ease: EASE_OUT }}
     >
-      <span className="text-[13px] text-slate-400 font-medium mb-2.5 block tracking-wider">
-        {number}
-      </span>
-
-      <div
-        className="relative rounded-[1.4rem] overflow-hidden group-hover:-translate-y-1 transition-all duration-300"
-        style={{ backgroundColor: '#e5e0d8' }}
+      <Link
+        href={href}
+        aria-label={detailHref ? undefined : `Inquire about ${product.name}`}
+        className={cn(cardVariants({ variant: 'interactive' }), 'group flex h-full flex-col p-3')}
       >
-        <div className="aspect-[3/4] flex items-center justify-center p-8">
-          {product.image_path ? (
-            <img
-              src={product.image_path}
-              alt={product.name}
-              className="max-w-full max-h-full object-contain drop-shadow-lg group-hover:scale-105 transition-transform duration-500"
-            />
-          ) : (
-            <div className="text-navy-800/25 group-hover:text-navy-800/40 group-hover:scale-110 transition-all duration-500">
-              {categoryIcon[product.category as keyof typeof categoryIcon]?.(72)}
-            </div>
+        <div className="relative overflow-hidden rounded-card bg-navy-50">
+          <div className="aspect-[3/4] flex items-center justify-center p-8">
+            {product.image_path ? (
+              <img
+                src={product.image_path}
+                alt={product.name}
+                className="max-w-full max-h-full object-contain transition-transform duration-500 ease-out-quart group-hover:scale-105"
+              />
+            ) : (
+              <div className="text-navy-800/25 transition-colors duration-300 group-hover:text-navy-800/40">
+                {categoryIcon[product.category as keyof typeof categoryIcon]?.(72)}
+              </div>
+            )}
+          </div>
+
+          {product.badge && (
+            <Badge tone="solar" caps className="absolute top-3 left-3">
+              {product.badge}
+            </Badge>
           )}
+
+          <span
+            className="absolute bottom-3 right-3 grid size-10 place-items-center rounded-full bg-navy-900 text-white shadow-soft transition-colors duration-300 group-hover:bg-solar-500 group-hover:text-navy-950"
+            aria-hidden
+          >
+            <ArrowUpRight size={17} />
+          </span>
         </div>
 
-        {product.badge && (
-          <span className="absolute top-4 left-4 text-[9px] font-bold uppercase tracking-[0.12em] bg-white/90 backdrop-blur-sm text-navy-900 px-3 py-1.5 rounded-full">
-            {product.badge}
-          </span>
-        )}
-
-        {detailHref ? (
-          <Link
-            href={detailHref}
-            className="absolute bottom-4 right-4 w-11 h-11 bg-navy-900 hover:bg-solar-500 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg"
-            aria-label={`View ${product.name}`}
-          >
-            <ArrowUpRight size={17} className="text-white" />
-          </Link>
-        ) : (
-          <a
-            href={`/?product=${product.id}&service=${product.related_service}#contact`}
-            className="absolute bottom-4 right-4 w-11 h-11 bg-navy-900 hover:bg-solar-500 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg"
-            aria-label={`Inquire about ${product.name}`}
-          >
-            <ArrowUpRight size={17} className="text-white" />
-          </a>
-        )}
-      </div>
-
-      <div className="mt-4">
-        <h3
-          className="text-navy-900 font-bold text-[15px] leading-snug mb-1"
-          style={{ fontFamily: 'Poppins, sans-serif' }}
-        >
-          {detailHref ? (
-            <Link href={detailHref} className="hover:text-solar-600 transition-colors">
-              {product.name}
-            </Link>
-          ) : (
-            product.name
-          )}
-        </h3>
-        <p className="text-slate-400 text-[12px] leading-relaxed">{product.specs}</p>
-      </div>
+        <div className="px-2 pt-4 pb-2">
+          <h3 className="text-title text-fg transition-colors group-hover:text-solar-ink">
+            {product.name}
+          </h3>
+          <p className="mt-1 text-sm text-fg-subtle tabular-nums">{product.specs}</p>
+        </div>
+      </Link>
     </motion.div>
   );
 }
@@ -126,58 +112,16 @@ export default function ProductsPage({ products }: Props) {
 
   return (
     <Layout>
-      {/* Hero */}
-      <motion.div
-        className="bg-gradient-to-br from-navy-900 via-navy-800 to-navy-700 pt-28 pb-14 px-4"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.6 }}
-      >
-        <div className="max-w-6xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
-            <div className="flex items-center gap-2 text-white/60 text-sm mb-8">
-              <Link href="/" className="hover:text-white transition-colors">Home</Link>
-              <span>/</span>
-              <span className="text-white">Products</span>
-            </div>
+      <PageHero
+        title="Our Products"
+        lead="Quality solar equipment sourced from trusted global brands — panels, batteries, inverters, charge controllers, and more."
+      />
 
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                <Package size={28} className="text-white" />
-              </div>
-            </div>
-
-            <h1
-              className="text-white font-black text-4xl sm:text-5xl leading-tight mb-3"
-              style={{ fontFamily: 'Poppins, sans-serif' }}
-            >
-              Our Products
-            </h1>
-            <p className="text-white/70 text-base sm:text-lg max-w-2xl">
-              Quality solar equipment sourced from trusted global brands — panels,
-              batteries, inverters, charge controllers, and more.
-            </p>
-          </motion.div>
-        </div>
-      </motion.div>
-
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-12">
-          <p className="text-[13px] text-slate-400 uppercase tracking-[0.2em] font-medium">Our Products</p>
-          <h2
-            className="text-navy-900 font-bold text-2xl sm:text-[1.75rem] max-w-sm leading-snug"
-            style={{ fontFamily: 'Poppins, sans-serif' }}
-          >
-            We offer a range of quality solar products to choose&nbsp;from.
-          </h2>
-        </div>
+      <Section tone="white">
+        <SectionHeader title="We offer a range of quality solar products to choose from." />
 
         <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 mb-12">
-          <div className="flex gap-2 w-max sm:w-auto sm:flex-wrap">
+          <div className="flex gap-2 w-max sm:w-auto sm:flex-wrap" role="group" aria-label="Filter by category">
             {productCategories.map((cat) => {
               const isActive = activeCategory === cat.id;
               const count =
@@ -185,21 +129,28 @@ export default function ProductsPage({ products }: Props) {
                   ? products.length
                   : products.filter((p) => p.category === cat.id).length;
               return (
-                <motion.button
+                <button
                   key={cat.id}
+                  type="button"
+                  aria-pressed={isActive}
                   onClick={() => setActiveCategory(cat.id as ProductCategory | 'all')}
-                  className={`px-4 py-2 rounded-full text-sm font-semibold border whitespace-nowrap transition-colors duration-200 flex items-center gap-1.5 ${
+                  className={cn(
+                    'flex min-h-10 items-center gap-1.5 whitespace-nowrap rounded-full border px-4 text-sm font-semibold transition-colors duration-200',
                     isActive
-                      ? 'bg-navy-900 border-navy-900 text-white'
-                      : 'bg-white border-slate-200 text-navy-900 hover:border-navy-300'
-                  }`}
-                  whileTap={{ scale: 0.96 }}
+                      ? 'border-navy-950 bg-navy-950 text-white'
+                      : 'border-line bg-white text-fg hover:border-navy-300',
+                  )}
                 >
                   {cat.label}
-                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                  <span
+                    className={cn(
+                      'rounded-full px-1.5 py-0.5 text-xs font-bold tabular-nums',
+                      isActive ? 'bg-white/20 text-white' : 'bg-slate-100 text-fg-muted',
+                    )}
+                  >
                     {count}
                   </span>
-                </motion.button>
+                </button>
               );
             })}
           </div>
@@ -212,8 +163,8 @@ export default function ProductsPage({ products }: Props) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.25 }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12"
+              transition={{ duration: 0.25, ease: EASE_OUT }}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
             >
               {filtered.map((product, i) => (
                 <ProductCard key={product.id} product={product} index={i} />
@@ -225,37 +176,18 @@ export default function ProductsPage({ products }: Props) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="text-center py-20 text-slate-400"
             >
-              <Package size={40} className="mx-auto mb-3 opacity-40" />
-              <p className="text-lg font-medium">No products in this category yet.</p>
+              <EmptyState icon={Package} title="No products in this category yet." />
             </motion.div>
           )}
         </AnimatePresence>
+      </Section>
 
-        <motion.div
-          className="mt-24 bg-navy-900 rounded-3xl px-5 py-10 sm:px-10 sm:py-14 text-center"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-60px' }}
-          transition={{ duration: 0.5 }}
-        >
-          <h2 className="text-white font-black text-2xl sm:text-3xl mb-3" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            Not sure which product fits your system?
-          </h2>
-          <p className="text-white/70 text-base sm:text-lg mb-8 max-w-xl mx-auto">
-            Our team will assess your site and recommend the right equipment for your budget and energy needs — free of charge.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/#contact" className="inline-flex items-center gap-2 bg-solar-500 hover:bg-solar-400 text-white font-bold px-7 py-3.5 rounded-xl transition-colors duration-200">
-              Get a Free Consultation <ArrowRight size={18} />
-            </Link>
-            <Link href="/services" className="inline-flex items-center gap-2 text-white/70 hover:text-white font-semibold transition-colors duration-200 text-sm">
-              View our services →
-            </Link>
-          </div>
-        </motion.div>
-      </div>
+      <CtaBand
+        className="pt-0 sm:pt-0"
+        title="Not sure which product fits your system?"
+        body="Our team will assess your site and recommend the right equipment for your budget and energy needs — free of charge."
+      />
     </Layout>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/Button';
 import { deleteImageAction, setCoverAction } from '../actions';
 
 type ProjectImage = { id: string; storage_path: string; url: string | null };
@@ -32,40 +33,44 @@ export default function PhotoGrid({ images, projectId, coverPath }: Props) {
 
   return (
     <div>
-      <h2 className="font-display font-bold text-navy-950 text-lg mt-8 mb-4">Photos</h2>
+      <h2 className="font-display font-bold text-fg text-lg mt-8 mb-4">Photos</h2>
       {!images.length ? (
-        <p className="text-slate-400 text-sm">No photos yet. Upload one above.</p>
+        <p className="text-fg-muted text-sm">No photos yet. Upload one above.</p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {images.map((img) => {
             const url = img.url;
             const isCover = img.storage_path === coverPath;
             return (
-              <div key={img.id} className="bg-white rounded-xl overflow-hidden border border-slate-200 shadow-sm group">
+              <div key={img.id} className="bg-white rounded-card overflow-hidden border border-line shadow-soft group">
                 <div className="relative aspect-video overflow-hidden">
                   {url && <img src={url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" decoding="async" />}
                   {isCover && (
-                    <span className="absolute top-2 left-2 text-[10px] font-bold bg-solar-500 text-navy-950 px-2 py-0.5 rounded-full">Cover</span>
+                    <span className="absolute top-2 left-2 text-xs font-bold bg-solar-500 text-navy-950 px-2 py-0.5 rounded-full">Cover</span>
                   )}
                 </div>
                 <div className="flex items-center gap-2 p-2.5">
                   {!isCover && (
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => handleSetCover(img.storage_path)}
                       disabled={isPending}
-                      className="text-xs text-navy-700 hover:text-navy-900 font-medium transition-colors disabled:opacity-40"
+                      className="h-8 px-3 text-xs"
                     >
                       Set cover
-                    </button>
+                    </Button>
                   )}
                   <div className="flex-1" />
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => handleDelete(img.id, img.storage_path)}
                     disabled={isPending}
-                    className="text-xs text-red-400 hover:text-red-600 transition-colors disabled:opacity-40"
+                    className="h-8 px-3 text-xs text-red-700 hover:bg-red-50"
                   >
                     Delete
-                  </button>
+                  </Button>
                 </div>
               </div>
             );

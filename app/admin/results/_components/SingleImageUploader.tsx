@@ -29,7 +29,7 @@ export default function SingleImageUploader({ name, currentUrl }: Props) {
   return (
     <div className="w-full">
       {preview ? (
-        <div className="relative rounded-xl overflow-hidden border border-slate-200 aspect-[3/4]">
+        <div className="relative rounded-control overflow-hidden border border-line aspect-[3/4]">
           <img src={preview} alt="" className="w-full h-full object-cover" />
           {file ? (
             <button
@@ -38,17 +38,18 @@ export default function SingleImageUploader({ name, currentUrl }: Props) {
                 setFile(null);
                 if (inputRef.current) inputRef.current.value = '';
               }}
-              className="absolute top-2 right-2 p-1.5 bg-black/60 hover:bg-black text-white rounded-full transition-colors"
+              aria-label="Remove selected image"
+              className="absolute top-2 right-2 p-1.5 bg-navy-950/60 hover:bg-navy-950 text-white rounded-full transition-colors"
             >
-              <X size={12} />
+              <X size={12} aria-hidden />
             </button>
           ) : (
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
-              className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 hover:opacity-100 transition-opacity text-white text-sm font-semibold gap-2"
+              className="absolute inset-0 flex items-center justify-center bg-navy-950/50 opacity-0 hover:opacity-100 focus-visible:opacity-100 transition-opacity text-white text-sm font-semibold gap-2"
             >
-              <UploadCloud size={16} />
+              <UploadCloud size={16} aria-hidden />
               Replace
             </button>
           )}
@@ -69,15 +70,15 @@ export default function SingleImageUploader({ name, currentUrl }: Props) {
             }
           }}
           onClick={() => inputRef.current?.click()}
-          className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors aspect-[3/4] flex flex-col items-center justify-center ${
+          className={`border-2 border-dashed rounded-control p-8 text-center cursor-pointer transition-colors aspect-[3/4] flex flex-col items-center justify-center ${
             isDragging
               ? 'border-solar-500 bg-solar-50'
               : 'border-slate-300 hover:border-slate-400 bg-slate-50 hover:bg-slate-100'
           }`}
         >
-          <UploadCloud className="h-9 w-9 text-slate-400 mb-3" />
-          <p className="text-sm text-slate-600 font-medium">Click or drag to upload</p>
-          <p className="text-xs text-slate-400 mt-1">JPG, PNG, WEBP</p>
+          <UploadCloud className="h-9 w-9 text-slate-500 mb-3" aria-hidden />
+          <p className="text-sm text-fg-muted font-medium">Click or drag to upload</p>
+          <p className="text-xs text-fg-subtle mt-1">JPG, PNG, WEBP</p>
         </div>
       )}
 

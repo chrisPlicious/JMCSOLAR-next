@@ -778,6 +778,14 @@ export function getProvinceSlug(provinceName: string | undefined): string | unde
   return LOCATIONS.find((l) => l.tier === 'province' && l.name === provinceName)?.slug;
 }
 
+/**
+ * "Leyte" → "Leyte Province", but "Cebu Province" stays as-is (some names
+ * already carry the suffix, which used to render "Cebu Province Province").
+ */
+export function provinceLabel(name: string): string {
+  return /\bprovince$/i.test(name.trim()) ? name : `${name} Province`;
+}
+
 export type FooterCity = { slug: string; name: string };
 export type FooterProvince = { slug: string; name: string; cities: FooterCity[] };
 
