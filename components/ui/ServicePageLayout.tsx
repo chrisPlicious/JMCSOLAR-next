@@ -13,6 +13,7 @@ import CtaBand from './CtaBand';
 import { Section } from './Section';
 import { SectionHeader } from './SectionHeader';
 import { fadeUp, revealOnScroll } from '@/lib/motion';
+import { SERVICE_AREA } from '@/lib/seo/business';
 
 type IconName = keyof typeof Icons;
 
@@ -73,7 +74,7 @@ export default function ServicePageLayout({
         {/* ── Overview ── */}
         {(overview || whatIsIt) && (
           <motion.section variants={fadeUp} {...revealOnScroll}>
-            <SectionHeader title={`What is ${title}?`} className="mb-6 sm:mb-6" />
+            <SectionHeader title={`About ${title}`} className="mb-6 sm:mb-6" />
             {overview && <p className="text-lead text-fg-muted mb-6">{overview}</p>}
             {whatIsIt && <p className="text-lead text-fg-muted">{whatIsIt}</p>}
           </motion.section>
@@ -184,8 +185,8 @@ export default function ServicePageLayout({
       </Section>
 
       <CtaBand
-        title={`Ready to install ${title}?`}
-        body="JMC Solar PH serves Ormoc City and all of Eastern Visayas. Get a free site assessment and quote."
+        title={`Ready for ${title}?`}
+        body={`JMC Solar PH serves ${SERVICE_AREA}. Get a free site assessment and quote.`}
         secondary={{ label: 'Message us', href: contactHref }}
       />
     </Layout>

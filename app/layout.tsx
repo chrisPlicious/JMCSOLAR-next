@@ -11,6 +11,8 @@ import MotionProvider from '@/components/ui/MotionProvider';
 import HeroBgLayer from './_components/HeroBgLayer';
 import { cn } from "@/lib/utils";
 import { SITE_URL } from '@/lib/seo/site';
+import { SITE_OPEN_GRAPH } from '@/lib/seo/metadata';
+import { siteGraphLd } from '@/lib/seo/organization';
 import { Analytics } from '@vercel/analytics/next';
 
 // Font roles (see app/globals.css): Geist = body, Poppins = headings
@@ -47,31 +49,18 @@ export const metadata: Metadata = {
   },
   description:
     'JMC Solar PH provides professional solar installation services in Ormoc City, Leyte and Cebu, Central Visayas. Hybrid solar, on-grid, battery storage, EV chargers, and more. Future is Electric.',
-  keywords:
-    'solar panels Philippines, solar installation Ormoc City, solar installation Cebu, hybrid solar system Leyte, solar panels Cebu, JMC Solar PH, solar energy Visayas, solar energy Central Visayas, solar panel Leyte, solar energy Philippines',
-  openGraph: {
-    title: 'JMC Solar PH — Future is Electric',
-    description:
-      'Professional solar installation services in Ormoc City, Leyte and Cebu, Central Visayas. From residential rooftops to 100kW+ industrial systems.',
-    url: '/',
-    siteName: 'JMC Solar PH',
-    type: 'website',
-    locale: 'en_PH',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'JMC Solar PH — Future is Electric',
-    description:
-      'Professional solar installation in Ormoc City & Cebu. Hybrid solar, on-grid, battery storage, EV chargers.',
-  },
+  // Site default only — no `url` here, or every page without its own openGraph
+  // would advertise the homepage as its og:url. Pages set theirs via pageMetadata().
+  openGraph: SITE_OPEN_GRAPH,
+  // Card type only. Next fills twitter:title/description/image from each page's
+  // Open Graph; setting them here would stamp the homepage copy on every page.
+  twitter: { card: 'summary_large_image' },
   // NOTE: no root-level `alternates.canonical` — in the App Router it is inherited
   // by every child route that lacks its own canonical, pointing them all at the
   // homepage (GSC "Alternate page with proper canonical tag"). The homepage sets
   // its own canonical in app/page.tsx; every other page already self-canonicalizes.
-  robots: {
-    index: true,
-    follow: true,
-  },
+  // No `robots` or `keywords` either: index,follow is the default, and Google
+  // ignores the keywords tag.
   verification: {
     google: process.env.GOOGLE_SITE_VERIFICATION,
     other: process.env.BING_SITE_VERIFICATION
@@ -97,6 +86,10 @@ export default async function RootLayout({
         <link rel="preload" as="image" href="/assets/bg-1.jpg" />
       </head>
       <body suppressHydrationWarning>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(siteGraphLd()) }}
+        />
         <NextTopLoader
           color="var(--color-solar-500)"
           height={3}

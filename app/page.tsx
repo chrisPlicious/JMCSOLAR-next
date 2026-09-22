@@ -3,58 +3,16 @@ import HomePage from '@/page-components/home/HomePage';
 import { adminDb } from '@/lib/firebase/admin';
 import type { DbReview } from '@/lib/firebase/types';
 import type { Review } from '@/types';
-import { FACEBOOK_URL, SITE_URL } from '@/lib/seo/site';
-import { buildAreaServedArray } from '@/lib/seo/serviceArea';
+import { SITE_URL } from '@/lib/seo/site';
+import { SITE_OPEN_GRAPH } from '@/lib/seo/metadata';
+import { BUSINESS_ID } from '@/lib/seo/organization';
 import { getServices } from '@/lib/data/getServices';
 
-// Homepage owns the site-root canonical. (It used to live on the root layout, but
-// that leaked to every child page — see app/layout.tsx.)
+// Homepage owns the site-root canonical and og:url. (They used to live on the
+// root layout, but that leaked to every child page — see app/layout.tsx.)
 export const metadata: Metadata = {
   alternates: { canonical: '/' },
-};
-
-const baseJsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'LocalBusiness',
-  '@id': `${SITE_URL}/#business`,
-  name: 'JMC Solar PH',
-  description:
-    'Professional solar installation services in Ormoc City, Leyte and Cebu, Central Visayas. Hybrid solar, on-grid, battery storage, EV chargers, and more.',
-  url: SITE_URL,
-  telephone: '+639175088220',
-  email: 'jmcsolarph@gmail.com',
-  address: {
-    '@type': 'PostalAddress',
-    streetAddress: 'Lilia Avenue, Cogon',
-    addressLocality: 'Ormoc City',
-    addressRegion: 'Leyte',
-    postalCode: '6541',
-    addressCountry: 'PH',
-  },
-  geo: {
-    '@type': 'GeoCoordinates',
-    latitude: 11.016443,
-    longitude: 124.606008,
-  },
-  openingHoursSpecification: {
-    '@type': 'OpeningHoursSpecification',
-    dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
-    opens: '08:00',
-    closes: '17:00',
-  },
-  sameAs: [FACEBOOK_URL],
-  priceRange: '$$',
-  slogan: 'Future is Electric',
-  knowsAbout: [
-    'Solar Panel Installation',
-    'Hybrid Solar Systems',
-    'On-Grid Solar',
-    'Net Metering',
-    'Battery Energy Storage Systems',
-    'EV Charging',
-    'Solar Water Pumping',
-  ],
-  areaServed: buildAreaServedArray(),
+  openGraph: { ...SITE_OPEN_GRAPH, url: '/' },
 };
 
 // H1: fetch approved reviews server-side; Firestore rules can now deny public reads
@@ -116,18 +74,27 @@ export default async function Home() {
       }
     : undefined;
 
-  const jsonLd = {
-    ...baseJsonLd,
-    ...(aggregateRating && { aggregateRating }),
-    ...(hasOfferCatalog && { hasOfferCatalog }),
-  };
+  // The LocalBusiness node itself comes from the root layout (siteGraphLd).
+  // This adds the homepage-only facts to that same @id; parsers merge them.
+  const jsonLd =
+    aggregateRating || hasOfferCatalog
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'LocalBusiness',
+          '@id': BUSINESS_ID,
+          ...(aggregateRating && { aggregateRating }),
+          ...(hasOfferCatalog && { hasOfferCatalog }),
+        }
+      : null;
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      {jsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      )}
       <HomePage reviews={reviews} services={services} />
     </>
   );

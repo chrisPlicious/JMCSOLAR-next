@@ -10,27 +10,27 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import CtaBand from '@/components/ui/CtaBand';
 import ProjectCard from '@/components/ui/ProjectCard';
-import { LOCATIONS, getLocation, getProvinceSlug, provinceLabel } from '@/data/locations';
+import { getLocation, getProvinceSlug, provinceLabel } from '@/data/locations';
 import { adminDb } from '@/lib/firebase/admin';
 import { itemsNearCity } from '@/lib/data/nearestLocations';
-import { isIndexableCityService } from '@/data/indexableCityServices';
+import { INDEXABLE_CITY_SERVICES, isIndexableCityService } from '@/data/indexableCityServices';
+import { getServiceBySlug, getServiceDetail } from '@/lib/data/getServices';
 import { SITE_URL } from '@/lib/seo/site';
 import { makeBreadcrumbLd } from '@/lib/seo/breadcrumb';
-import type { DbProject, DbService, DbServiceDetail } from '@/lib/firebase/types';
+import { pageMetadata } from '@/lib/seo/metadata';
+import { BUSINESS_ID } from '@/lib/seo/organization';
+import type { DbProject } from '@/lib/firebase/types';
 import type { Project } from '@/types';
 
 export const revalidate = 3600;
 
-export async function generateStaticParams() {
-  try {
-    const servicesSnap = await adminDb.collection('services').get();
-    const serviceSlugs = servicesSnap.docs.map((d) => (d.data() as DbService).slug);
-    return LOCATIONS.flatMap((loc) =>
-      serviceSlugs.map((service) => ({ city: loc.slug, service }))
-    );
-  } catch {
-    return [];
-  }
+// Prerender only the allowlisted (indexable) combos. The pruned noindex ones still
+// render on demand for anyone who follows an old link, but no longer cost build time.
+export function generateStaticParams() {
+  return [...INDEXABLE_CITY_SERVICES].map((key) => {
+    const [city, service] = key.split('/');
+    return { city, service };
+  });
 }
 
 export async function generateMetadata({
@@ -42,11 +42,9 @@ export async function generateMetadata({
   const loc = getLocation(citySlug);
   if (!loc) return {};
 
-  const snap = await adminDb.collection('services').where('slug', '==', serviceSlug).limit(1).get();
-  if (snap.empty) return {};
-  const svc = snap.docs[0].data() as DbService;
+  const svc = await getServiceBySlug(serviceSlug);
+  if (!svc) return {};
 
-  // The root layout template appends "| JMC Solar PH"; OG titles don't use the template.
   const title =
     loc.tier === 'province'
       ? `${svc.title} in ${provinceLabel(loc.name)}`
@@ -56,16 +54,15 @@ export async function generateMetadata({
       ? `JMC Solar PH provides ${svc.title.toLowerCase()} services across ${provinceLabel(loc.name)}. DOE-compliant. Free site assessment.`
       : `JMC Solar PH provides ${svc.title.toLowerCase()} in ${loc.name}, ${loc.province}. Licensed engineers, DOE-compliant systems. Get a free quote.`;
 
-  return {
+  return pageMetadata({
     title,
     description,
+    // Keep the SELF canonical — never pair noindex with a canonical to a different URL.
+    path: `/locations/${citySlug}/${serviceSlug}`,
     // Prune: these auto-generated combos are thin near-duplicates. noindex,follow
     // (still crawl outbound links) unless allowlisted in data/indexableCityServices.ts.
-    // Keep the SELF canonical — never pair noindex with a canonical to a different URL.
-    robots: { index: isIndexableCityService(citySlug, serviceSlug), follow: true },
-    alternates: { canonical: `/locations/${citySlug}/${serviceSlug}` },
-    openGraph: { title: `${title} | JMC Solar PH`, description },
-  };
+    index: isIndexableCityService(citySlug, serviceSlug),
+  });
 }
 
 export default async function CityServicePage({
@@ -78,22 +75,11 @@ export default async function CityServicePage({
   const loc = getLocation(citySlug);
   if (!loc) notFound();
 
-  const serviceSnap = await adminDb
-    .collection('services')
-    .where('slug', '==', serviceSlug)
-    .limit(1)
-    .get();
-  if (serviceSnap.empty) notFound();
+  const svc = await getServiceBySlug(serviceSlug);
+  if (!svc) notFound();
 
-  const svcDoc = serviceSnap.docs[0];
-  const svc = svcDoc.data() as DbService;
-
-  const detailSnap = await adminDb
-    .collection('serviceDetails')
-    .where('service_id', '==', svcDoc.id)
-    .limit(1)
-    .get();
-  const detail = !detailSnap.empty ? (detailSnap.docs[0].data() as DbServiceDetail) : null;
+  const detail = await getServiceDetail(svc.id);
+  const indexable = isIndexableCityService(citySlug, serviceSlug);
 
   let projects: DbProject[] = [];
   let isFallback = false;
@@ -148,29 +134,33 @@ export default async function CityServicePage({
     loc.tier === 'province' ? `${provinceLabel(loc.name)} · ${loc.region}` : `${loc.province} · ${loc.region}`;
   const provinceSlug = getProvinceSlug(loc.province);
 
-  const serviceLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Service',
-    name: `${svc.title} in ${areaName}`,
-    description: svc.description,
-    provider: { '@id': `${SITE_URL}/#business` },
-    areaServed:
-      loc.tier === 'province'
-        ? { '@type': 'AdministrativeArea', name: loc.name }
-        : {
-            '@type': 'City',
-            name: loc.name,
-            containedInPlace: {
-              '@type': 'AdministrativeArea',
-              name: loc.province,
-              containedInPlace: { '@type': 'Country', name: 'Philippines' },
-            },
-          },
-    url: `${SITE_URL}/locations/${citySlug}/${serviceSlug}`,
-  };
+  // Structured data only for indexable combos — on a noindex page it is dead weight,
+  // and the FAQ would duplicate the city page's FAQPage verbatim.
+  const serviceLd = indexable
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'Service',
+        name: `${svc.title} in ${areaName}`,
+        description: svc.description,
+        provider: { '@id': BUSINESS_ID },
+        areaServed:
+          loc.tier === 'province'
+            ? { '@type': 'AdministrativeArea', name: loc.name }
+            : {
+                '@type': 'City',
+                name: loc.name,
+                containedInPlace: {
+                  '@type': 'AdministrativeArea',
+                  name: loc.province,
+                  containedInPlace: { '@type': 'Country', name: 'Philippines' },
+                },
+              },
+        url: `${SITE_URL}/locations/${citySlug}/${serviceSlug}`,
+      }
+    : null;
 
   const faqLd =
-    loc.faqs.length > 0
+    indexable && loc.faqs.length > 0
       ? {
           '@context': 'https://schema.org',
           '@type': 'FAQPage',
@@ -182,10 +172,9 @@ export default async function CityServicePage({
         }
       : null;
 
+  // One hierarchy: Home › Locations › [Province] › City › Service in City.
   const breadcrumb = makeBreadcrumbLd([
     { name: 'Home', url: '/' },
-    { name: 'Services', url: '/services' },
-    { name: svc.title, url: `/services/${serviceSlug}` },
     { name: 'Locations', url: '/locations' },
     ...(loc.tier === 'municipality' && provinceSlug && loc.province
       ? [{ name: provinceLabel(loc.province), url: `/locations/${provinceSlug}` }]
@@ -206,7 +195,9 @@ export default async function CityServicePage({
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceLd) }} />
+      {serviceLd && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceLd) }} />
+      )}
       {faqLd && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       )}

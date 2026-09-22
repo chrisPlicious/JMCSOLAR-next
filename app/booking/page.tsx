@@ -3,7 +3,8 @@ import BookingSplitLayout from './_components/BookingSplitLayout';
 import BookingServiceList from './_components/BookingServiceList';
 
 export const metadata: Metadata = {
-  title: 'Book a Service — JMC Solar',
+  // The root layout template appends "| JMC Solar PH".
+  title: 'Book a Service',
   description: 'Book a solar consultation, maintenance service, or site assessment with JMC Solar.',
 };
 

@@ -77,14 +77,15 @@ export default function Hero() {
               </span>
             </motion.p>
 
-            <motion.h1 variants={fadeUp} className="mb-8 text-display text-fg">
+            {/* The location line sits inside the H1 (styled as the lead) so the page's
+                one heading carries the primary keyword + service area. */}
+            <motion.h1 variants={fadeUp} className="mb-4 text-display text-fg">
               Premium Solar Installations <span className="text-solar-ink">for You</span>
+              <span className="mx-auto mt-8 block max-w-2xl font-sans text-lead font-normal tracking-normal text-pretty lg:mx-0">
+                Professional Solar Installation Services in{" "}
+                <span className="font-semibold">Ormoc City, Eastern Visayas &amp; Cebu, Central Visayas</span>
+              </span>
             </motion.h1>
-
-            <motion.p variants={fadeUp} className="mx-auto mb-4 max-w-2xl text-lead text-fg lg:mx-0">
-              Professional Solar Installation Services in{" "}
-              <span className="font-semibold">Ormoc City, Eastern Visayas &amp; Cebu, Central Visayas</span>
-            </motion.p>
             <motion.p variants={fadeUp} className="mx-auto mb-10 max-w-xl text-base text-fg-muted lg:mx-0">
               Every installation is carried out by a duly licensed electrical engineer, backed by a professionally trained team — ensuring safety, compliance, and precision from start to finish.
             </motion.p>

@@ -20,6 +20,9 @@ import { itemsNearCity, nearestCities } from '@/lib/data/nearestLocations';
 import { getPublicUrl } from '@/lib/firebase/storage';
 import { SITE_URL } from '@/lib/seo/site';
 import { makeBreadcrumbLd } from '@/lib/seo/breadcrumb';
+import { pageMetadata } from '@/lib/seo/metadata';
+import { BUSINESS_ID } from '@/lib/seo/organization';
+import { isIndexableCityService } from '@/data/indexableCityServices';
 import { cn } from '@/lib/utils';
 import type { DbProject, DbReview, DbService } from '@/lib/firebase/types';
 import type { Project, Review } from '@/types';
@@ -39,7 +42,6 @@ export async function generateMetadata({
   const loc = getLocation(slug);
   if (!loc) return {};
 
-  // The root layout template appends "| JMC Solar PH"; OG titles don't use the template.
   const title =
     loc.tier === 'province'
       ? `Solar Installation in ${provinceLabel(loc.name)}`
@@ -49,12 +51,7 @@ export async function generateMetadata({
       ? `JMC Solar PH installs residential, commercial, and industrial solar systems across ${provinceLabel(loc.name)}. Free site assessment. Call today.`
       : `JMC Solar PH installs solar panels in ${loc.name}, ${loc.province}. Residential, commercial & industrial systems. DOE-compliant. Free quote.`;
 
-  return {
-    title,
-    description,
-    alternates: { canonical: `/locations/${slug}` },
-    openGraph: { title: `${title} | JMC Solar PH`, description },
-  };
+  return pageMetadata({ title, description, path: `/locations/${slug}`, routeImage: true });
 }
 
 export default async function CityPage({
@@ -168,7 +165,7 @@ export default async function CityPage({
       loc.tier === 'province'
         ? `Solar Panel Installation in ${provinceLabel(loc.name)}`
         : `Solar Panel Installation in ${loc.name}`,
-    provider: { '@id': `${SITE_URL}/#business` },
+    provider: { '@id': BUSINESS_ID },
     areaServed:
       loc.tier === 'province'
         ? { '@type': 'AdministrativeArea', name: loc.name }
@@ -281,10 +278,15 @@ export default async function CityPage({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {services.map((svc) => {
               const IC = Icons[svc.icon as keyof typeof Icons] as ComponentType<LucideProps> | undefined;
+              // Link the city×service page only when it is indexable; otherwise send the
+              // link equity to the canonical service page instead of a noindex combo.
+              const href = isIndexableCityService(slug, svc.slug)
+                ? `/locations/${slug}/${svc.slug}`
+                : `/services/${svc.slug}`;
               return (
               <Link
                 key={svc.id}
-                href={`/locations/${slug}/${svc.slug}`}
+                href={href}
                 className={cn(cardVariants({ variant: 'interactive', padding: 'md' }), 'group flex flex-col gap-4')}
               >
                 <span className="grid size-11 place-items-center rounded-control bg-solar-50 text-solar-700">

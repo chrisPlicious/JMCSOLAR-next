@@ -113,7 +113,7 @@ export default function ProductsPage({ products }: Props) {
   return (
     <Layout>
       <PageHero
-        title="Our Products"
+        title="Our Solar Products"
         lead="Quality solar equipment sourced from trusted global brands — panels, batteries, inverters, charge controllers, and more."
       />
 

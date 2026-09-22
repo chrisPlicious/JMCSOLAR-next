@@ -10,19 +10,18 @@ import CtaBand from '@/components/ui/CtaBand';
 import { getMunicipalityLocations, getProvinceLocations, provinceLabel } from '@/data/locations';
 import { SITE_URL } from '@/lib/seo/site';
 import { makeBreadcrumbLd } from '@/lib/seo/breadcrumb';
+import { pageMetadata } from '@/lib/seo/metadata';
+import { BUSINESS_ID } from '@/lib/seo/organization';
+import { SERVICE_AREA } from '@/lib/seo/business';
 
-export const metadata: Metadata = {
-  // The root layout template appends "| JMC Solar PH".
+// Derived, not typed: adding a location in data/locations.ts updates every mention.
+const CITY_COUNT = getMunicipalityLocations().length;
+
+export const metadata: Metadata = pageMetadata({
   title: 'Solar Installation Locations',
-  description:
-    'JMC Solar PH serves 19 cities and municipalities across Leyte, Southern Leyte, and Cebu. Find professional solar installation services near you.',
-  alternates: { canonical: '/locations' },
-  openGraph: {
-    title: 'Solar Installation Locations | JMC Solar PH',
-    description:
-      'Professional solar installation in Leyte, Southern Leyte, and Cebu. 19 cities and municipalities served.',
-  },
-};
+  description: `JMC Solar PH serves ${CITY_COUNT} cities and municipalities across ${SERVICE_AREA}. Find professional solar installation services near you.`,
+  path: '/locations',
+});
 
 export default function LocationsPage() {
   const municipalities = getMunicipalityLocations();
@@ -34,7 +33,7 @@ export default function LocationsPage() {
     name: 'Solar Installation Locations — JMC Solar PH',
     description: 'Cities and municipalities served by JMC Solar PH across Eastern and Central Visayas',
     url: `${SITE_URL}/locations`,
-    provider: { '@id': `${SITE_URL}/#business` },
+    provider: { '@id': BUSINESS_ID },
   };
 
   const breadcrumb = makeBreadcrumbLd([
@@ -48,12 +47,12 @@ export default function LocationsPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <Layout>
         <PageHero
-          title="Areas We Serve"
+          title="Solar Installation Areas"
           lead={
             <>
               JMC Solar PH installs solar energy systems across{' '}
-              <span className="font-semibold text-fg">19 cities and municipalities</span> in Leyte,
-              Southern Leyte, and Cebu. Select your area below to learn more.
+              <span className="font-semibold text-fg">{CITY_COUNT} cities and municipalities</span> in{' '}
+              {SERVICE_AREA}. Select your area below to learn more.
             </>
           }
         />

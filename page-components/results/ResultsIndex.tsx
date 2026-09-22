@@ -201,7 +201,7 @@ export default function ResultsIndex({ results }: Props) {
       <Lightbox state={lightbox} onClose={closeLightbox} />
 
       <PageHero
-        title="See the Difference"
+        title="See the Difference Solar Makes"
         lead="Real electric bills from our customers — before and after switching to solar."
       />
 

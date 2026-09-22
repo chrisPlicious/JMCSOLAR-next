@@ -5,9 +5,10 @@ import { formatCentavos } from '@/lib/bookings/pricing';
 import { Button } from '@/components/ui/Button';
 import { Section } from '@/components/ui/Section';
 import StatusCard from '@/components/ui/StatusCard';
+import { BUSINESS } from '@/lib/seo/business';
 
 export const metadata = {
-  title: 'Booking Confirmed — JMC Solar PH',
+  title: 'Booking Confirmed',
 };
 
 const FREE_NEXT_STEPS = [
@@ -132,8 +133,8 @@ export default async function BookingConfirmationPage({
 
           <p className="text-center text-sm text-fg-subtle">
             Questions? Call us at{' '}
-            <a href="tel:+639175088220" className="font-semibold text-solar-ink hover:underline">
-              0917 508 8220
+            <a href={`tel:${BUSINESS.phone.e164}`} className="font-semibold text-solar-ink hover:underline">
+              {BUSINESS.phone.display}
             </a>
           </p>
         </div>

@@ -61,7 +61,7 @@ export default function ServicesPage({ services }: { services: DbService[] }) {
   return (
     <Layout>
       <PageHero
-        title="Complete Solar Solutions"
+        title="Complete Solar Services"
         lead="From the initial consultation to after-sales support — we handle every step of your solar journey for residential, commercial, agricultural, and industrial clients."
       />
 

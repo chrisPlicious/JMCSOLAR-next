@@ -4,18 +4,15 @@ import { adminDb } from '@/lib/firebase/admin';
 import { getPublicUrl } from '@/lib/firebase/storage';
 import type { Project, ProjectImage } from '@/types';
 import { makeBreadcrumbLd } from '@/lib/seo/breadcrumb';
+import { pageMetadata } from '@/lib/seo/metadata';
+import { SERVICE_AREA } from '@/lib/seo/business';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: 'Completed Projects',
   description:
-    'See completed solar installation projects by JMC Solar PH across Leyte and Visayas. From residential rooftops to 100kW+ commercial systems.',
-  alternates: { canonical: '/projects' },
-  openGraph: {
-    title: 'Completed Projects | JMC Solar PH',
-    description:
-      'Solar installation projects across Leyte and Visayas. Residential, commercial, and industrial systems.',
-  },
-};
+    `See completed solar installation projects by JMC Solar PH across ${SERVICE_AREA}. From residential rooftops to 100kW+ commercial systems.`,
+  path: '/projects',
+});
 
 export default async function Projects() {
   const [snap, imagesSnap] = await Promise.all([

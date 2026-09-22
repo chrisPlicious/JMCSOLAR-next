@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/Button';
 
 export const metadata: Metadata = {
   title: 'Page not found',
-  robots: { index: false, follow: true },
+  // No `robots`: Next already emits noindex on the not-found response.
+  description: 'The page you are looking for does not exist or has moved.',
 };
 
 export default function NotFound() {

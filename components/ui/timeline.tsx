@@ -61,13 +61,18 @@ function TimelineItem({ item }: { item: TimelineEntry }) {
           />
         </div>
         <div className="hidden lg:flex lg:flex-col lg:pl-20">
-          <h2
+          {/* Desktop copy of the label. The <h2> below is the one real heading
+              (only one of the two is ever displayed); role/aria-level keep this
+              one announced as a heading without a duplicate <h2> in the DOM. */}
+          <p
+            role="heading"
+            aria-level={2}
             className={`text-h2 transition-colors duration-300 ${
               isActive ? "text-solar-ink" : "text-fg"
             }`}
           >
             {item.title}
-          </h2>
+          </p>
           {item.stats && <YearStats stats={item.stats} isActive={isActive} />}
         </div>
       </div>

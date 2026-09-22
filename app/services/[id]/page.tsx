@@ -1,12 +1,13 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { adminDb } from '@/lib/firebase/admin';
 import ServicePageLayout from '@/components/ui/ServicePageLayout';
 import ServiceEmptyState from '@/components/ui/ServiceEmptyState';
-import type { DbService, DbServiceDetail } from '@/lib/firebase/types';
+import { getServiceBySlug, getServiceDetail } from '@/lib/data/getServices';
 import { SITE_URL } from '@/lib/seo/site';
 import { makeBreadcrumbLd } from '@/lib/seo/breadcrumb';
-import { buildAreaServedArray } from '@/lib/seo/serviceArea';
+import { pageMetadata } from '@/lib/seo/metadata';
+import { BUSINESS_ID } from '@/lib/seo/organization';
+import { isServiceIndexable } from '@/lib/seo/service';
 
 export const revalidate = 60;
 
@@ -16,22 +17,17 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id: slug } = await params;
-  const snap = await adminDb
-    .collection('services')
-    .where('slug', '==', slug)
-    .limit(1)
-    .get();
-  if (snap.empty) return {};
-  const service = snap.docs[0].data() as DbService;
-  return {
+  const service = await getServiceBySlug(slug);
+  if (!service) return {};
+  const detail = await getServiceDetail(service.id);
+  return pageMetadata({
     title: service.title,
     description: service.description,
-    alternates: { canonical: `/services/${slug}` },
-    openGraph: {
-      title: `${service.title} | JMC Solar PH`,
-      description: service.description,
-    },
-  };
+    path: `/services/${slug}`,
+    routeImage: true,
+    // Same gate as the sitemap: empty or intro-only service pages stay noindex.
+    index: isServiceIndexable(detail),
+  });
 }
 
 export default async function ServiceDetailPage({
@@ -41,29 +37,21 @@ export default async function ServiceDetailPage({
 }) {
   const { id: slug } = await params;
 
-  const snap = await adminDb.collection('services').where('slug', '==', slug).limit(1).get();
+  const service = await getServiceBySlug(slug);
+  if (!service) notFound();
 
-  if (snap.empty) {
-    notFound();
-  }
-
-  const serviceDoc = snap.docs[0];
-  const service = { id: serviceDoc.id, ...serviceDoc.data() } as DbService;
-
-  const detailQuery = await adminDb.collection('serviceDetails').where('service_id', '==', service.id).limit(1).get();
-  const detail = !detailQuery.empty ? (detailQuery.docs[0].data() as DbServiceDetail) : null;
-
+  const detail = await getServiceDetail(service.id);
   if (!detail) {
     return <ServiceEmptyState service={service} />;
   }
 
+  // areaServed lives on the business node (root layout); provider points at it.
   const serviceLd = {
     '@context': 'https://schema.org',
     '@type': 'Service',
     name: service.title,
     description: service.description,
-    provider: { '@id': `${SITE_URL}/#business` },
-    areaServed: buildAreaServedArray(),
+    provider: { '@id': BUSINESS_ID },
     url: `${SITE_URL}/services/${slug}`,
   };
 

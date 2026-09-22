@@ -11,6 +11,7 @@ import { Section } from "@/components/ui/Section";
 import ProjectCarouselModal from "@/components/ui/ProjectCarouselModal";
 import { Timeline } from "@/components/ui/timeline";
 import Layout from "@/components/layout/Layout";
+import { SERVICE_AREA } from "@/lib/seo/business";
 import type { Project } from "@/types";
 
 interface Props {
@@ -76,8 +77,8 @@ export default function ProjectsPage({ projects }: Props) {
   return (
     <Layout>
       <PageHero
-        title="Projects & Installations"
-        lead="From residential rooftops to large-scale industrial farms — browse our completed solar installations across Eastern Visayas."
+        title="Solar Projects & Installations"
+        lead={`From residential rooftops to large-scale industrial farms — browse our completed solar installations across ${SERVICE_AREA}.`}
       />
 
       <Section id="projects" tone="white" spacing="compact">

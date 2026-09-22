@@ -1,19 +1,22 @@
 import type { Metadata } from 'next';
+import { cache } from 'react';
 import { notFound } from 'next/navigation';
 import { adminDb } from '@/lib/firebase/admin';
 import { getPublicUrl } from '@/lib/firebase/storage';
 import { makeBreadcrumbLd } from '@/lib/seo/breadcrumb';
 import { productLd, isProductIndexable } from '@/lib/seo/product';
+import { pageMetadata } from '@/lib/seo/metadata';
 import ProductDetail from '@/page-components/products/ProductDetail';
 import type { Product } from '@/types';
 
 export const revalidate = 60;
 
-async function getProductBySlug(slug: string): Promise<Product | null> {
+// cache(): generateMetadata and the page share one Firestore read per request.
+const getProductBySlug = cache(async (slug: string): Promise<Product | null> => {
   const snap = await adminDb.collection('products').where('slug', '==', slug).limit(1).get();
   if (snap.empty) return null;
   return { id: snap.docs[0].id, ...snap.docs[0].data() } as Product;
-}
+});
 
 export async function generateStaticParams() {
   try {
@@ -39,21 +42,16 @@ export async function generateMetadata({
   const description =
     product.description ??
     `${product.name}${product.specs ? ` — ${product.specs}` : ''} available through JMC Solar PH.`;
-  const imageUrl = getPublicUrl(product.image_path);
 
-  return {
+  return pageMetadata({
     title: product.name,
     description,
+    path: `/products/${slug}`,
+    image: getPublicUrl(product.image_path),
     // Thin products stay out of the index until enriched (same anti-doorway gate as
     // the location pages) — they still render for users at /products/[slug].
-    robots: { index: isProductIndexable(product), follow: true },
-    alternates: { canonical: `/products/${slug}` },
-    openGraph: {
-      title: `${product.name} | JMC Solar PH`,
-      description,
-      ...(imageUrl && { images: [imageUrl] }),
-    },
-  };
+    index: isProductIndexable(product),
+  });
 }
 
 export default async function ProductPage({

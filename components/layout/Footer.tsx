@@ -8,6 +8,7 @@ import type { FooterProvince } from '@/data/locations';
 import { Container } from '@/components/ui/Section';
 import { fadeUp, fadeIn, revealOnScroll } from '@/lib/motion';
 import { FACEBOOK_URL } from '@/lib/seo/site';
+import { BUSINESS, HQ_AREA, SERVICE_AREA } from '@/lib/seo/business';
 
 const quickLinks = [
   { label: 'Home', href: '/' },
@@ -39,7 +40,7 @@ export default function Footer({ locations }: { locations: FooterProvince[] }) {
               <span className="font-medium text-fg-muted">SOLAR</span>
             </Link>
             <p className="text-sm text-fg-muted">
-              Renewable energy advocates serving Ormoc City and Eastern Visayas. Providing free and clean energy for every Filipino home, farm, and business.
+              Renewable energy advocates serving {SERVICE_AREA}. Providing free and clean energy for every Filipino home, farm, and business.
             </p>
             <a
               href={FACEBOOK_URL}
@@ -55,8 +56,8 @@ export default function Footer({ locations }: { locations: FooterProvince[] }) {
 
           {/* Quick Links */}
           <motion.div variants={fadeUp} {...revealOnScroll}>
-            <h2 className={headingClass}>Quick Links</h2>
-            <ul className="flex flex-col gap-3">
+            <p id="footer-quick-links" className={headingClass}>Quick Links</p>
+            <ul aria-labelledby="footer-quick-links" className="flex flex-col gap-3">
               {quickLinks.map((link) => (
                 <li key={link.href}>
                   <Link href={link.href} className={linkClass}>
@@ -67,8 +68,8 @@ export default function Footer({ locations }: { locations: FooterProvince[] }) {
               ))}
             </ul>
 
-            <h2 className={`${headingClass} mt-8`}>Services</h2>
-            <ul className="flex flex-col gap-3">
+            <p id="footer-services" className={`${headingClass} mt-8`}>Services</p>
+            <ul aria-labelledby="footer-services" className="flex flex-col gap-3">
               {NAV_SERVICES.map((service) => (
                 <li key={service.slug}>
                   <Link href={`/services/${service.slug}`} className={linkClass}>
@@ -82,8 +83,8 @@ export default function Footer({ locations }: { locations: FooterProvince[] }) {
 
           {/* Service Areas */}
           <motion.div variants={fadeUp} {...revealOnScroll}>
-            <h2 className={headingClass}>Service Areas</h2>
-            <div className="flex flex-col gap-5">
+            <p id="footer-areas" className={headingClass}>Service Areas</p>
+            <div role="group" aria-labelledby="footer-areas" className="flex flex-col gap-5">
               {locations.map((province) => (
                 <div key={province.slug}>
                   <Link
@@ -116,29 +117,29 @@ export default function Footer({ locations }: { locations: FooterProvince[] }) {
 
           {/* Contact Info */}
           <motion.div variants={fadeUp} {...revealOnScroll}>
-            <h2 className={headingClass}>Contact Us</h2>
-            <ul className="flex flex-col gap-4">
+            <p id="footer-contact" className={headingClass}>Contact Us</p>
+            <ul aria-labelledby="footer-contact" className="flex flex-col gap-4">
               <li className="flex items-start gap-3">
                 <Phone size={15} className="mt-0.5 shrink-0 text-solar-ink" aria-hidden />
-                <a href="tel:+639175088220" className="text-sm text-fg-muted transition-colors hover:text-fg">
-                  0917 508 8220
+                <a href={`tel:${BUSINESS.phone.e164}`} className="text-sm text-fg-muted transition-colors hover:text-fg">
+                  {BUSINESS.phone.display}
                 </a>
               </li>
               <li className="flex items-start gap-3">
                 <Mail size={15} className="mt-0.5 shrink-0 text-solar-ink" aria-hidden />
                 <a
-                  href="mailto:jmcsolarph@gmail.com"
+                  href={`mailto:${BUSINESS.email}`}
                   className="text-sm break-all text-fg-muted transition-colors hover:text-fg"
                 >
-                  jmcsolarph@gmail.com
+                  {BUSINESS.email}
                 </a>
               </li>
               <li className="flex items-start gap-3">
                 <MapPin size={15} className="mt-0.5 shrink-0 text-solar-ink" aria-hidden />
                 <span className="text-sm text-fg-muted">
-                  Lilia Avenue, Cogon,<br />
-                  Ormoc City, Leyte 6541<br />
-                  Philippines
+                  {BUSINESS.address.street},<br />
+                  {HQ_AREA} {BUSINESS.address.postalCode}<br />
+                  {BUSINESS.address.countryName}
                 </span>
               </li>
             </ul>
@@ -152,7 +153,7 @@ export default function Footer({ locations }: { locations: FooterProvince[] }) {
           {...revealOnScroll}
         >
           <p className="text-center text-sm text-fg-subtle sm:text-left">
-            © {new Date().getFullYear()} JMC Solar PH. All rights reserved.
+            © {new Date().getFullYear()} {BUSINESS.name}. All rights reserved.
           </p>
           <p className="text-xs text-fg-subtle">Renewable Energy Advocates · Ormoc City, Leyte, Philippines</p>
         </motion.div>

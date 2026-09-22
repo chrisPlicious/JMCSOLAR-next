@@ -19,6 +19,7 @@ import { Section } from "@/components/ui/Section";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { getMunicipalityLocations } from "@/data/locations";
 import { FACEBOOK_URL } from "@/lib/seo/site";
+import { ADDRESS_LINE, BUSINESS, HQ_AREA } from "@/lib/seo/business";
 import { DURATION, EASE_OUT, fadeUp, revealOnScroll, stagger } from "@/lib/motion";
 
 const systemTypes = [
@@ -203,24 +204,24 @@ export default function Contact() {
           <div>
             <h3 className="mb-6 text-h3 text-fg">Contact Information</h3>
             <motion.ul className="space-y-5" variants={stagger(0.07)} {...revealOnScroll}>
-              <ContactItem icon={<Phone size={18} />} href="tel:+639175088220">
-                0917 508 8220
+              <ContactItem icon={<Phone size={18} />} href={`tel:${BUSINESS.phone.e164}`}>
+                {BUSINESS.phone.display}
               </ContactItem>
-              <ContactItem icon={<Mail size={18} />} href="mailto:jmcsolarph@gmail.com">
-                jmcsolarph@gmail.com
+              <ContactItem icon={<Mail size={18} />} href={`mailto:${BUSINESS.email}`}>
+                {BUSINESS.email}
               </ContactItem>
               <ContactItem icon={<MapPin size={18} />}>
-                Lilia Avenue, Cogon,
+                {BUSINESS.address.street},
                 <br />
-                Ormoc City, Leyte 6541
+                {HQ_AREA} {BUSINESS.address.postalCode}
                 <br />
-                Philippines
+                {BUSINESS.address.countryName}
               </ContactItem>
               <ContactItem icon={<Facebook size={18} />} href={FACEBOOK_URL} external>
                 JMC Solar PH on Facebook
               </ContactItem>
               <ContactItem icon={<Clock size={18} />}>
-                Monday - Friday: 8:00 AM - 5:00 PM
+                {BUSINESS.hours.days}: {BUSINESS.hours.display}
               </ContactItem>
               <ContactItem icon={<CreditCard size={18} />}>
                 We accept credit card payments and installment options
@@ -378,7 +379,7 @@ export default function Contact() {
             <MapPin size={16} aria-hidden />
           </span>
           <span className="text-sm font-semibold text-fg">
-            Find Us — Lilia Avenue, Cogon, Ormoc City, Leyte 6541
+            Find Us — {ADDRESS_LINE}
           </span>
         </div>
         <div className="overflow-hidden rounded-card border border-line shadow-soft">
@@ -401,7 +402,7 @@ export default function Contact() {
           >
             OpenStreetMap
           </a>{" "}
-          contributors · Lilia Avenue, Cogon, Ormoc City, Leyte 6541
+          contributors · {ADDRESS_LINE}
         </p>
       </motion.div>
     </Section>
