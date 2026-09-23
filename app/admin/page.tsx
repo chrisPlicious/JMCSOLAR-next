@@ -1,6 +1,7 @@
 import { adminDb } from '@/lib/firebase/admin';
 import { requireAdminAuth } from '@/lib/auth';
 import { formatCentavos } from '@/lib/bookings/pricing';
+import { getServices } from '@/data/services';
 import type { DbBooking, DbBookingType } from '@/lib/firebase/types';
 import Link from 'next/link';
 import { CalendarDays, Images, FolderOpen, Package, Wrench, Star, Wallet, ExternalLink } from 'lucide-react';
@@ -85,12 +86,10 @@ export default async function AdminDashboard() {
   const [
     projectCountAgg,
     productCountAgg,
-    serviceCountAgg,
     reviewCountAgg,
     bookingCountAgg,
     resultCountAgg,
     pendingBookingCountAgg,
-    featuredServicesSnap,
     recentProjectsSnap,
     recentProductsSnap,
     recentBookingsSnap,
@@ -102,12 +101,10 @@ export default async function AdminDashboard() {
   ] = await Promise.all([
     adminDb.collection('projects').count().get(),
     adminDb.collection('products').count().get(),
-    adminDb.collection('services').count().get(),
     adminDb.collection('reviews').count().get(),
     adminDb.collection('bookings').count().get(),
     adminDb.collection('results').count().get(),
     adminDb.collection('bookings').where('status', '==', 'pending').count().get(),
-    adminDb.collection('services').where('highlight', '==', true).get(),
     adminDb.collection('projects').orderBy('created_at', 'desc').limit(5).get(),
     adminDb.collection('products').orderBy('created_at', 'desc').limit(5).get(),
     adminDb.collection('bookings').orderBy('created_at', 'desc').limit(6).get(),
@@ -137,13 +134,14 @@ export default async function AdminDashboard() {
 
   const projectCount = projectCountAgg.data().count;
   const productCount = productCountAgg.data().count;
-  const serviceCount = serviceCountAgg.data().count;
   const reviewCount = reviewCountAgg.data().count;
   const bookingCount = bookingCountAgg.data().count;
   const resultCount = resultCountAgg.data().count;
   const pendingBookingCount = pendingBookingCountAgg.data().count;
 
-  const featuredServices = featuredServicesSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  // Services live in data/services.ts, not Firestore — counted from code.
+  const services = getServices();
+  const featuredServiceCount = services.filter((s) => s.highlight).length;
 
   const recentProjects = recentProjectsSnap.docs.map((doc) => {
     const d = doc.data() as { title: string; created_at: string };
@@ -287,13 +285,13 @@ export default async function AdminDashboard() {
           secondary="across multiple categories"
           href="/admin/products"
         />
+        {/* Read-only: services are defined in data/services.ts, so there is no admin CRUD. */}
         <StatCard
-          count={serviceCount ?? 0}
+          count={services.length}
           label="Services"
           icon={<Wrench size={18} aria-hidden />}
           tile="bg-slate-100 text-slate-600"
-          secondary={`${featuredServices?.length ?? 0} featured`}
-          href="/admin/services"
+          secondary={`${featuredServiceCount} featured · managed in code`}
         />
         <StatCard
           count={reviewCount ?? 0}

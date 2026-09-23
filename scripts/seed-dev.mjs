@@ -13,9 +13,8 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import admin from 'firebase-admin'
 
+// Services are not here: they live in data/services.ts, not Firestore.
 const COLLECTIONS = [
-  'services',
-  'serviceDetails',
   'projects',
   'projectImages',
   'products',

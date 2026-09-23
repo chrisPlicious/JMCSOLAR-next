@@ -15,8 +15,7 @@ import CtaBand from "@/components/ui/CtaBand";
 import { Section } from "@/components/ui/Section";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { ArrowRight, X } from "lucide-react";
-import type { DbService } from "@/lib/firebase/types";
-import { clientTypes } from "@/data/services";
+import { clientTypes, type Service } from "@/data/services";
 import Layout from "@/components/layout/Layout";
 import { fadeUp, revealOnScroll } from "@/lib/motion";
 import { cn } from "@/lib/utils";
@@ -27,7 +26,7 @@ type IconName = keyof typeof Icons;
 
 // Services are fetched server-side (app/services/page.tsx) and passed in as a prop,
 // so the /services/[slug] links are present in the initial SSR HTML for crawlers.
-export default function ServicesPage({ services }: { services: DbService[] }) {
+export default function ServicesPage({ services }: { services: Service[] }) {
   const [activeIndex, setActiveIndex] = useState<number | null>(0);
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -73,7 +72,7 @@ export default function ServicesPage({ services }: { services: DbService[] }) {
               | ComponentType<LucideProps>
               | undefined;
             return (
-              <motion.div key={service.id} variants={fadeUp} {...revealOnScroll}>
+              <motion.div key={service.slug} variants={fadeUp} {...revealOnScroll}>
                 <Link
                   href={`/services/${service.slug}`}
                   className={cn(
@@ -113,7 +112,7 @@ export default function ServicesPage({ services }: { services: DbService[] }) {
               | undefined;
             return (
               <div
-                key={service.id}
+                key={service.slug}
                 className={cn(
                   'surface-dark relative snap-start overflow-hidden rounded-card transition-[flex-grow,flex-basis,min-width] duration-500 ease-out-quart',
                   isActive ? 'min-w-[28rem] flex-1' : 'w-24 shrink-0',

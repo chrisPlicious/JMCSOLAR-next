@@ -2,14 +2,19 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import ServicePageLayout from '@/components/ui/ServicePageLayout';
 import ServiceEmptyState from '@/components/ui/ServiceEmptyState';
-import { getServiceBySlug, getServiceDetail } from '@/lib/data/getServices';
+import { getServiceBySlug, getServiceDetail, getServices } from '@/data/services';
 import { SITE_URL } from '@/lib/seo/site';
 import { makeBreadcrumbLd } from '@/lib/seo/breadcrumb';
 import { pageMetadata } from '@/lib/seo/metadata';
 import { BUSINESS_ID } from '@/lib/seo/organization';
 import { isServiceIndexable } from '@/lib/seo/service';
 
-export const revalidate = 60;
+// Services are defined in code, so every route is known at build time.
+export const dynamicParams = false;
+
+export function generateStaticParams() {
+  return getServices().map((s) => ({ id: s.slug }));
+}
 
 export async function generateMetadata({
   params,
@@ -17,9 +22,9 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id: slug } = await params;
-  const service = await getServiceBySlug(slug);
+  const service = getServiceBySlug(slug);
   if (!service) return {};
-  const detail = await getServiceDetail(service.id);
+  const detail = getServiceDetail(slug);
   return pageMetadata({
     title: service.title,
     description: service.description,
@@ -37,10 +42,10 @@ export default async function ServiceDetailPage({
 }) {
   const { id: slug } = await params;
 
-  const service = await getServiceBySlug(slug);
+  const service = getServiceBySlug(slug);
   if (!service) notFound();
 
-  const detail = await getServiceDetail(service.id);
+  const detail = getServiceDetail(slug);
   if (!detail) {
     return <ServiceEmptyState service={service} />;
   }
@@ -75,7 +80,7 @@ export default async function ServiceDetailPage({
         whatIsIt={detail.what_is_it}
         howItWorks={detail.how_it_works}
         benefits={detail.benefits}
-        useCases={detail.use_cases.map((u) => u.item)}
+        useCases={detail.use_cases}
         specs={detail.specs}
         sources={detail.sources}
       />

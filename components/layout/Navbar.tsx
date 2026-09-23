@@ -5,9 +5,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, X, ChevronDown, LayoutGrid, Package, Calculator, MapPin, CalendarCheck } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { db } from '@/lib/firebase/client';
-import { collection, getDocs, orderBy, query } from 'firebase/firestore';
-import type { DbService } from '@/lib/firebase/types';
 import { NAV_SERVICES } from '@/data/services';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
@@ -25,11 +22,11 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileServicesOpen, setMobileServicesOpen] = useState(false);
-  // Seeded from the static NAV_SERVICES so the menus show correct links immediately;
-  // the effect below refreshes from Firestore after hydration. (These menus are
-  // conditionally mounted, so they are NOT an SSR crawl surface — Footer/ServiceIndex/
-  // HomeExplore server-render the service links for crawlers.)
-  const [services, setServices] = useState<Pick<DbService, 'slug' | 'title'>[]>(NAV_SERVICES);
+  // Services are defined in code, so the dropdown renders straight from NAV_SERVICES —
+  // no state, no post-hydration refetch. (These menus are conditionally mounted, so they
+  // are NOT an SSR crawl surface — Footer/ServiceIndex/HomeExplore server-render the
+  // service links for crawlers.)
+  const services = NAV_SERVICES;
   const dropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
 
@@ -37,14 +34,6 @@ export default function Navbar() {
     const handleScroll = () => setScrolled(window.scrollY > 80);
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  useEffect(() => {
-    const q = query(collection(db, 'services'), orderBy('display_order', 'asc'));
-    getDocs(q).then((snap) => {
-      const data = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as DbService[];
-      setServices(data);
-    });
   }, []);
 
   // Close everything on navigation

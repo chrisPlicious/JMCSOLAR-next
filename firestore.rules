@@ -5,15 +5,9 @@ service cloud.firestore {
     match /{document=**} {
       allow read, write: if false;
     }
-    // Public read-only collections
-    match /services/{docId} {
-      allow read: if true;
-      allow write: if false;
-    }
-    match /serviceDetails/{docId} {
-      allow read: if true;
-      allow write: if false;
-    }
+    // Public read-only collections.
+    // NOTE: `services` / `serviceDetails` intentionally absent — services moved to
+    // data/services.ts, so those collections fall through to the default deny.
     match /projects/{docId} {
       allow read: if true;
       allow write: if false;

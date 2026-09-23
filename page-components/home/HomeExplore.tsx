@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ArrowRight, MapPin } from 'lucide-react';
-import type { DbService } from '@/lib/firebase/types';
+import type { Service } from '@/data/services';
 import { getProvinceLocations, getLocation, type ServiceLocation } from '@/data/locations';
 import { Button } from '@/components/ui/Button';
 import { Section } from '@/components/ui/Section';
@@ -47,7 +47,7 @@ function LinkRow({ href, label }: { href: string; label: string }) {
   );
 }
 
-export default function HomeExplore({ services }: { services: DbService[] }) {
+export default function HomeExplore({ services }: { services: Service[] }) {
   const provinces = getProvinceLocations();
   const topCities = TOP_CITY_SLUGS
     .map((s) => getLocation(s))

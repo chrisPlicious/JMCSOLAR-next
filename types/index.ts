@@ -1,11 +1,3 @@
-export interface Service {
-  id: string;
-  icon: string;
-  title: string;
-  description: string;
-  highlight?: string;
-}
-
 export interface ProjectImage {
   id: string;
   storage_path: string;

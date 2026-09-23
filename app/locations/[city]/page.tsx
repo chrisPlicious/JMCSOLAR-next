@@ -24,7 +24,8 @@ import { pageMetadata } from '@/lib/seo/metadata';
 import { BUSINESS_ID } from '@/lib/seo/organization';
 import { isIndexableCityService } from '@/data/indexableCityServices';
 import { cn } from '@/lib/utils';
-import type { DbProject, DbReview, DbService } from '@/lib/firebase/types';
+import { getServices } from '@/data/services';
+import type { DbProject, DbReview } from '@/lib/firebase/types';
 import type { Project, Review } from '@/types';
 
 export const revalidate = 3600;
@@ -67,7 +68,7 @@ export default async function CityPage({
   let isFallback = false;
   let reviews: DbReview[] = [];
 
-  const servicesPromise = adminDb.collection('services').orderBy('display_order').get();
+  const services = getServices();
 
   if (loc.tier === 'municipality') {
     const [projectsSnap, reviewsSnap] = await Promise.all([
@@ -107,9 +108,6 @@ export default async function CityPage({
         .slice(0, 6);
     }
   }
-
-  const servicesSnap = await servicesPromise;
-  const services = servicesSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as DbService);
 
   const mappedProjects: Project[] = projects.map((p) => ({
     id: p.id,
@@ -285,7 +283,7 @@ export default async function CityPage({
                 : `/services/${svc.slug}`;
               return (
               <Link
-                key={svc.id}
+                key={svc.slug}
                 href={href}
                 className={cn(cardVariants({ variant: 'interactive', padding: 'md' }), 'group flex flex-col gap-4')}
               >

@@ -7,11 +7,11 @@ import Reviews from './Reviews';
 import Contact from './Contact';
 import HomeExplore from './HomeExplore';
 import type { Review } from '@/types';
-import type { DbService } from '@/lib/firebase/types';
+import type { Service } from '@/data/services';
 
 interface HomePageProps {
   reviews: Review[];
-  services: DbService[];
+  services: Service[];
 }
 
 export default function HomePage({ reviews, services }: HomePageProps) {

@@ -6,7 +6,7 @@ import type { Review } from '@/types';
 import { SITE_URL } from '@/lib/seo/site';
 import { SITE_OPEN_GRAPH } from '@/lib/seo/metadata';
 import { BUSINESS_ID } from '@/lib/seo/organization';
-import { getServices } from '@/lib/data/getServices';
+import { getServices } from '@/data/services';
 
 // Homepage owns the site-root canonical and og:url. (They used to live on the
 // root layout, but that leaked to every child page — see app/layout.tsx.)
@@ -46,10 +46,8 @@ async function fetchApprovedReviews(): Promise<Review[]> {
 }
 
 export default async function Home() {
-  const [reviews, services] = await Promise.all([
-    fetchApprovedReviews(),
-    getServices(),
-  ]);
+  const reviews = await fetchApprovedReviews();
+  const services = getServices();
 
   const ratings = reviews.filter((r) => typeof r.rating === 'number');
   const aggregateRating =

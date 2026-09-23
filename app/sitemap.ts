@@ -5,8 +5,7 @@ import { LOCATIONS } from '@/data/locations';
 import { isIndexableCityService } from '@/data/indexableCityServices';
 import { isProductIndexable } from '@/lib/seo/product';
 import { isServiceIndexable } from '@/lib/seo/service';
-import { getServices } from '@/lib/data/getServices';
-import type { DbServiceDetail } from '@/lib/firebase/types';
+import { getServices, getServiceDetail } from '@/data/services';
 import type { Product } from '@/types';
 
 // Google ignores <changefreq> and <priority>, and only trusts <lastmod> when it
@@ -25,37 +24,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ].map((path) => ({ url: `${SITE_URL}${path}` }));
 
   // Service detail pages — same gate as the page's robots (isServiceIndexable).
-  let servicePages: MetadataRoute.Sitemap = [];
-  let serviceSlugs: string[] = [];
-  try {
-    const [services, detailsSnap] = await Promise.all([
-      getServices(),
-      adminDb.collection('serviceDetails').get(),
-    ]);
-    const detailByService = new Map(
-      detailsSnap.docs.map((d) => {
-        const detail = d.data() as DbServiceDetail;
-        return [detail.service_id, detail] as const;
-      }),
-    );
-    serviceSlugs = services.map((s) => s.slug);
-    servicePages = services.flatMap((s) => {
-      const detail = detailByService.get(s.id) ?? null;
-      if (!isServiceIndexable(detail)) return [];
-      // The page renders both docs, so it changed whenever either one did.
-      const times = [s.updated_at || s.created_at, detail?.updated_at]
-        .map((t) => (t ? Date.parse(t) : NaN))
-        .filter(Number.isFinite);
-      return [
-        {
-          url: `${SITE_URL}/services/${s.slug}`,
-          ...(times.length > 0 && { lastModified: new Date(Math.max(...times)) }),
-        },
-      ];
-    });
-  } catch (err) {
-    console.error('[sitemap] Failed to fetch service pages:', err);
-  }
+  const services = getServices();
+  const serviceSlugs = services.map((s) => s.slug);
+  const servicePages: MetadataRoute.Sitemap = services.flatMap((s) => {
+    if (!isServiceIndexable(getServiceDetail(s.slug))) return [];
+    const t = Date.parse(s.updated_at);
+    return [
+      {
+        url: `${SITE_URL}/services/${s.slug}`,
+        ...(Number.isFinite(t) && { lastModified: new Date(t) }),
+      },
+    ];
+  });
 
   // Location landing pages — one per city/province slug.
   const locationPages: MetadataRoute.Sitemap = LOCATIONS.map((loc) => ({

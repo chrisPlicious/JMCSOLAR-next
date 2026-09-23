@@ -14,7 +14,7 @@ import { getLocation, getProvinceSlug, provinceLabel } from '@/data/locations';
 import { adminDb } from '@/lib/firebase/admin';
 import { itemsNearCity } from '@/lib/data/nearestLocations';
 import { INDEXABLE_CITY_SERVICES, isIndexableCityService } from '@/data/indexableCityServices';
-import { getServiceBySlug, getServiceDetail } from '@/lib/data/getServices';
+import { getServiceBySlug, getServiceDetail } from '@/data/services';
 import { SITE_URL } from '@/lib/seo/site';
 import { makeBreadcrumbLd } from '@/lib/seo/breadcrumb';
 import { pageMetadata } from '@/lib/seo/metadata';
@@ -42,7 +42,7 @@ export async function generateMetadata({
   const loc = getLocation(citySlug);
   if (!loc) return {};
 
-  const svc = await getServiceBySlug(serviceSlug);
+  const svc = getServiceBySlug(serviceSlug);
   if (!svc) return {};
 
   const title =
@@ -75,10 +75,10 @@ export default async function CityServicePage({
   const loc = getLocation(citySlug);
   if (!loc) notFound();
 
-  const svc = await getServiceBySlug(serviceSlug);
+  const svc = getServiceBySlug(serviceSlug);
   if (!svc) notFound();
 
-  const detail = await getServiceDetail(svc.id);
+  const detail = getServiceDetail(serviceSlug);
   const indexable = isIndexableCityService(citySlug, serviceSlug);
 
   let projects: DbProject[] = [];

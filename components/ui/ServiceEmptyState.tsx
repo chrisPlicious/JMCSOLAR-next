@@ -1,13 +1,13 @@
 import { ArrowLeft, Clock } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
-import type { DbService } from '@/lib/firebase/types';
+import type { Service } from '@/data/services';
 import Button from './Button';
 import EmptyState from './EmptyState';
 import PageHero from './PageHero';
 import { Section } from './Section';
 
 interface ServiceEmptyStateProps {
-  service: DbService;
+  service: Service;
 }
 
 export default function ServiceEmptyState({ service }: ServiceEmptyStateProps) {

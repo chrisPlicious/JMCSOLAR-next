@@ -24,7 +24,7 @@ const navItems: { label: string; href: string; exact: boolean; icon: LucideIcon 
   { label: 'Calendar', href: '/admin/calendar', exact: false, icon: CalendarDays },
   { label: 'Projects', href: '/admin/projects', exact: false, icon: Folder },
   { label: 'Products', href: '/admin/products', exact: false, icon: Package },
-  { label: 'Services', href: '/admin/services', exact: false, icon: SunMedium },
+  // No Services entry: services are defined in data/services.ts, not the CMS.
   { label: 'Reviews', href: '/admin/reviews', exact: false, icon: Star },
   { label: 'Results', href: '/admin/results', exact: false, icon: Columns2 },
   { label: 'Bookings', href: '/admin/bookings', exact: false, icon: CalendarCheck },
