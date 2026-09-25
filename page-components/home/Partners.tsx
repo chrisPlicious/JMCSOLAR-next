@@ -61,7 +61,7 @@ function PartnerCard({ name, logo }: { name: string; logo: string }) {
 
 export default function Partners() {
   return (
-    <Section id="partners" tone="tint" className="overflow-hidden">
+    <Section id="partners" tone="white" className="overflow-hidden">
       <motion.div variants={fadeUp} {...revealOnScroll}>
         <SectionHeader
           align="center"

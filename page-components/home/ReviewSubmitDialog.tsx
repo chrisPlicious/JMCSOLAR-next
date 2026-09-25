@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X, CheckCircle, MessageSquarePlus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -15,6 +16,8 @@ interface Props {
 
 const GROUP_LABEL_CLASS = 'mb-1.5 block text-sm font-semibold text-fg';
 
+const noopSubscribe = () => () => {};
+
 export default function ReviewSubmitDialog({ open, onOpenChange }: Props) {
   const [name, setName] = useState('');
   const [companyName, setCompanyName] = useState('');
@@ -26,6 +29,9 @@ export default function ReviewSubmitDialog({ open, onOpenChange }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [succeeded, setSucceeded] = useState(false);
   const [error, setError] = useState('');
+  // The trigger sits in a dark band; portalling to <body> keeps the dialog out
+  // of `.surface-dark`, which would otherwise turn its text white on white.
+  const isClient = useSyncExternalStore(noopSubscribe, () => true, () => false);
 
   function handleClose() {
     onOpenChange(false);
@@ -81,7 +87,9 @@ export default function ReviewSubmitDialog({ open, onOpenChange }: Props) {
 
   const displayRating = hoverRating || rating;
 
-  return (
+  if (!isClient) return null;
+
+  return createPortal(
     <AnimatePresence>
       {open && (
         <>
@@ -275,6 +283,7 @@ export default function ReviewSubmitDialog({ open, onOpenChange }: Props) {
           </div>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 }

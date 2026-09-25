@@ -55,7 +55,10 @@
       "mcp__plugin_context-mode_context-mode__ctx_batch_execute",
       "Bash(rtk curl *)",
       "mcp__plugin_firebase_firebase__firestore_delete_document",
-      "mcp__plugin_context-mode_context-mode__ctx_execute"
+      "mcp__plugin_context-mode_context-mode__ctx_execute",
+      "Bash(echo \"exit: $?\")",
+      "Bash(npx vitest *)",
+      "Bash(rtk git *)"
     ]
   },
   "enableAllProjectMcpServers": true,

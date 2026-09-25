@@ -114,8 +114,13 @@ export default function ServicesPage({ services }: { services: Service[] }) {
               <div
                 key={service.slug}
                 className={cn(
-                  'surface-dark relative snap-start overflow-hidden rounded-card transition-[flex-grow,flex-basis,min-width] duration-500 ease-out-quart',
-                  isActive ? 'min-w-[28rem] flex-1' : 'w-24 shrink-0',
+                  // Both states size themselves with flex-basis (a length, never `auto`) so the
+                  // open/close tween is one continuous interpolation. Using `w-24` collapsed and
+                  // `flex-1` expanded made the card snap to its new width in a single frame and
+                  // only the flex-grow ramp animated. `shrink-0` + basis-[28rem] also supplies the
+                  // 28rem floor that `min-width` used to, and unlike min-width it animates.
+                  'surface-dark relative snap-start overflow-hidden rounded-card shrink-0 transition-[flex-basis,flex-grow] duration-500 ease-out-quart',
+                  isActive ? 'grow basis-[28rem]' : 'grow-0 basis-24',
                 )}
               >
                 {/* Background image */}

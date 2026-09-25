@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import ServicePageLayout from '@/components/ui/ServicePageLayout';
 import ServiceEmptyState from '@/components/ui/ServiceEmptyState';
+import PowerFlowSimulatorLazy from '@/page-components/services/PowerFlowSimulatorLazy';
+import { isSimulatorSystem } from '@/lib/power-flow/systems';
 import { getServiceBySlug, getServiceDetail, getServices } from '@/data/services';
 import { SITE_URL } from '@/lib/seo/site';
 import { makeBreadcrumbLd } from '@/lib/seo/breadcrumb';
@@ -79,6 +81,7 @@ export default async function ServiceDetailPage({
         overview={detail.overview}
         whatIsIt={detail.what_is_it}
         howItWorks={detail.how_it_works}
+        simulator={isSimulatorSystem(slug) ? <PowerFlowSimulatorLazy system={slug} /> : undefined}
         benefits={detail.benefits}
         useCases={detail.use_cases}
         specs={detail.specs}

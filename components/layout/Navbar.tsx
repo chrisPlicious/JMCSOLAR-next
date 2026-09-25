@@ -24,7 +24,7 @@ export default function Navbar() {
   const [mobileServicesOpen, setMobileServicesOpen] = useState(false);
   // Services are defined in code, so the dropdown renders straight from NAV_SERVICES —
   // no state, no post-hydration refetch. (These menus are conditionally mounted, so they
-  // are NOT an SSR crawl surface — Footer/ServiceIndex/HomeExplore server-render the
+  // are NOT an SSR crawl surface — Footer/ServiceIndex/ServiceHighlights server-render the
   // service links for crawlers.)
   const services = NAV_SERVICES;
   const dropdownRef = useRef<HTMLDivElement>(null);

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Poppins, Montserrat, Geist } from 'next/font/google';
+import { Poppins, Montserrat, Geist, Geist_Mono } from 'next/font/google';
 import { headers } from 'next/headers';
 import './globals.css';
 import NextTopLoader from 'nextjs-toploader';
@@ -35,6 +35,16 @@ const montserrat = Montserrat({
   weight: ['500', '800'],
   variable: '--font-montserrat',
   display: 'swap',
+});
+
+// Geist Mono = figures in the power-flow simulators. Not preloaded: only the
+// service pages that use it download it.
+const geistMono = Geist_Mono({
+  subsets: ['latin'],
+  weight: ['500', '600'],
+  variable: '--font-geist-mono',
+  display: 'swap',
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -78,7 +88,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={cn(geist.variable, poppins.variable, montserrat.variable, 'font-sans')}
+      className={cn(geist.variable, poppins.variable, montserrat.variable, geistMono.variable, 'font-sans')}
       nonce={nonce}
       suppressHydrationWarning
     >

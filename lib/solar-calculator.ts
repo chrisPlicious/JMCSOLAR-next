@@ -222,6 +222,16 @@ function computeLifetimeSavings(
 // Main calculator
 // ---------------------------------------------------------------------------
 
+/**
+ * Panels needed to cover `dailyKwh`, sized on 4 sun hours and rounded up to
+ * whole panels. Shared with the power-flow simulators so both agree on size.
+ */
+export function sizeArray(dailyKwh: number, panelWattage = 550) {
+  const panelWattageKw = panelWattage / 1000;
+  const panelCount = Math.ceil(dailyKwh / 4 / panelWattageKw);
+  return { panelCount, kwp: Math.round(panelCount * panelWattageKw * 100) / 100 };
+}
+
 export function calculate(input: CalculatorInput): CalculatorResult {
   const region = REGIONS[input.region];
   const panelWattageKw = (input.panelWattage ?? 550) / 1000;
@@ -233,12 +243,9 @@ export function calculate(input: CalculatorInput): CalculatorResult {
   // 1. Monthly kWh
   const monthlyKwh = input.monthlyKwh;
 
-  // 2. System size: kWh / 30 days / 4 sun hours
+  // 2–3. System size (kWh / 30 days / 4 sun hours), rounded up to whole panels
   const dailyKwh = monthlyKwh / 30;
-  const systemSizeKw = dailyKwh / 4;
-
-  // 3. Panel count (round up)
-  const panelCount = Math.ceil(systemSizeKw / panelWattageKw);
+  const { panelCount } = sizeArray(dailyKwh, input.panelWattage ?? 550);
 
   // 4. Actual system size after rounding panels up
   const actualSystemSizeKw = panelCount * panelWattageKw;
