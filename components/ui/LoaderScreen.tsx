@@ -1,103 +1,179 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { JMC_PIXELS } from './loader-pixels';
 
-// ── Tile configuration ────────────────────────────────────────────────────────
-const SVG_CX       = 200;
-const SVG_CY       = 200;
-const OUTER_COUNT  = 12;
-const OUTER_RADIUS = 148;
-const TILE_SIZE    = 18;
-const TILE_GAP     = 3;
-const WAVE_PERIOD  = 2.8; // seconds for one full sweep
+// ── Palette (sampled from the JMC mark) ───────────────────────────────────────
+const NAVY  = '#1c1b51';
+const MID   = '#3e67ae';
+const ICE   = '#b3e2f8';
+const SLATE = '#4a6194';
+const SLOT  = '#e8eff8';
+const HALO  = '#5aaeee';
+const TIER  = [NAVY, MID, ICE] as const;
+const GLOW  = ['#4f86e3', '#8fcaf6', '#f2fbff'] as const;
 
-const COLOR_BANDS = {
-  dark:  ['#152848', '#1a2e52', '#1e3560'],
-  mid:   ['#3260a0', '#3d6a9e', '#4878b0'],
-  light: ['#6b9fd4', '#7fb5dc', '#5a90c4'],
-  pale:  ['#a3cbe8', '#b5d8ef', '#90c0df'],
-} as const;
+// ── Timeline (seconds since the CSS entrance started) ─────────────────────────
+// The entrance — pixel sweep, battery outline, wordmark — is CSS (globals.css)
+// so it plays before hydration. Everything after is driven from here.
+const SWEEP        = 1.1; // seconds for the reveal to travel once around the logo
+const REVEAL_DONE  = 2.2; // last pixel + wordmark (CSS: 1.4s delay + 0.8s) settled: earliest "charged"
+const GLOW_START   = 1.9; // twinkles begin
+const TWINKLE_LOOP = 5.2; // one pass of the twinkle schedule, repeated while loading
+const HOLD         = 1.0; // charged ripple at 100% before the exit
+const EXIT         = 0.7; // pixels wipe away and the screen fades
 
-type Band = keyof typeof COLOR_BANDS;
+// ── Layout (1920×1080 design space, cropped by VIEW_BOX) ──────────────────────
+const VIEW_BOX = '600 90 720 870';
+const LOGO = { x: 960, y: 436, s: 0.62 };
+const BAT  = { cx: 960, cy: 851, w: 290, h: 76, r: 16, sw: 6, nubW: 14, nubH: 30, pad: 8, cells: 5, gap: 8 };
+const BAT_X0 = BAT.cx - (BAT.w + 4 + BAT.nubW) / 2;
+const BAT_Y0 = BAT.cy - BAT.h / 2;
+const BAT_IX = BAT_X0 + BAT.sw / 2 + BAT.pad;
+const BAT_IY = BAT_Y0 + BAT.sw / 2 + BAT.pad;
+const BAT_IH = BAT.h - BAT.sw - BAT.pad * 2;
+const BAT_IW = BAT.w - BAT.sw - BAT.pad * 2;
+const CELL_W = (BAT_IW - BAT.gap * (BAT.cells - 1)) / BAT.cells;
+// Rounded-rect perimeter, used as the dash length for the outline draw-in.
+const BAT_PERIMETER = 2 * (BAT.w + BAT.h - 4 * BAT.r) + 2 * Math.PI * BAT.r;
 
-// Each cluster is a 3-column × 2-row grid of tiles
-const CLUSTER_BANDS: Band[][] = [
-  ['dark', 'mid',  'dark' ],
-  ['mid',  'pale', 'light'],
-];
+// ── Easing ────────────────────────────────────────────────────────────────────
+const clamp01   = (v: number) => Math.max(0, Math.min(1, v));
+const enter     = (t: number) => 1 - Math.pow(1 - t, 3);
+const draw      = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+const pop       = (t: number) => 1 + 2.70158 * Math.pow(t - 1, 3) + 1.70158 * Math.pow(t - 1, 2);
+const r3        = (n: number) => Math.round(n * 1000) / 1000;
 
-function pick(band: Band, index: number): string {
-  const arr = COLOR_BANDS[band];
-  return arr[index % arr.length];
+/** Quick rise, slow fall; 0 outside the window. */
+function pulse(dt: number, rise: number, fall: number): number {
+  if (dt <= 0) return 0;
+  if (dt < rise) return enter(dt / rise);
+  if (dt < rise + fall) return 1 - draw((dt - rise) / fall);
+  return 0;
 }
 
-interface TileData {
-  transform:    string;
-  fill:         string;
-  appearDelay:  number;
-  waveDelay:    number;
+// ── Pixel geometry ────────────────────────────────────────────────────────────
+const PIXELS = (() => {
+  const g = JMC_PIXELS.map((p) => {
+    const pts = p.d.slice(1, -1).split('L').map((s) => s.split(',').map(Number));
+    const cx  = pts.reduce((a, q) => a + q[0], 0) / pts.length;
+    const cy  = pts.reduce((a, q) => a + q[1], 0) / pts.length;
+    const ang = (Math.atan2(cx, -cy) / (Math.PI * 2) + 1.01) % 1; // 0 = 12 o'clock, clockwise
+    return { ...p, cx, cy, ang, dist: Math.hypot(cx, cy) };
+  });
+  const lo = Math.min(...g.map((p) => p.dist));
+  const hi = Math.max(...g.map((p) => p.dist));
+  return g.map((p) => ({
+    d:        p.d,
+    t:        p.t,
+    cx:       p.cx,
+    cy:       p.cy,
+    rad:      (p.dist - lo) / (hi - lo),
+    revealAt: r3(0.2 + p.ang * SWEEP + p.t * 0.08), // clockwise sweep (inline CSS delay)
+    exitAt:   p.ang * 0.35 + p.t * 0.05,          // wipe away in the same order
+  }));
+})();
+
+function mulberry32(a: number) {
+  return () => {
+    a |= 0; a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
 }
 
-const r = (n: number) => Math.round(n * 1e4) / 1e4;
+// Twinkle schedule: [phase 0–1, amplitude] per pixel, stratified in time so
+// something is always lit and no pixel fires twice in quick succession.
+const TWINKLES = (() => {
+  const rnd = mulberry32(20261001);
+  const ev: [number, number][][] = PIXELS.map(() => []);
+  const N = 44;
+  let last = -1;
+  for (let k = 0; k < N; k++) {
+    const u = (k + rnd() * 0.9) / N;
+    let i = 0, tries = 0;
+    do { i = Math.floor(rnd() * PIXELS.length); tries++; }
+    while (tries < 60 && (i === last || ev[i].some((e) => Math.abs(e[0] - u) < 0.22)));
+    ev[i].push([u, 0.6 + rnd() * 0.4]);
+    last = i;
+  }
+  return ev;
+})();
 
-function buildOuterTiles(): TileData[] {
-  const tiles: TileData[] = [];
-  for (let i = 0; i < OUTER_COUNT; i++) {
-    const angle = (i / OUTER_COUNT) * Math.PI * 2 - Math.PI / 2;
-    const gx    = SVG_CX + Math.cos(angle) * OUTER_RADIUS;
-    const gy    = SVG_CY + Math.sin(angle) * OUTER_RADIUS;
-    const rot   = (angle * 180 / Math.PI) + 90;
-    const norm  = ((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
-
-    for (let row = 0; row < 2; row++) {
-      for (let col = 0; col < 3; col++) {
-        const lx = (col - 1) * (TILE_SIZE + TILE_GAP);
-        const ly = (row - 0.5) * (TILE_SIZE + TILE_GAP);
-        tiles.push({
-          transform:   `translate(${r(gx)},${r(gy)}) rotate(${r(rot)}) translate(${r(lx)},${r(ly)})`,
-          fill:        pick(CLUSTER_BANDS[row][col], tiles.length),
-          appearDelay: (80 + tiles.length * 18) / 1000,
-          waveDelay:   -((norm / (Math.PI * 2)) * WAVE_PERIOD),
-        });
+function glowAt(i: number, T: number, chargedAt: number | null): number {
+  const px = PIXELS[i];
+  let g = pulse(T - px.revealAt, 0.06, 0.7);
+  if (T > GLOW_START) {
+    const cycle = Math.floor((T - GLOW_START) / TWINKLE_LOOP);
+    for (let k = Math.max(0, cycle - 1); k <= cycle; k++) {
+      for (const [u, amp] of TWINKLES[i]) {
+        const at = GLOW_START + k * TWINKLE_LOOP + 0.15 + u * (TWINKLE_LOOP - 0.9);
+        if (chargedAt !== null && at > chargedAt) continue;
+        g = Math.max(g, amp * pulse(T - at, 0.28, 1.1));
       }
     }
   }
-  return tiles;
+  if (chargedAt !== null) g = Math.max(g, pulse(T - (chargedAt + px.rad * 0.45), 0.14, 0.85));
+  return Math.min(g, 1.4);
+}
+
+const scaleAbout = (cx: number, cy: number, s: number) =>
+  s === 1 ? undefined : `translate(${r3(cx)} ${r3(cy)}) scale(${r3(s)}) translate(${r3(-cx)} ${r3(-cy)})`;
+
+/** Timeline time (ms) at which the CSS entrance started, so JS glow lines up with it. */
+function entranceStart(svg: SVGSVGElement | null): number | null {
+  const start = svg?.querySelector('.jmc-loader-px')?.getAnimations?.()[0]?.startTime;
+  return typeof start === 'number' ? start : null;
+}
+
+interface Frame {
+  T:         number;        // seconds since the entrance started
+  pct:       number;        // smoothed progress, 0–100
+  chargedAt: number | null; // T at which progress hit 100
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function LoaderScreen() {
-  const [pct,    setPct]    = useState(0);
-  const [fading, setFading] = useState(false);
-  const [gone,   setGone]   = useState(false);
-
-  const tiles = useMemo(buildOuterTiles, []);
-
-  // Refs so closures always see latest values without re-running the effect
-  const targetRef    = useRef(5);
-  const currentRef   = useRef(0);
-  const dismissedRef = useRef(false);
-  const rafRef       = useRef<number>(0);
+  const [frame, setFrame] = useState<Frame>({ T: 0, pct: 0, chargedAt: null });
+  const [gone,  setGone]  = useState(false);
+  const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
-    // ── Smooth rAF loop: creep currentRef toward targetRef ──────────────────
-    const animate = () => {
-      if (dismissedRef.current) return;
-      const cur = currentRef.current;
-      const tgt = targetRef.current;
-      if (cur < tgt) {
-        // Speed scales with gap — faster when far behind, slows near target
-        const step = Math.max(0.3, (tgt - cur) * 0.04);
-        currentRef.current = Math.min(cur + step, tgt);
-        setPct(Math.floor(currentRef.current));
-      }
-      rafRef.current = requestAnimationFrame(animate);
-    };
-    rafRef.current = requestAnimationFrame(animate);
+    let stopped   = false;
+    let raf       = 0;
+    let origin: number | null = null;
+    let target    = 5;
+    let current   = 0;
+    let chargedAt: number | null = null;
 
     const advance = (v: number) => {
-      targetRef.current = Math.max(targetRef.current, v);
+      target = Math.max(target, v);
     };
+
+    // ── Frame loop: creep progress toward target, then charge → hold → exit ──
+    const tick = (now: number) => {
+      if (stopped) return;
+      origin ??= entranceStart(svgRef.current) ?? now;
+      const T = (now - origin) / 1000;
+
+      if (current < target) {
+        // Speed scales with gap — faster when far behind, slows near target
+        current = Math.min(current + Math.max(0.3, (target - current) * 0.04), target);
+      }
+      // target only reaches 100 on window load, so this means the page is ready
+      if (chargedAt === null && current >= 99.5) chargedAt = Math.max(T, REVEAL_DONE);
+
+      if (chargedAt !== null && T >= chargedAt + HOLD + EXIT) {
+        stopped = true;
+        setGone(true);
+        window.dispatchEvent(new Event('jmc:loader-done'));
+        return;
+      }
+      setFrame({ T, pct: current, chargedAt });
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
 
     // ── Real signal 1: document readyState ──────────────────────────────────
     const applyReadyState = () => {
@@ -128,26 +204,7 @@ export default function LoaderScreen() {
     }
 
     // ── Real signal 3: window load — page is fully ready ────────────────────
-    const onLoad = () => {
-      advance(100);
-      // Wait until the rAF loop visually reaches 100, then dismiss
-      const waitForFull = () => {
-        if (currentRef.current >= 99.5) {
-          setTimeout(() => {
-            dismissedRef.current = true;
-            cancelAnimationFrame(rafRef.current);
-            setFading(true);
-            setTimeout(() => {
-              setGone(true);
-              window.dispatchEvent(new Event('jmc:loader-done'));
-            }, 700);
-          }, 1000);
-        } else {
-          requestAnimationFrame(waitForFull);
-        }
-      };
-      requestAnimationFrame(waitForFull);
-    };
+    const onLoad = () => advance(100);
 
     if (document.readyState === 'complete') {
       onLoad();
@@ -156,8 +213,8 @@ export default function LoaderScreen() {
     }
 
     return () => {
-      dismissedRef.current = true;
-      cancelAnimationFrame(rafRef.current);
+      stopped = true;
+      cancelAnimationFrame(raf);
       observer?.disconnect();
       document.removeEventListener('readystatechange', applyReadyState);
       window.removeEventListener('load', onLoad);
@@ -166,93 +223,148 @@ export default function LoaderScreen() {
 
   if (gone) return null;
 
+  const { T, pct, chargedAt } = frame;
+  const exitAt  = chargedAt === null ? Infinity : chargedAt + HOLD;
+  const charged = chargedAt === null ? 0 : T - chargedAt;
+
+  // ── Logo pixels ───────────────────────────────────────────────────────────
+  const halos: React.ReactNode[] = [];
+  const tiles = PIXELS.map((px, i) => {
+    const e      = clamp01((T - (exitAt + px.exitAt)) / 0.22);
+    const g      = glowAt(i, T, chargedAt);
+    const lift   = 1 + 0.05 * Math.min(g, 1);
+    const shrink = 1 - 0.7 * draw(e);
+
+    if (g > 0.01) {
+      // The tile's own entrance is CSS; the halo mirrors it so they stay in step.
+      const shown = enter(clamp01((T - px.revealAt) / 0.2));
+      const grown = 0.2 + 0.8 * pop(clamp01((T - px.revealAt) / 0.45));
+      halos.push(
+        <path
+          key={i}
+          d={px.d}
+          fill={HALO}
+          opacity={r3(Math.min(1, g * 0.8) * shown * (1 - e))}
+          transform={scaleAbout(px.cx, px.cy, grown * shrink * lift)}
+        />,
+      );
+    }
+
+    return (
+      <g key={i} className="jmc-loader-px" style={{ animationDelay: `${px.revealAt}s` }}>
+        <g opacity={e > 0 ? r3(1 - e) : undefined} transform={scaleAbout(px.cx, px.cy, shrink * lift)}>
+          <path d={px.d} fill={TIER[px.t]} />
+          {g > 0.01 && <path d={px.d} fill={GLOW[px.t]} opacity={r3(Math.min(1, g * 0.9))} />}
+        </g>
+      </g>
+    );
+  });
+
+  const bump     = chargedAt === null ? 0 : pulse(charged, 0.2, 0.7);
+  const logoTf   = `translate(${LOGO.x} ${LOGO.y}) scale(${r3(LOGO.s * (1 + 0.025 * bump))})`;
+  const fadeOut  = enter(clamp01((T - exitAt) / 0.45));
+
+  // ── Battery ───────────────────────────────────────────────────────────────
+  const P     = pct / 100;
+  const full  = chargedAt === null ? 0 : pulse(charged, 0.12, 0.9);
+  const slots = enter(clamp01((T - 0.9) / 0.4));
+  const cells = Array.from({ length: BAT.cells }, (_, k) => {
+    const f = clamp01(P * BAT.cells - k);
+    const x = BAT_IX + k * (CELL_W + BAT.gap);
+    const w = CELL_W * f;
+    return (
+      <g key={k}>
+        {w > 0.5 && <rect x={x} y={BAT_IY} width={r3(w)} height={BAT_IH} rx={5} fill={MID} />}
+        {f > 0 && f < 1 && w > 6 && <rect x={r3(x + w - 5)} y={BAT_IY} width={5} height={BAT_IH} rx={2.5} fill={ICE} />}
+        {full > 0 && <rect x={x} y={BAT_IY} width={CELL_W} height={BAT_IH} rx={5} fill={ICE} opacity={r3(full * 0.85)} />}
+      </g>
+    );
+  });
+
+  const overlay = 1 - draw(clamp01((T - exitAt - 0.3) / 0.4));
+  const shownPct = Math.floor(pct);
+
   return (
     <div
-      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center"
-      style={{
-        background: 'radial-gradient(ellipse at center, #0f2035 0%, #0a1525 70%)',
-        transform:  fading ? 'translateY(-100%)' : 'translateY(0)',
-        transition: 'transform 0.7s cubic-bezier(0.4,0,0.2,1)',
-      }}
+      role="progressbar"
+      aria-label="Loading JMC Solar"
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={shownPct}
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-white"
+      style={{ opacity: overlay }}
     >
-      {/* ── Tile ring + brand ── */}
-      <div className="relative w-[min(320px,85vw)] h-[min(320px,85vw)] mb-10">
+      <svg
+        ref={svgRef}
+        viewBox={VIEW_BOX}
+        aria-hidden="true"
+        className="h-auto w-[min(420px,78vw)] max-h-[88svh] overflow-visible"
+      >
+        <defs>
+          <filter id="jmc-loader-halo" filterUnits="userSpaceOnUse" x={-600} y={-600} width={1200} height={1200}>
+            <feGaussianBlur stdDeviation={18} />
+          </filter>
+        </defs>
 
-        {/* Ambient pulse rings (decorative) */}
-        <div
-          className="loader-v2-ring-1 absolute rounded-full pointer-events-none"
-          style={{ width: 380, height: 380, top: '50%', left: '50%', transform: 'translate(-50%,-50%)' }}
-        />
-        <div
-          className="loader-v2-ring-2 absolute rounded-full pointer-events-none"
-          style={{ width: 440, height: 440, top: '50%', left: '50%', transform: 'translate(-50%,-50%)' }}
-        />
+        {/* ── Logo ── */}
+        <g transform={logoTf}>
+          <g filter="url(#jmc-loader-halo)">{halos}</g>
+          <g>{tiles}</g>
+          <g opacity={fadeOut > 0 ? r3(1 - fadeOut) : undefined}>
+            <text className="jmc-loader-wordmark font-wordmark" x={15} y={19} fontSize={52} textAnchor="middle">
+              <tspan fontWeight={800} fill={NAVY}>JMC</tspan>
+              <tspan fontWeight={500} fill={SLATE}>SOLAR</tspan>
+            </text>
+          </g>
+        </g>
 
-        {/* Outer tile ring (SVG) */}
-        <svg
-          viewBox="0 0 400 400"
-          className="w-full h-full"
-          style={{ filter: 'drop-shadow(0 0 2px rgba(126,200,240,0.08))' }}
+        {/* ── Battery ── */}
+        <g
+          opacity={fadeOut > 0 ? r3(1 - fadeOut) : undefined}
+          transform={fadeOut > 0 ? `translate(0 ${r3(10 * fadeOut)})` : undefined}
         >
-          {tiles.map((t, i) => (
-            <rect
-              key={i}
-              x={-TILE_SIZE / 2}
-              y={-TILE_SIZE / 2}
-              width={TILE_SIZE}
-              height={TILE_SIZE}
-              rx={1.5}
-              fill={t.fill}
-              transform={t.transform}
-              style={{
-                opacity: 0,
-                animation: [
-                  `loaderTileAppear 0.4s ${t.appearDelay}s ease-out forwards`,
-                  `loaderTileWave   3s   ${t.waveDelay}s  ease-in-out infinite`,
-                ].join(', '),
-              }}
-            />
-          ))}
-        </svg>
-
-        {/* Brand text — centred over the SVG */}
-        <div className="loader-v2-brand absolute inset-0 flex items-center justify-center">
-          <div className="flex items-baseline gap-1.5">
-            <span className="font-wordmark font-extrabold text-[22px] tracking-[3px] text-white">
-              JMC
-            </span>
-            <span
-              className="font-wordmark font-medium text-[22px] tracking-[2px]"
-              style={{ color: '#6b9fd4' }}
-            >
-              SOLAR
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Progress row ── */}
-      <div className="loader-v2-progress-row flex items-center gap-3.5">
-        <div
-          className="w-[160px] h-[2px] rounded-full overflow-hidden"
-          style={{ background: 'rgba(255,255,255,0.06)' }}
-        >
-          <div
-            className="h-full rounded-full"
-            style={{
-              width: `${pct}%`,
-              background: 'linear-gradient(90deg, #3d6a9e, #7ec8f0)',
-              transition: 'width 0.15s ease-out',
-            }}
+          <rect
+            className="jmc-loader-outline"
+            x={BAT_X0}
+            y={BAT_Y0}
+            width={BAT.w}
+            height={BAT.h}
+            rx={BAT.r}
+            fill="none"
+            stroke={NAVY}
+            strokeWidth={BAT.sw}
+            strokeDasharray={`${r3(BAT_PERIMETER)} ${r3(BAT_PERIMETER)}`}
+            style={{ '--jmc-dash': r3(BAT_PERIMETER) } as React.CSSProperties}
           />
-        </div>
-        <span
-          className="font-wordmark text-[11px] font-medium tracking-[1px] tabular-nums min-w-[32px]"
-          style={{ color: 'rgba(255,255,255,0.3)' }}
-        >
-          {pct}%
-        </span>
-      </div>
+          <rect
+            className="jmc-loader-nub"
+            x={BAT_X0 + BAT.w + 4}
+            y={BAT.cy - BAT.nubH / 2}
+            width={BAT.nubW}
+            height={BAT.nubH}
+            rx={4}
+            fill={NAVY}
+          />
+          <g className="jmc-loader-slots">
+            {Array.from({ length: BAT.cells }, (_, k) => (
+              <rect key={k} x={BAT_IX + k * (CELL_W + BAT.gap)} y={BAT_IY} width={CELL_W} height={BAT_IH} rx={5} fill={SLOT} />
+            ))}
+          </g>
+          <g opacity={slots < 1 ? r3(slots) : undefined}>{cells}</g>
+          <text
+            className="jmc-loader-label font-wordmark tabular-nums"
+            x={BAT.cx}
+            y={BAT_Y0 + BAT.h + 50}
+            textAnchor="middle"
+            fontSize={26}
+            fontWeight={500}
+            letterSpacing="0.08em"
+            fill={SLATE}
+          >
+            {shownPct}%
+          </text>
+        </g>
+      </svg>
     </div>
   );
 }

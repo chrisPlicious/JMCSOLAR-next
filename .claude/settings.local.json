@@ -58,7 +58,9 @@
       "mcp__plugin_context-mode_context-mode__ctx_execute",
       "Bash(echo \"exit: $?\")",
       "Bash(npx vitest *)",
-      "Bash(rtk git *)"
+      "Bash(rtk git *)",
+      "Bash(gh api *)",
+      "Bash(node -e ' *)"
     ]
   },
   "enableAllProjectMcpServers": true,

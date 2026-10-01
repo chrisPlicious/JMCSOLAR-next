@@ -1,406 +1,275 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, ChevronDown, LayoutGrid, Package, Calculator, MapPin, CalendarCheck } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { NAV_SERVICES } from '@/data/services';
+import { ChevronDown, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import { DURATION, EASE_OUT } from '@/lib/motion';
+import MobileMenu from './MobileMenu';
+import ServicesMenu from './ServicesMenu';
+import { Wordmark } from './Wordmark';
+import { SERVICES_ROUTES, TOP_LINKS, isUnder } from './nav-data';
 
-// Every route reachable from the Services dropdown marks "Services" active.
-const SERVICES_ROUTES = ['/services', '/products', '/calculator', '/locations', '/booking'];
+const SOLID_AFTER    = 80;  // px scrolled before the bar turns solid and narrows
+const HIDE_AFTER     = 240; // px scrolled before scrolling down tucks the bar away
+const SCROLL_SLOP    = 8;   // ignore direction changes smaller than this
+const HOVER_OPEN_MS  = 80;  // hover intent before the Services menu opens
+const HOVER_CLOSE_MS = 160; // grace period to cross from the trigger into the menu
 
-function isUnder(pathname: string, base: string) {
-  return pathname === base || pathname.startsWith(`${base}/`);
-}
+const SERVICES_MENU_ID = 'services-menu';
 
+/**
+ * Floating pill navbar. Transparent glass over the home hero, solid white
+ * everywhere else; narrows once scrolled, hides on scroll down and returns on
+ * scroll up. Service links here are client-only — Footer, ServiceIndex and
+ * ServiceHighlights server-render them for crawlers.
+ */
 export default function Navbar() {
-  const [scrolled, setScrolled] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [mobileServicesOpen, setMobileServicesOpen] = useState(false);
-  // Services are defined in code, so the dropdown renders straight from NAV_SERVICES —
-  // no state, no post-hydration refetch. (These menus are conditionally mounted, so they
-  // are NOT an SSR crawl surface — Footer/ServiceIndex/ServiceHighlights server-render the
-  // service links for crawlers.)
-  const services = NAV_SERVICES;
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
+  const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [servicesOpen, setServicesOpen] = useState(false);
+  const [hovered, setHovered] = useState<string | null>(null);
+
+  const navRef = useRef<HTMLElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const hoverTimer = useRef<number | undefined>(undefined);
+  const openedByHover = useRef(false);
+  const servicesOpenRef = useRef(false);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 80);
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    servicesOpenRef.current = servicesOpen;
+  }, [servicesOpen]);
+
+  // ── Scroll: solid/narrow past the hero top, hide on the way down ─────────
+  useEffect(() => {
+    let lastY = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      setScrolled(y > SOLID_AFTER);
+      if (y < HIDE_AFTER) {
+        setHidden(false);
+        lastY = y;
+      } else if (y > lastY + SCROLL_SLOP) {
+        // Keep the bar while a keyboard user is working inside it.
+        if (!navRef.current?.querySelector(':focus-visible')) setHidden(true);
+        lastY = y;
+      } else if (y < lastY - SCROLL_SLOP) {
+        setHidden(false);
+        lastY = y;
+      }
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Close everything on navigation
+  // ── Services menu: hover intent, click, Escape, click/focus outside ──────
+  const closeServices = useCallback(() => {
+    window.clearTimeout(hoverTimer.current);
+    openedByHover.current = false;
+    setServicesOpen(false);
+  }, []);
+
+  const hoverOpen = (e: PointerEvent) => {
+    if (e.pointerType !== 'mouse') return;
+    window.clearTimeout(hoverTimer.current);
+    hoverTimer.current = window.setTimeout(() => {
+      if (servicesOpenRef.current) return;
+      openedByHover.current = true;
+      setServicesOpen(true);
+    }, HOVER_OPEN_MS);
+  };
+
+  const hoverClose = (e: PointerEvent) => {
+    if (e.pointerType !== 'mouse') return;
+    window.clearTimeout(hoverTimer.current);
+    // A menu opened by click stays open until click outside, Escape or a link.
+    if (servicesOpenRef.current && !openedByHover.current) return;
+    hoverTimer.current = window.setTimeout(closeServices, HOVER_CLOSE_MS);
+  };
+
+  const toggleServices = () => {
+    window.clearTimeout(hoverTimer.current);
+    // A click just after hover opened the menu pins it rather than closing it.
+    if (servicesOpen && openedByHover.current) {
+      openedByHover.current = false;
+      return;
+    }
+    openedByHover.current = false;
+    setServicesOpen((open) => !open);
+  };
+
+  useEffect(() => {
+    if (!servicesOpen) return;
+    const outside = (t: EventTarget | null) =>
+      !panelRef.current?.contains(t as Node) && !triggerRef.current?.contains(t as Node);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      closeServices();
+      triggerRef.current?.focus();
+    };
+    const onPointer = (e: MouseEvent) => outside(e.target) && closeServices();
+    const onFocus = (e: FocusEvent) => outside(e.target) && closeServices();
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('mousedown', onPointer);
+    document.addEventListener('focusin', onFocus);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('mousedown', onPointer);
+      document.removeEventListener('focusin', onFocus);
+    };
+  }, [servicesOpen, closeServices]);
+
+  useEffect(() => () => window.clearTimeout(hoverTimer.current), []);
+
+  // Close everything on navigation.
   useEffect(() => {
     setMenuOpen(false);
-    setDropdownOpen(false);
-    setMobileServicesOpen(false);
-  }, [pathname]);
+    closeServices();
+  }, [pathname, closeServices]);
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setDropdownOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  const closeMobile = useCallback(() => setMenuOpen(false), []);
 
-  const isServicesActive = SERVICES_ROUTES.some((base) => isUnder(pathname, base));
   const isHomePage = pathname === '/';
-  const isTransparent = isHomePage && !scrolled;
+  const isServicesActive = SERVICES_ROUTES.some((base) => isUnder(pathname, base));
+  // Glass over the home hero; solid once scrolled, on every other page, and
+  // while the Services menu is open so bar and menu read as one surface.
+  const solid = !isHomePage || scrolled || servicesOpen;
+  const tucked = hidden && !menuOpen && !servicesOpen;
 
-  // Desktop top-level link: navy (or white over the hero) text; active state is
-  // a small solar bar underneath, never amber text.
   const linkClass = (active: boolean) =>
     cn(
-      'relative inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition-colors duration-200',
-      isTransparent
-        ? active
-          ? 'text-white'
-          : 'text-white/80 hover:bg-white/10 hover:text-white'
-        : active
-          ? 'text-navy-950'
-          : 'text-slate-600 hover:bg-navy-50 hover:text-navy-950',
+      'relative isolate inline-flex h-10 items-center gap-1 rounded-full px-4 text-sm font-semibold transition-colors duration-150',
+      active ? 'text-fg' : 'text-fg-muted hover:text-fg',
     );
 
-  const activeBar = (active: boolean) =>
-    active ? (
-      <span aria-hidden className="absolute inset-x-4 -bottom-0.5 h-0.5 rounded-full bg-solar-500" />
-    ) : null;
-
-  // Dropdown rows (light panel).
-  const menuRowClass = (active: boolean) =>
-    cn(
-      'flex items-center gap-2.5 rounded-control px-3 py-2.5 text-sm font-semibold transition-colors duration-200',
-      active ? 'bg-navy-50 text-navy-950' : 'text-navy-950 hover:bg-navy-50',
-    );
-  const iconTile = 'flex size-8 items-center justify-center rounded-control bg-navy-50 text-navy-700';
-
-  // Mobile rows (dark panel, inside surface-dark).
-  const mobileRowClass = (active: boolean, size: 'lg' | 'sm' = 'lg') =>
-    cn(
-      'flex items-center gap-2 rounded-control transition-colors',
-      size === 'lg' ? 'px-4 py-3.5 text-base font-medium' : 'px-4 py-2.5 text-sm font-semibold',
-      active ? 'bg-white/10 text-fg' : 'text-fg-muted hover:bg-white/10 hover:text-fg',
-    );
-
-  return (
-    <nav
-      aria-label="Main"
-      className={cn(
-        'fixed top-0 right-0 left-0 z-50 transition-all duration-500',
-        // Solid white: translucent white turns grey over the navy page heroes.
-        isTransparent ? 'bg-transparent py-5' : 'bg-white py-3 shadow-soft',
-      )}
-    >
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Logo */}
-        <Link href="/" className="group flex items-center gap-2.5">
-          <div className="flex size-10 items-center justify-center">
-            <img src="/Logos/JMC SOLAR.png" alt="JMC Solar Logo" />
-          </div>
-          <span className="flex gap-1 font-wordmark text-2xl leading-tight">
-            <span
-              className={cn(
-                'font-extrabold transition-colors duration-300',
-                isTransparent ? 'text-white' : 'text-navy-950',
-              )}
-            >
-              JMC
-            </span>
-            <span
-              className={cn(
-                'font-medium transition-colors duration-300',
-                isTransparent ? 'text-white/80' : 'text-navy-500',
-              )}
-            >
-              SOLAR
-            </span>
-          </span>
-        </Link>
-
-        {/* Desktop Nav */}
-        <div className="hidden items-center gap-1 lg:flex">
-          <Link href="/" className={linkClass(isHomePage)} aria-current={isHomePage ? 'page' : undefined}>
-            Home
-            {activeBar(isHomePage)}
-          </Link>
-
-          {/* Services Dropdown */}
-          <div ref={dropdownRef} className="relative">
-            <button
-              type="button"
-              onClick={() => setDropdownOpen((prev) => !prev)}
-              aria-expanded={dropdownOpen}
-              aria-haspopup="true"
-              className={cn(linkClass(isServicesActive), 'cursor-pointer')}
-            >
-              Services
-              <motion.span
-                animate={{ rotate: dropdownOpen ? 180 : 0 }}
-                transition={{ duration: DURATION.base, ease: EASE_OUT }}
-                className="inline-flex"
-              >
-                <ChevronDown size={14} aria-hidden />
-              </motion.span>
-              {activeBar(isServicesActive)}
-            </button>
-
-            <AnimatePresence>
-              {dropdownOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: -8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: DURATION.fast, ease: EASE_OUT }}
-                  className="absolute top-full left-1/2 z-50 mt-3 w-72 -translate-x-1/2 overflow-hidden rounded-card border border-line bg-white shadow-elevated"
-                >
-                  <div className="px-4 pt-4 pb-2">
-                    <p className="caps mb-2">Overview</p>
-                    <Link href="/booking" className={menuRowClass(isUnder(pathname, '/booking'))}>
-                      <span className="flex size-8 items-center justify-center rounded-control bg-solar-500 text-navy-950">
-                        <CalendarCheck size={15} aria-hidden />
-                      </span>
-                      Book a Service
-                    </Link>
-
-                    <div className="mx-1 my-2 h-px bg-line" />
-
-                    <Link href="/services" className={menuRowClass(pathname === '/services')}>
-                      <span className={iconTile}>
-                        <LayoutGrid size={15} aria-hidden />
-                      </span>
-                      All Services
-                    </Link>
-                    <Link href="/locations" className={menuRowClass(isUnder(pathname, '/locations'))}>
-                      <span className={iconTile}>
-                        <MapPin size={15} aria-hidden />
-                      </span>
-                      Locations
-                    </Link>
-                  </div>
-
-                  <div className="mx-4 h-px bg-line" />
-
-                  <div className="px-4 py-2">
-                    <p className="caps mb-2">Service Types</p>
-                    <div className="flex flex-col gap-0.5">
-                      {services.map((service) => {
-                        const active = pathname === `/services/${service.slug}`;
-                        return (
-                          <Link
-                            key={service.slug}
-                            href={`/services/${service.slug}`}
-                            className={cn(
-                              'rounded-control px-3 py-2 text-sm transition-colors duration-200',
-                              active
-                                ? 'bg-navy-50 font-semibold text-navy-950'
-                                : 'text-fg-muted hover:bg-navy-50 hover:text-navy-950',
-                            )}
-                          >
-                            {service.title}
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <div className="mx-4 h-px bg-line" />
-
-                  <div className="flex flex-col gap-1 px-4 py-3">
-                    <Link href="/products" className={menuRowClass(isUnder(pathname, '/products'))}>
-                      <span className={iconTile}>
-                        <Package size={15} aria-hidden />
-                      </span>
-                      Products
-                    </Link>
-                    <Link href="/calculator" className={menuRowClass(isUnder(pathname, '/calculator'))}>
-                      <span className={iconTile}>
-                        <Calculator size={15} aria-hidden />
-                      </span>
-                      Solar Calculator
-                    </Link>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          <Link href="/projects" className={linkClass(isUnder(pathname, '/projects'))}>
-            Projects
-            {activeBar(isUnder(pathname, '/projects'))}
-          </Link>
-
-          <Link href="/results" className={linkClass(isUnder(pathname, '/results'))}>
-            Results
-            {activeBar(isUnder(pathname, '/results'))}
-          </Link>
-        </div>
-
-        {/* Desktop CTA */}
-        <div className="hidden items-center gap-3 lg:flex">
-          <Button href="/booking" size="sm">
-            Get a quote
-          </Button>
-        </div>
-
-        {/* Mobile Hamburger */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className={cn('lg:hidden', isTransparent ? 'text-white hover:bg-white/10' : 'text-navy-950')}
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-          aria-expanded={menuOpen}
-          aria-controls={menuOpen ? 'mobile-menu' : undefined}
-        >
-          <AnimatePresence mode="wait" initial={false}>
-            {menuOpen ? (
-              <motion.span
-                key="close"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: DURATION.fast }}
-                className="inline-flex"
-              >
-                <X size={22} aria-hidden />
-              </motion.span>
-            ) : (
-              <motion.span
-                key="open"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: DURATION.fast }}
-                className="inline-flex"
-              >
-                <Menu size={22} aria-hidden />
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </Button>
-      </div>
-
-      {/* Mobile Menu */}
+  // Hover highlight that slides between links; the active page keeps its solar bar.
+  const decorations = (key: string, active: boolean) => (
+    <>
       <AnimatePresence>
-        {menuOpen && (
-          <motion.div
-            id="mobile-menu"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
+        {hovered === key && (
+          <motion.span
+            layoutId="nav-hover"
+            aria-hidden
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: DURATION.base, ease: EASE_OUT }}
-            className="surface-dark overflow-hidden border-t border-line bg-navy-950 lg:hidden"
-          >
-            <div className="flex flex-col gap-1 px-4 py-5">
-              <Link href="/" className={mobileRowClass(isHomePage)}>
-                Home
-              </Link>
-
-              {/* Services accordion */}
-              <div>
-                <button
-                  type="button"
-                  onClick={() => setMobileServicesOpen((prev) => !prev)}
-                  aria-expanded={mobileServicesOpen}
-                  className={cn(mobileRowClass(isServicesActive), 'w-full cursor-pointer justify-between')}
-                >
-                  Services
-                  <motion.span
-                    animate={{ rotate: mobileServicesOpen ? 180 : 0 }}
-                    transition={{ duration: DURATION.base, ease: EASE_OUT }}
-                    className="inline-flex"
-                  >
-                    <ChevronDown size={16} aria-hidden />
-                  </motion.span>
-                </button>
-
-                <AnimatePresence>
-                  {mobileServicesOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: DURATION.base, ease: EASE_OUT }}
-                      className="overflow-hidden"
-                    >
-                      <div className="mt-1 flex flex-col gap-0.5 pb-3 pl-3">
-                        <Link href="/booking" className={mobileRowClass(isUnder(pathname, '/booking'), 'sm')}>
-                          <CalendarCheck size={14} aria-hidden />
-                          Book a Service
-                        </Link>
-
-                        <div className="mx-3 my-1 h-px bg-line" />
-
-                        <Link href="/services" className={mobileRowClass(pathname === '/services', 'sm')}>
-                          <LayoutGrid size={14} aria-hidden />
-                          All Services
-                        </Link>
-
-                        <Link href="/locations" className={mobileRowClass(isUnder(pathname, '/locations'), 'sm')}>
-                          <MapPin size={14} aria-hidden />
-                          Locations
-                        </Link>
-
-                        <div className="mx-3 my-1.5 h-px bg-line" />
-
-                        {services.map((s) => (
-                          <Link
-                            key={s.slug}
-                            href={`/services/${s.slug}`}
-                            className={cn(
-                              'rounded-control px-4 py-2.5 text-sm transition-colors',
-                              pathname === `/services/${s.slug}`
-                                ? 'bg-white/10 text-fg'
-                                : 'text-fg-muted hover:bg-white/10 hover:text-fg',
-                            )}
-                          >
-                            {s.title}
-                          </Link>
-                        ))}
-
-                        <div className="mx-3 my-1.5 h-px bg-line" />
-
-                        <Link href="/products" className={mobileRowClass(isUnder(pathname, '/products'), 'sm')}>
-                          <Package size={14} aria-hidden />
-                          Products
-                        </Link>
-
-                        <Link href="/calculator" className={mobileRowClass(isUnder(pathname, '/calculator'), 'sm')}>
-                          <Calculator size={14} aria-hidden />
-                          Solar Calculator
-                        </Link>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              <Link href="/projects" className={mobileRowClass(isUnder(pathname, '/projects'))}>
-                Projects
-              </Link>
-
-              <Link href="/results" className={mobileRowClass(isUnder(pathname, '/results'))}>
-                Results
-              </Link>
-
-              <Button href="/booking" size="sm" fullWidth className="mt-3">
-                Get a quote
-              </Button>
-            </div>
-          </motion.div>
+            className="absolute inset-0 -z-10 rounded-full bg-fg/8"
+          />
         )}
       </AnimatePresence>
-    </nav>
+      {active && <span aria-hidden className="absolute inset-x-4 bottom-1 h-0.5 rounded-full bg-solar-500" />}
+    </>
+  );
+
+  return (
+    <>
+      <nav
+        ref={navRef}
+        aria-label="Main"
+        onFocusCapture={() => setHidden(false)}
+        className={cn(
+          'fixed inset-x-0 top-0 z-50 px-3 pt-3 transition-transform duration-300 ease-out-quart sm:px-4 sm:pt-4',
+          tucked && '-translate-y-[calc(100%+4rem)]',
+        )}
+      >
+        <div
+          className={cn(
+            'relative mx-auto flex h-14 items-center justify-between rounded-full pr-2 pl-4 ring-1 transition-[max-width,background-color,box-shadow] duration-300 ease-out-quart lg:grid lg:grid-cols-[1fr_auto_1fr]',
+            scrolled ? 'max-w-5xl' : 'max-w-7xl',
+            solid
+              ? 'bg-white shadow-elevated ring-line'
+              : 'surface-dark bg-navy-950/30 ring-white/15 backdrop-blur-md',
+          )}
+        >
+          <Link href="/" aria-label="JMC Solar home" className="justify-self-start">
+            <Wordmark tone={solid ? 'dark' : 'light'} />
+          </Link>
+
+          {/* Desktop links */}
+          <ul className="hidden items-center lg:flex" onPointerLeave={() => setHovered(null)}>
+            <li onPointerEnter={() => setHovered('/')}>
+              <Link href="/" className={linkClass(isHomePage)} aria-current={isHomePage ? 'page' : undefined}>
+                Home
+                {decorations('/', isHomePage)}
+              </Link>
+            </li>
+
+            <li
+              onPointerEnter={(e) => {
+                setHovered('services');
+                hoverOpen(e);
+              }}
+              onPointerLeave={hoverClose}
+            >
+              <button
+                ref={triggerRef}
+                type="button"
+                onClick={toggleServices}
+                aria-expanded={servicesOpen}
+                aria-controls={SERVICES_MENU_ID}
+                className={cn(linkClass(isServicesActive), 'cursor-pointer')}
+              >
+                Services
+                <motion.span
+                  animate={{ rotate: servicesOpen ? 180 : 0 }}
+                  transition={{ duration: DURATION.base, ease: EASE_OUT }}
+                  className="inline-flex"
+                >
+                  <ChevronDown size={14} aria-hidden />
+                </motion.span>
+                {decorations('services', isServicesActive)}
+              </button>
+
+              {/* Right after the trigger so Tab moves into it, and inside this
+                  <li> so pointerleave treats trigger + menu as one target. */}
+              <AnimatePresence>
+                {servicesOpen && (
+                  <ServicesMenu ref={panelRef} id={SERVICES_MENU_ID} pathname={pathname} onNavigate={closeServices} />
+                )}
+              </AnimatePresence>
+            </li>
+
+            {TOP_LINKS.filter((l) => l.href !== '/').map(({ href, label }) => {
+              const active = isUnder(pathname, href);
+              return (
+                <li key={href} onPointerEnter={() => setHovered(href)}>
+                  <Link href={href} className={linkClass(active)} aria-current={active ? 'page' : undefined}>
+                    {label}
+                    {decorations(href, active)}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+
+          <div className="flex items-center justify-self-end gap-2">
+            <Button href="/booking" size="sm" className="hidden lg:inline-flex">
+              Get a quote
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-fg hover:bg-fg/10 lg:hidden"
+              onClick={() => setMenuOpen(true)}
+              aria-label="Open menu"
+              aria-expanded={menuOpen}
+              aria-controls="mobile-menu"
+            >
+              <Menu size={22} aria-hidden />
+            </Button>
+          </div>
+        </div>
+      </nav>
+
+      <MobileMenu open={menuOpen} onClose={closeMobile} pathname={pathname} />
+    </>
   );
 }
