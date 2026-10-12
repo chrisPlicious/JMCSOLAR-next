@@ -203,9 +203,11 @@ The full-bleed photo hero is the one page top that isn't a `PageHero`. It carrie
 
 ### Navigation
 
-- **Navbar:** transparent over the home hero, solid `bg-white` with `shadow-soft` everywhere else. Translucent white turns into a grey band over the navy page heroes and the booking panel. The active link is navy-950 text with a solar underline indicator (not amber text).
+- **Navbar:** a floating pill detached from the page edges. Over the home hero it is dark glass (`surface-dark`, navy-950/30 with a backdrop blur); once scrolled, on every other page, and while the Services menu is open it is solid `bg-white` with `shadow-elevated`. Never translucent white: it turns into a grey band over the navy page heroes. It narrows (`max-w-7xl` → `max-w-5xl`) once scrolled, hides on scroll down past 240px and returns on scroll up (never while a menu is open or a keyboard user is inside it). The active link is navy-950 text with a solar underline indicator (not amber text); a hover highlight slides between links.
+- **Services mega menu (desktop):** every service as a tile with a one-line benefit, the planning links (calculator, products, locations), and a flush navy booking side. Opens on hover intent or click; a click-opened menu stays until click outside, Escape or a link. It carries `surface-light` so it stays readable over the dark glass state.
+- **Mobile menu:** a full-screen `surface-dark` sheet with large links, service chips (no nested accordion) and the quote, call and message actions pinned in the thumb zone. It traps focus, closes on Escape and locks page scroll.
 - **CTA:** "Get a quote" is the same solar pill on desktop and mobile.
-- **Links:** all internal links use `next/link`.
+- **Links:** all internal links use `next/link`. Nav copy (short labels, one-line benefits) lives in `components/layout/nav-data.ts`.
 
 ## 7. Motion and accessibility
 

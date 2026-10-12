@@ -88,7 +88,10 @@
  * stay correct on both light and dark surfaces. Wrap any navy band in
  * .surface-dark (Section tone="dark", PageHero and CtaBand do this).
  */
-:root {
+/* .surface-light restores the light roles inside a .surface-dark ancestor
+   (the white Services menu under the navbar's dark glass state). */
+:root,
+.surface-light {
   --fg: #0a1428;              /* navy-950 */
   --fg-muted: #475569;        /* slate-600, 7.5:1 on white */
   --fg-subtle: #64748b;       /* slate-500, 4.76:1 — white backgrounds only */
@@ -318,37 +321,52 @@
 }
 
 /* ─── Loader screen ─────────────────────────────────────────────────────── */
-@keyframes loaderTileAppear {
+/* Entrance only — CSS so it plays before hydration. Glow, charge and exit are
+   driven from components/ui/LoaderScreen.tsx, which reads these timings. */
+@keyframes jmcLoaderFade {
   from { opacity: 0; }
   to { opacity: 1; }
 }
-@keyframes loaderTileWave {
-  0%, 100% { filter: brightness(1); }
-  50% { filter: brightness(2.2) drop-shadow(0 0 6px rgba(126, 200, 240, 0.8)); }
+@keyframes jmcLoaderPop {
+  from { transform: scale(0.2); }
+  to { transform: scale(1); }
 }
-@keyframes loaderRingPulse {
-  0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
-  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.03); }
-}
-@keyframes loaderBrandIn {
+@keyframes jmcLoaderRise {
+  from { opacity: 0; transform: translateY(14px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.loader-v2-ring-1 {
-  border: 1px solid rgba(126, 200, 240, 0.04);
-  animation: loaderRingPulse 4s ease-in-out infinite;
+@keyframes jmcLoaderDraw {
+  from { stroke-dashoffset: var(--jmc-dash); }
+  to { stroke-dashoffset: 0; }
 }
-.loader-v2-ring-2 {
-  border: 1px solid rgba(126, 200, 240, 0.02);
-  animation: loaderRingPulse 4s 1s ease-in-out infinite;
+@keyframes jmcLoaderNub {
+  from { transform: scale(0); }
+  to { transform: scale(1); }
 }
-.loader-v2-brand {
-  opacity: 0;
-  transform: translateY(10px);
-  animation: loaderBrandIn 0.7s 0.8s ease-out forwards;
+/* Logo pixels: per-pixel animation-delay is set inline (clockwise sweep). */
+.jmc-loader-px {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation:
+    jmcLoaderFade 0.2s cubic-bezier(0.33, 1, 0.68, 1) both,
+    jmcLoaderPop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
-.loader-v2-progress-row {
-  opacity: 0;
-  animation: loaderBrandIn 0.5s 1.2s ease-out forwards;
+.jmc-loader-wordmark {
+  animation: jmcLoaderRise 0.8s 1.4s cubic-bezier(0.33, 1, 0.68, 1) both;
+}
+.jmc-loader-outline {
+  animation: jmcLoaderDraw 0.8s 0.3s cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+.jmc-loader-nub {
+  transform-box: fill-box;
+  transform-origin: left center;
+  animation: jmcLoaderNub 0.35s 0.95s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.jmc-loader-slots {
+  animation: jmcLoaderFade 0.4s 0.9s cubic-bezier(0.33, 1, 0.68, 1) both;
+}
+.jmc-loader-label {
+  animation: jmcLoaderFade 0.4s 1s cubic-bezier(0.33, 1, 0.68, 1) both;
 }
 
 /* Horizontal scrollers that should not show a bar (gallery carousel). */
