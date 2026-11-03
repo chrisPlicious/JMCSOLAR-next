@@ -1,18 +1,18 @@
 import { describe, expect, test } from 'vitest';
-import { calculate } from '@/lib/solar-calculator';
 import {
   advance,
-  arrayForLoad,
   buildRoutes,
   DAWN_SOC,
   DAY_START,
   harvestAt,
+  loadCap,
+  panelsFor,
+  pickTime,
   pointAt,
   resetDay,
   RESET_HOUR,
   settle,
   startAt,
-  withLoad,
   type SimInput,
   type Snapshot,
 } from './engine';
@@ -22,6 +22,7 @@ const { hybrid, ongrid } = SYSTEMS;
 const input = (over: Partial<SimInput>): SimInput => ({
   pvKwp: 6,
   solar: 0,
+  demand: over.load ?? 0,
   load: 0,
   soc: 50,
   battKWh: 10,
@@ -38,15 +39,10 @@ describe('solar harvest', () => {
     expect(harvestAt(6, 9)).toBeLessThan(harvestAt(6, 12));
   });
 
-  test('the array is sized from the house load, exactly as the savings calculator sizes it', () => {
-    // 2 kW all day = 48 kWh/day = 1,440 kWh/month.
-    expect(arrayForLoad(2)).toEqual({ panelCount: 22, kwp: 12.1 });
-    const calc = calculate({ monthlyKwh: 1440, region: 'eastern-visayas-ormoc', systemType: 'hybrid' });
-    expect(calc.systemSizeKw).toBe(arrayForLoad(2).kwp);
-    expect(calc.panelCount).toBe(arrayForLoad(2).panelCount);
-    // Changing the load resizes the array with it.
-    expect(withLoad(input({ load: 2 }), 4).pvKwp).toBe(arrayForLoad(4).kwp);
-    expect(arrayForLoad(4).kwp).toBeGreaterThan(arrayForLoad(2).kwp);
+  test('the system size sets the 550 W panel count', () => {
+    expect(panelsFor(3)).toBe(6);
+    expect(panelsFor(5)).toBe(10);
+    expect(panelsFor(5.5)).toBe(10); // an exact fit needs no extra panel
   });
 
   test('settle derives the harvest from the panel size and the clock', () => {
@@ -59,15 +55,15 @@ describe('solar harvest', () => {
 
 describe('hybrid dispatch', () => {
   test('surplus charges the battery first, then exports', () => {
-    const r = hybrid.dispatch(input({ solar: 7.4, load: 2.2, soc: 60 }));
+    const r = hybrid.dispatch(input({ pvKwp: 5, solar: 7.4, load: 2.2, soc: 60 }));
     expect(r.direct).toBeCloseTo(2.2);
-    expect(r.charge).toBeCloseTo(5); // 5 kW inverter limit
+    expect(r.charge).toBeCloseTo(5); // the 5 kW inverter's limit
     expect(r.exp).toBeCloseTo(0.2);
     expect(r.curtailed).toBe(0);
   });
 
   test('without net metering the leftover is curtailed, not exported', () => {
-    const r = hybrid.dispatch(input({ solar: 7.4, load: 2.2, soc: 60, netMetering: false }));
+    const r = hybrid.dispatch(input({ pvKwp: 5, solar: 7.4, load: 2.2, soc: 60, netMetering: false }));
     expect(r.exp).toBe(0);
     expect(r.curtailed).toBeCloseTo(0.2);
   });
@@ -80,6 +76,18 @@ describe('hybrid dispatch', () => {
     expect(hybrid.view(s, r, false).nodes.battery?.sub).toBe('Holding 20% brownout reserve');
   });
 
+  test('after a brownout drains it below the reserve, the battery says so and waits for solar', () => {
+    const s = input({ load: 2, soc: 5 }); // grid back at night, battery at its brownout cut-off
+    const r = hybrid.dispatch(s);
+    expect(r.discharge).toBe(0);
+    expect(r.imp).toBeCloseTo(2);
+    const v = hybrid.view(s, r, false);
+    expect(v.nodes.battery?.sub).toBe('Below the 20% reserve · refills from extra solar');
+    expect(hybrid.view(s, r, true).nodes.battery?.sub).toBe('Below reserve');
+    expect(v.story).toContain('below its 20% brownout reserve');
+    expect(v.story).not.toContain('holding');
+  });
+
   test('a brownout runs the home on the battery', () => {
     const s = input({ load: 1.8, soc: 70, gridUp: false });
     const r = hybrid.dispatch(s);
@@ -88,10 +96,71 @@ describe('hybrid dispatch', () => {
     expect(hybrid.view(s, r, false).story).toContain('Your lights stay on.');
   });
 
-  test('load beyond the 5 kW battery limit goes unserved in a brownout', () => {
-    const r = hybrid.dispatch(input({ load: 7, soc: 70, gridUp: false }));
-    expect(r.discharge).toBeCloseTo(5);
-    expect(r.unserved).toBeCloseTo(2);
+  test('solar and battery reach the home at no more than the inverter rating; the grid adds the rest', () => {
+    const s = input({ pvKwp: 5, solar: 3, load: 9, soc: 60 });
+    const r = hybrid.dispatch(s);
+    expect(r.direct).toBeCloseTo(3);
+    expect(r.discharge).toBeCloseTo(2);
+    expect(r.imp).toBeCloseTo(4);
+    expect(hybrid.view(s, r, false).story).toContain('the grid adds the rest');
+  });
+
+  test('in a brownout the home goes short only once the battery hits its cut-off', () => {
+    const s = input({ load: 3, soc: 5, gridUp: false });
+    const r = hybrid.dispatch(s);
+    expect(r.discharge).toBe(0);
+    expect(r.unserved).toBeCloseTo(3);
+    expect(hybrid.view(s, r, false).story).toContain('cut-off');
+  });
+});
+
+describe('house load and the system size', () => {
+  const night = (def: typeof hybrid, over: Partial<SimInput>, hour = 21): Snapshot =>
+    settle(def, { input: input(over), result: def.dispatch(input(over)), hour, playing: false });
+
+  test('only a brownout caps the load', () => {
+    expect(loadCap({ gridUp: true, pvKwp: 5 })).toBe(Infinity);
+    expect(loadCap({ gridUp: false, pvKwp: 5 })).toBe(5);
+  });
+
+  test('with the grid up the load can run past the system size: the grid covers the rest', () => {
+    const s = night(hybrid, { pvKwp: 5, demand: 8, soc: 70 });
+    expect(s.input.load).toBe(8);
+    expect(s.result.discharge).toBeCloseTo(5);
+    expect(s.result.imp).toBeCloseTo(3);
+  });
+
+  test('in a brownout the load is capped at the system size and runs on solar and battery only', () => {
+    const s = night(hybrid, { pvKwp: 5, demand: 8, soc: 70, gridUp: false });
+    expect(s.input.load).toBe(5);
+    expect(s.result.discharge).toBeCloseTo(5);
+    expect(s.result.imp).toBe(0);
+    expect(s.result.unserved).toBe(0);
+    const v = hybrid.view(s.input, s.result, false);
+    expect(v.nodes.home?.sub).toBe('3.0 kW switched off');
+    expect(v.story).toContain('must stay off until the grid returns');
+  });
+
+  test('a bigger system carries more of the load through a brownout', () => {
+    expect(night(hybrid, { pvKwp: 3, demand: 8, gridUp: false }).input.load).toBe(3);
+    expect(night(hybrid, { pvKwp: 10, demand: 8, gridUp: false }).input.load).toBe(8);
+  });
+
+  test('the full load comes back when the grid does', () => {
+    const during = night(hybrid, { pvKwp: 5, demand: 8, soc: 70, gridUp: false }, 19.95);
+    expect(during.input.load).toBe(5);
+    const after = advance(hybrid, during, 0.1);
+    expect(after.input.gridUp).toBe(true);
+    expect(after.input.load).toBe(8);
+  });
+
+  test('on-grid has no brownout: the grid always covers what solar cannot', () => {
+    expect(ongrid.brownout).toBeUndefined();
+    const s = night(ongrid, { pvKwp: 5, demand: 8 }, 12);
+    expect(s.input.load).toBe(8);
+    expect(s.result.direct).toBeCloseTo(4); // noon sun on 5 kWp
+    expect(s.result.imp).toBeCloseTo(4);
+    for (const h of [12.95, 17.95]) expect(advance(ongrid, night(ongrid, {}, h), 0.1).input.gridUp).toBe(true);
   });
 });
 
@@ -103,15 +172,6 @@ describe('on-grid dispatch', () => {
     expect(r.imp).toBe(0);
   });
 
-  test('a brownout trips the inverter even in full sun (anti-islanding)', () => {
-    const s = input({ solar: 6.5, load: 2.4, gridUp: false });
-    const r = ongrid.dispatch(s);
-    expect(r.tripped).toBe(true);
-    expect(r.direct).toBe(0);
-    expect(r.unserved).toBeCloseTo(2.4);
-    expect(r.curtailed).toBeCloseTo(6.5);
-    expect(ongrid.view(s, r, false).nodes.home?.sub).toBe('No power');
-  });
 });
 
 describe('the day', () => {
@@ -161,7 +221,21 @@ describe('the day', () => {
     const down = advance(hybrid, at(hybrid, {}, 17.95), 0.1);
     expect(down.input.gridUp).toBe(false);
     expect(advance(hybrid, { ...down, hour: 19.95 }, 0.1).input.gridUp).toBe(true);
-    expect(advance(ongrid, at(ongrid, {}, 12.95), 0.1).input.gridUp).toBe(false);
+  });
+
+  test('the time picker: paused at the picked time, battery charged as the day so far left it', () => {
+    const s = pickTime(hybrid, at(hybrid, { load: 1, soc: 100 }, 12), 7);
+    expect(s.hour).toBe(7);
+    expect(s.playing).toBe(false);
+    expect(s.input.soc).toBeCloseTo(startAt(hybrid, at(hybrid, { load: 1 }, 12), 7).input.soc);
+    expect(pickTime(hybrid, s, 13).input.soc).toBeGreaterThan(s.input.soc);
+  });
+
+  test("the time picker skips the scheduled brownout but keeps the visitor's switch", () => {
+    expect(pickTime(hybrid, at(hybrid, { load: 1 }, 12), 19).input.gridUp).toBe(true);
+    const down = pickTime(hybrid, at(hybrid, { pvKwp: 5, demand: 8, gridUp: false }, 12), 21);
+    expect(down.input.gridUp).toBe(false);
+    expect(down.input.load).toBe(5);
   });
 
   test("inside the window the visitor's own switch still holds", () => {

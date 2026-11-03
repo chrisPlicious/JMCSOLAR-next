@@ -18,14 +18,15 @@ import {
   DAY_SECONDS,
   DAY_START,
   kw,
+  loadCap,
   OPENING_HOUR,
+  panelsFor,
+  pickTime,
   pointAt,
   resetDay,
   RESET_HOUR,
   settle,
   startAt,
-  arrayForLoad,
-  withLoad,
   tickDay,
   type Flow,
   type FlowColor,
@@ -324,15 +325,17 @@ const MIX: Record<MixSegment, { label: string; bar: string; dot: string }> = {
 const PANEL = 'px-4 py-5 md:px-8 md:pt-7 md:pb-8';
 const CHIP = 'cursor-pointer rounded-full border px-3.5 py-2 text-sm font-semibold transition-colors duration-150';
 
-// Range input: the track fills up to the value (--p) in the slider's colour (--c).
+// Range input: the track fills up to the value (--p) in the slider's colour (--c),
+// and turns red past a limit (--cap) the value can't go beyond.
 const RANGE = [
   'mt-1 h-7.5 w-full cursor-pointer appearance-none bg-transparent focus-visible:outline-none',
   '[&::-webkit-slider-runnable-track]:h-1.5 [&::-webkit-slider-runnable-track]:rounded-full',
-  '[&::-webkit-slider-runnable-track]:bg-[linear-gradient(to_right,var(--c)_var(--p),var(--color-navy-100)_var(--p))]',
+  '[&::-webkit-slider-runnable-track]:bg-[linear-gradient(to_right,var(--c)_var(--p),var(--color-navy-100)_var(--p)_var(--cap),var(--color-red-200)_var(--cap))]',
   '[&::-webkit-slider-thumb]:-mt-2 [&::-webkit-slider-thumb]:size-5.5 [&::-webkit-slider-thumb]:appearance-none',
   '[&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-3 [&::-webkit-slider-thumb]:border-(--c)',
   '[&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-soft',
-  '[&::-moz-range-track]:h-1.5 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-navy-100',
+  '[&::-moz-range-track]:h-1.5 [&::-moz-range-track]:rounded-full',
+  '[&::-moz-range-track]:bg-[linear-gradient(to_right,var(--color-navy-100)_var(--cap),var(--color-red-200)_var(--cap))]',
   '[&::-moz-range-progress]:h-1.5 [&::-moz-range-progress]:rounded-full [&::-moz-range-progress]:bg-(--c)',
   '[&::-moz-range-thumb]:size-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-3',
   '[&::-moz-range-thumb]:border-(--c) [&::-moz-range-thumb]:bg-white',
@@ -347,6 +350,7 @@ function Slider({
   value,
   min = 0,
   max,
+  limit = max,
   step,
   format,
   color,
@@ -358,12 +362,14 @@ function Slider({
   value: number;
   min?: number;
   max: number;
+  limit?: number; // the most onChange should accept right now; the track beyond it shows red
   step: number;
   format: (v: number) => string;
   color: string;
   hints: [string, string];
   onChange: (v: number) => void;
 }) {
+  const pct = (v: number) => `${((Math.min(v, max) - min) / (max - min)) * 100}%`;
   return (
     <div>
       <label htmlFor={id} className="flex items-baseline justify-between gap-3 text-sm font-semibold text-fg">
@@ -381,12 +387,65 @@ function Slider({
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
         className={`${RANGE} ${color}`}
-        style={{ '--p': `${((value - min) / (max - min)) * 100}%` } as CSSProperties}
+        style={{ '--p': pct(value), '--cap': pct(limit) } as CSSProperties}
       />
       <div className="flex justify-between text-xs text-fg-subtle">
         <span>{hints[0]}</span>
         <span>{hints[1]}</span>
       </div>
+    </div>
+  );
+}
+
+/** A row of sizes to pick from, one per chip. */
+function Chips({
+  id,
+  label,
+  unit,
+  options,
+  value,
+  onClass,
+  note,
+  onPick,
+}: {
+  id: string;
+  label: string;
+  unit: string;
+  options: number[];
+  value: number;
+  onClass: string;
+  note: string;
+  onPick: (v: number) => void;
+}) {
+  return (
+    <div role="group" aria-labelledby={id}>
+      <p id={id} className="flex items-baseline justify-between gap-3 text-sm font-semibold text-fg">
+        {label}
+        <span className="font-mono tabular-nums">
+          {value} {unit}
+        </span>
+      </p>
+      <div className="mt-2 grid auto-cols-fr grid-flow-col gap-1.5">
+        {options.map((v) => {
+          const on = value === v;
+          return (
+            <button
+              key={v}
+              type="button"
+              aria-pressed={on}
+              onClick={() => onPick(v)}
+              className={cn(
+                CHIP,
+                'px-0 py-1.5 whitespace-nowrap',
+                on ? onClass : 'border-navy-200 bg-white text-fg hover:border-navy-500',
+              )}
+            >
+              {v} {unit}
+            </button>
+          );
+        })}
+      </div>
+      <p className="mt-1.5 text-xs text-fg-subtle">{note}</p>
     </div>
   );
 }
@@ -646,9 +705,14 @@ export default function PowerFlowSimulator({ system }: { system: SystemId }) {
 
   // ── Controls ── The setup, load and switches all apply live, even mid-play.
   const update = (fn: (prev: Snapshot) => Snapshot) => setSnap((prev) => settle(def, fn(prev)));
-  const setLoad = (loadKw: number) => update((p) => ({ ...p, input: withLoad(p.input, loadKw) }));
+  // In a brownout the slider stops at the system size (see loadCap); the demand
+  // set before it is kept, so the home draws it again once the grid returns.
+  const setLoad = (loadKw: number) =>
+    update((p) => ({ ...p, input: { ...p.input, demand: Math.min(loadKw, loadCap(p.input)) } }));
+  const setSize = (kW: number) => update((p) => ({ ...p, input: { ...p.input, pvKwp: kW } }));
   const setBattery = (kWh: number) => update((p) => ({ ...p, input: { ...p.input, battKWh: kWh } }));
-  const array = arrayForLoad(input.load);
+  const setHour = (h: number) => setSnap((p) => pickTime(def, p, h));
+  const shed = input.demand - input.load;
 
   const titleId = `${uid}-title`;
   const tiles = (Object.keys(layout.nodes) as (Tile | 'inverter')[]).filter((d): d is Tile => d !== 'inverter');
@@ -766,6 +830,19 @@ export default function PowerFlowSimulator({ system }: { system: SystemId }) {
         </p>
 
         <div className="mt-5 grid gap-4.5">
+          {/* The clock: picked here by default, or run by "Play a day" (the thumb follows it). */}
+          <Slider
+            id={`${uid}-time`}
+            label="Time of day"
+            value={snap.hour}
+            max={23.75}
+            step={0.25}
+            format={clockTime}
+            color="[--c:var(--color-solar-500)]"
+            hints={['00:00', '23:45']}
+            onChange={setHour}
+          />
+
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <button
               type="button"
@@ -789,71 +866,70 @@ export default function PowerFlowSimulator({ system }: { system: SystemId }) {
             </span>
           </div>
 
-          {/* Sized by this panel, not the screen: side by side only when it's roomy. */}
+          {/* The setup. Sized by this panel, not the screen: side by side only when it's roomy. */}
           <div className={cn('grid gap-4.5 @3xl:gap-7', def.battery && '@3xl:grid-cols-2')}>
-            <div>
-              <Slider
-                id={`${uid}-load`}
-                label="House load"
-                value={input.load}
-                min={0.5}
-                max={10}
-                step={0.1}
-                format={kw}
-                color="[--c:var(--color-navy-700)]"
-                hints={['0.5 kW', '10 kW · aircons on']}
-                onChange={setLoad}
-              />
-              {/* The array follows the load; shown so the harvest figures make sense. */}
-              <p className="mt-2.5 flex items-baseline justify-between gap-3 rounded-control bg-solar-50 px-3 py-2 text-sm text-fg-muted">
-                <span>Solar panels sized for this load</span>
-                <span className="font-mono font-semibold whitespace-nowrap text-solar-700 tabular-nums">
-                  {array.kwp.toFixed(1)} kWp
-                </span>
-              </p>
-              <p className="mt-1 text-xs text-fg-subtle">
-                {array.panelCount} × 550 W panels · {Math.round(input.load * 24)} kWh a day on 4 sun hours
-              </p>
-            </div>
+            <Chips
+              id={`${uid}-size`}
+              label="Solar system size"
+              unit="kW"
+              options={def.sizes}
+              value={input.pvKwp}
+              onClass="border-solar-500 bg-solar-500 text-navy-950"
+              note={`${panelsFor(input.pvKwp)} × 550 W panels · ${input.pvKwp} kW ${def.inverterKind}`}
+              onPick={setSize}
+            />
             {def.battery && (
-              <div role="group" aria-labelledby={`${uid}-batt`}>
-                <p id={`${uid}-batt`} className="flex items-baseline justify-between gap-3 text-sm font-semibold text-fg">
-                  Battery size
-                  <span className="font-mono tabular-nums">{input.battKWh} kWh</span>
+              <Chips
+                id={`${uid}-batt`}
+                label="Battery size"
+                unit="kWh"
+                options={def.battery.sizes}
+                value={input.battKWh}
+                onClass="border-green-600 bg-green-600 text-white"
+                note="Usable capacity"
+                onPick={setBattery}
+              />
+            )}
+          </div>
+
+          <div>
+            <Slider
+              id={`${uid}-load`}
+              label="House load"
+              value={input.load}
+              min={0.5}
+              max={10}
+              limit={loadCap(input)}
+              step={0.1}
+              format={kw}
+              color="[--c:var(--color-navy-700)]"
+              hints={['0.5 kW', '10 kW · aircons on']}
+              onChange={setLoad}
+            />
+            {!input.gridUp ? (
+              <p className="mt-1.5 text-xs font-medium text-red-700">
+                Brownout: solar and battery only, so the load can&rsquo;t go past your {input.pvKwp} kW system
+                {shed > 0.05 ? ` (${kw(shed)} switched off)` : ''}.
+              </p>
+            ) : (
+              input.load > input.pvKwp && (
+                <p className="mt-1.5 text-xs text-fg-subtle">
+                  More than your {input.pvKwp} kW system: the grid covers the rest.
                 </p>
-                <div className="mt-2 grid grid-cols-4 gap-1.5">
-                  {def.battery.sizes.map((kWh) => {
-                    const on = input.battKWh === kWh;
-                    return (
-                      <button
-                        key={kWh}
-                        type="button"
-                        aria-pressed={on}
-                        onClick={() => setBattery(kWh)}
-                        className={cn(
-                          CHIP,
-                          'px-0 py-1.5 whitespace-nowrap',
-                          on ? 'border-green-600 bg-green-600 text-white' : 'border-navy-200 bg-white text-fg hover:border-navy-500',
-                        )}
-                      >
-                        {kWh} kWh
-                      </button>
-                    );
-                  })}
-                </div>
-                <p className="mt-1.5 text-xs text-fg-subtle">Usable capacity</p>
-              </div>
+              )
             )}
           </div>
 
           <div className="flex flex-wrap gap-x-7 gap-y-3">
-            <Switch
-              checked={!input.gridUp}
-              danger
-              label="Brownout"
-              state={input.gridUp ? 'Grid is on' : 'Grid is down'}
-              onClick={() => update((p) => ({ ...p, input: { ...p.input, gridUp: !p.input.gridUp } }))}
-            />
+            {def.brownout && (
+              <Switch
+                checked={!input.gridUp}
+                danger
+                label="Brownout"
+                state={input.gridUp ? 'Grid is on' : 'Solar and battery only'}
+                onClick={() => update((p) => ({ ...p, input: { ...p.input, gridUp: !p.input.gridUp } }))}
+              />
+            )}
             <Switch
               checked={input.netMetering}
               label="Net metering"
