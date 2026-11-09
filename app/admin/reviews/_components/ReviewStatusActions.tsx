@@ -4,6 +4,7 @@ import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Check, X } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
 import { approveReview, rejectReview } from '../actions';
 
 export default function ReviewStatusActions({
@@ -44,24 +45,30 @@ export default function ReviewStatusActions({
   return (
     <>
       {status !== 'approved' && (
-        <button
+        <Button
+          variant="ghost"
+          size="icon-sm"
           onClick={handleApprove}
-          disabled={isApprovePending}
+          loading={isApprovePending}
           title="Approve review"
-          className="p-2 rounded-lg text-green-500 hover:text-green-700 hover:bg-green-50 transition-colors disabled:opacity-40"
+          aria-label="Approve review"
+          className="text-green-700 hover:bg-green-50"
         >
-          <Check size={16} />
-        </button>
+          {!isApprovePending && <Check size={16} aria-hidden />}
+        </Button>
       )}
       {status !== 'rejected' && (
-        <button
+        <Button
+          variant="ghost"
+          size="icon-sm"
           onClick={handleReject}
-          disabled={isRejectPending}
+          loading={isRejectPending}
           title="Reject review"
-          className="p-2 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-40"
+          aria-label="Reject review"
+          className="text-red-700 hover:bg-red-50"
         >
-          <X size={16} />
-        </button>
+          {!isRejectPending && <X size={16} aria-hidden />}
+        </Button>
       )}
     </>
   );

@@ -1,30 +1,29 @@
 'use client';
 
 import { useState } from 'react';
-import { MessageSquarePlus } from 'lucide-react';
+import { ArrowRight, MessageSquarePlus } from 'lucide-react';
 import ReviewSubmitDialog from './ReviewSubmitDialog';
+import { Button } from '@/components/ui/Button';
+import { FACEBOOK_REVIEWS_URL } from '@/lib/seo/site';
 
 /** Client island: only the dialog-open button needs interactivity. */
 export default function ReviewsClient() {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
-    <div className="text-center flex flex-col items-center gap-4">
-      <button
-        onClick={() => setDialogOpen(true)}
-        className="inline-flex items-center gap-2 bg-solar-500 hover:bg-solar-400 text-navy-950 font-bold px-6 py-3 rounded-xl text-sm transition-colors"
-      >
-        <MessageSquarePlus size={16} />
-        Share Your Experience
-      </button>
+    <div className="flex flex-col items-center gap-4 text-center">
+      <Button onClick={() => setDialogOpen(true)}>
+        <MessageSquarePlus size={16} aria-hidden />
+        Share your experience
+      </Button>
       <a
-        href="https://www.facebook.com/jmcsolar/reviews/?id=100063736463795&sk=reviews"
+        href={FACEBOOK_REVIEWS_URL}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 text-white/40 hover:text-solar-400 transition-colors text-xs sm:text-sm font-medium"
+        className="inline-flex items-center gap-1.5 text-sm font-semibold text-solar-ink hover:underline"
       >
-        <span>See all reviews on Facebook</span>
-        <span className="text-solar-500">→</span>
+        See all reviews on Facebook
+        <ArrowRight size={14} aria-hidden />
       </a>
       <ReviewSubmitDialog open={dialogOpen} onOpenChange={setDialogOpen} />
     </div>

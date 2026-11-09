@@ -4,18 +4,15 @@ import { adminDb } from '@/lib/firebase/admin';
 import { getPublicUrl } from '@/lib/firebase/storage';
 import type { BillResult } from '@/types';
 import { makeBreadcrumbLd } from '@/lib/seo/breadcrumb';
+import { pageMetadata } from '@/lib/seo/metadata';
+import { SERVICE_AREA } from '@/lib/seo/business';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: 'Real Results',
   description:
-    'See real before and after electric bill photos from JMC Solar PH customers across Leyte and Visayas. Proof that solar energy reduces electricity costs.',
-  alternates: { canonical: '/results' },
-  openGraph: {
-    title: 'Real Results | JMC Solar PH',
-    description:
-      'Before and after electric bill comparisons from real JMC Solar customers. See how much they save every month.',
-  },
-};
+    `Real before-and-after electric bill photos from JMC Solar PH customers across ${SERVICE_AREA} — proof that solar cuts power costs.`,
+  path: '/results',
+});
 
 export default async function ResultsPage() {
   const snap = await adminDb.collection('results').orderBy('display_order', 'asc').get();

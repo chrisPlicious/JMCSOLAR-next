@@ -4,13 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import {
-  ChevronLeft,
-  ArrowRight,
-  Loader2,
-  Calendar,
-  Clock,
-} from 'lucide-react';
+import { ChevronLeft, ArrowRight, Clock } from 'lucide-react';
 import { LOCATIONS } from '@/data/locations';
 import { createBookingAction, type ConsultationFormData } from '../actions';
 import BookingSplitLayout from '../_components/BookingSplitLayout';
@@ -19,6 +13,10 @@ import {
   CONSULTATION_HOURLY_CENTAVOS,
   formatCentavos,
 } from '@/lib/bookings/pricing';
+import { Button } from '@/components/ui/Button';
+import { Field, FieldError, Input, Select, Textarea } from '@/components/ui/Field';
+import { EASE_OUT } from '@/lib/motion';
+import { cn } from '@/lib/utils';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -33,14 +31,6 @@ const TIME_SLOTS = [
   { label: '3:00 PM', group: 'Afternoon' },
   { label: '4:00 PM', group: 'Afternoon' },
 ];
-
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
-const inputClass =
-  'w-full py-3 border-0 border-b border-slate-300 bg-transparent text-navy-900 placeholder-slate-500 focus:outline-none focus:ring-0 focus:border-solar-400 transition-colors text-base min-h-[52px] px-0 rounded-none';
-
-const selectClass =
-  'w-full py-3 pr-8 border-0 border-b border-slate-300 bg-transparent text-navy-900 focus:outline-none focus:ring-0 focus:border-solar-400 transition-colors text-base appearance-none min-h-[52px] cursor-pointer px-0 rounded-none';
 
 // ─── Derived data ─────────────────────────────────────────────────────────────
 
@@ -63,43 +53,11 @@ const variants = {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function FormField({
-  label,
-  htmlFor,
-  error,
-  optional,
-  children,
-}: {
-  label: string;
-  htmlFor: string;
-  error?: string;
-  optional?: boolean;
-  children: React.ReactNode;
-}) {
+function Optional({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex flex-col">
-      <div className="flex justify-between items-baseline mb-1">
-        <label htmlFor={htmlFor} className="block text-sm font-semibold text-navy-800">
-          {label}
-        </label>
-        {optional && <span className="text-xs italic text-slate-400">optional</span>}
-      </div>
-      {children}
-      {error && <p className="text-red-500 text-xs mt-1.5" role="alert">{error}</p>}
-    </div>
-  );
-}
-
-function SelectWrapper({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="relative">
-      {children}
-      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center">
-        <svg width="12" height="8" viewBox="0 0 12 8" fill="none" className="text-slate-400">
-          <path d="M1 1L6 7L11 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </div>
-    </div>
+    <>
+      {children} <span className="font-normal text-fg-subtle">(optional)</span>
+    </>
   );
 }
 
@@ -119,77 +77,65 @@ function Step1({ formData, errors, update }: StepProps) {
   };
 
   return (
-    <div className="space-y-8">
-      <div className="mb-8">
-        <h2 className="text-[2.25rem] font-black text-navy-950 tracking-tight text-wrap-balance" style={{ fontFamily: 'Poppins, sans-serif' }}>Your details.</h2>
-      </div>
+    <div className="space-y-6">
+      <h2 className="mb-8 text-h2 text-fg">Your details.</h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-        <FormField label="Full Name" htmlFor="name" error={errors.name}>
-          <input
-            id="name"
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <Field id="name" label="Full Name" error={errors.name} required>
+          <Input
             type="text"
             autoComplete="name"
             placeholder="Juan Dela Cruz"
             value={formData.name}
             onChange={(e) => update('name', e.target.value)}
-            className={inputClass}
           />
-        </FormField>
-        <FormField label="Phone Number" htmlFor="phone" error={errors.phone}>
-          <input
-            id="phone"
+        </Field>
+        <Field id="phone" label="Phone Number" error={errors.phone} required>
+          <Input
             type="tel"
             autoComplete="tel"
             placeholder="09XX XXX XXXX"
             value={formData.phone}
             onChange={(e) => update('phone', e.target.value)}
-            className={inputClass}
           />
-        </FormField>
+        </Field>
       </div>
 
-      <FormField label="Email Address" htmlFor="email" error={errors.email} optional>
-        <input
-          id="email"
+      <Field id="email" label={<Optional>Email Address</Optional>} error={errors.email}>
+        <Input
           type="email"
           autoComplete="email"
           placeholder="juan@email.com"
           value={formData.email}
           onChange={(e) => update('email', e.target.value)}
-          className={inputClass}
         />
-      </FormField>
+      </Field>
 
-      <FormField label="City / Municipality" htmlFor="city" error={errors.city}>
-        <SelectWrapper>
-          <select
-            id="city"
-            value={formData.city}
-            onChange={(e) => handleCityChange(e.target.value)}
-            className={selectClass}
-          >
-            <option value="">Select your city</option>
-            {cities.map((c) => (
-              <option key={c.slug} value={c.slug}>
-                {c.name}{c.province ? ` — ${c.province}` : ''}
-              </option>
-            ))}
-          </select>
-        </SelectWrapper>
-      </FormField>
+      <Field id="city" label="City / Municipality" error={errors.city} required>
+        <Select value={formData.city} onChange={(e) => handleCityChange(e.target.value)}>
+          <option value="">Select your city</option>
+          {cities.map((c) => (
+            <option key={c.slug} value={c.slug}>
+              {c.name}{c.province ? ` — ${c.province}` : ''}
+            </option>
+          ))}
+        </Select>
+      </Field>
 
-      <FormField label="Street Address" htmlFor="address" error={errors.address} optional>
-        <textarea
-          id="address"
+      <Field
+        id="address"
+        label={<Optional>Street Address</Optional>}
+        error={errors.address}
+        hint="Building, street, barangay — anything that helps our engineer find you."
+      >
+        <Textarea
           placeholder="Barangay, street, building"
           value={formData.address}
           onChange={(e) => update('address', e.target.value)}
-          rows={1}
-          className={`${inputClass} resize-none`}
+          rows={2}
+          className="resize-none"
         />
-        <p className="text-xs text-slate-400 mt-2 italic">Building, street, barangay — anything that helps our engineer find you.</p>
-      </FormField>
+      </Field>
     </div>
   );
 }
@@ -200,7 +146,7 @@ function Step3({ formData, errors, update }: StepProps) {
 
   const renderSlotGroup = (label: string, slots: typeof TIME_SLOTS) => (
     <div>
-      <p className="text-xs font-semibold text-slate-400 mb-3">{label}</p>
+      <p className="mb-3 text-xs font-semibold text-fg-subtle">{label}</p>
       <div className="flex flex-wrap gap-3">
         {slots.map(({ label: time }) => {
           const active = formData.preferred_time === time;
@@ -210,11 +156,12 @@ function Step3({ formData, errors, update }: StepProps) {
               type="button"
               onClick={() => update('preferred_time', time)}
               aria-pressed={active}
-              className={`px-6 py-3 rounded-full border border-slate-300 text-sm font-semibold tracking-wide transition-all duration-200 min-h-[52px] ${
+              className={cn(
+                'min-h-11 rounded-full border px-5 text-sm font-semibold transition-colors duration-200',
                 active
                   ? 'border-navy-950 bg-navy-950 text-white'
-                  : 'bg-transparent text-navy-800 hover:border-navy-950'
-              }`}
+                  : 'border-slate-300 bg-white text-fg hover:border-navy-950',
+              )}
             >
               {time}
             </button>
@@ -226,28 +173,21 @@ function Step3({ formData, errors, update }: StepProps) {
 
   return (
     <div className="space-y-8">
-      <div className="mb-8">
-        <h2 className="text-[2.25rem] font-black text-navy-950 tracking-tight text-wrap-balance" style={{ fontFamily: 'Poppins, sans-serif' }}>Schedule.</h2>
-      </div>
+      <h2 className="text-h2 text-fg">Schedule.</h2>
 
-      <FormField label="Preferred Date" htmlFor="preferred_date" error={errors.preferred_date}>
-        <div className="relative">
-          <Calendar size={16} className="absolute left-0 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-          <input
-            id="preferred_date"
-            type="date"
-            min={minDate}
-            max={maxDate}
-            value={formData.preferred_date}
-            onChange={(e) => update('preferred_date', e.target.value)}
-            className={`${inputClass} pl-8`}
-          />
-        </div>
-      </FormField>
+      <Field id="preferred_date" label="Preferred Date" error={errors.preferred_date} required>
+        <Input
+          type="date"
+          min={minDate}
+          max={maxDate}
+          value={formData.preferred_date}
+          onChange={(e) => update('preferred_date', e.target.value)}
+        />
+      </Field>
 
-      <div>
-        <p className="block text-sm font-semibold text-navy-800 mb-3">Session length</p>
-        <div className="grid grid-cols-3 gap-4">
+      <fieldset>
+        <legend className="mb-3 text-sm font-semibold text-fg">Session length</legend>
+        <div className="grid grid-cols-3 gap-3 sm:gap-4">
           {CONSULTATION_DURATION_OPTIONS.map((hrs) => {
             const active = formData.duration_hours === String(hrs);
             return (
@@ -256,50 +196,51 @@ function Step3({ formData, errors, update }: StepProps) {
                 type="button"
                 onClick={() => update('duration_hours', String(hrs))}
                 aria-pressed={active}
-                className={`flex flex-col items-center gap-1 p-5 border-2 transition-all duration-200 min-h-[52px] ${
-                  active ? 'border-solar-400 bg-white' : 'border-slate-200/60 bg-transparent hover:border-slate-300'
-                }`}
+                className={cn(
+                  'flex flex-col items-center gap-1 rounded-control border-2 p-4 transition-colors duration-200 sm:p-5',
+                  active ? 'border-solar-500 bg-solar-50' : 'border-line bg-white hover:border-slate-300',
+                )}
               >
-                <span className={`text-3xl font-black ${active ? 'text-navy-950' : 'text-slate-300'}`} style={{ fontFamily: 'Poppins, sans-serif' }}>{hrs}</span>
-                <span className="text-xs text-slate-400">{hrs === 1 ? 'hour' : 'hours'}</span>
-                <span className={`text-sm font-semibold mt-1 ${active ? 'text-navy-900' : 'text-slate-400'}`}>
+                <span className={cn('font-display text-h2 tabular-nums', active ? 'text-fg' : 'text-fg-subtle')}>
+                  {hrs}
+                </span>
+                <span className="text-xs text-fg-subtle">{hrs === 1 ? 'hour' : 'hours'}</span>
+                <span className={cn('mt-1 text-sm font-semibold tabular-nums', active ? 'text-fg' : 'text-fg-muted')}>
                   {formatCentavos(CONSULTATION_HOURLY_CENTAVOS * hrs)}
                 </span>
               </button>
             );
           })}
         </div>
-        <p className="text-xs text-slate-400 mt-2 italic">
+        <p className="mt-3 text-sm text-fg-subtle">
           Paid online consultation at {formatCentavos(CONSULTATION_HOURLY_CENTAVOS)}/hour. Your slot is confirmed after payment.
         </p>
-      </div>
+      </fieldset>
 
-      <div>
-        <div className="flex items-center gap-2 mb-4">
-          <Clock size={16} className="text-slate-400" />
-          <span className="block text-sm font-semibold text-navy-800">Preferred time</span>
-        </div>
+      <fieldset>
+        <legend className="mb-4 flex items-center gap-2 text-sm font-semibold text-fg">
+          <Clock className="size-4 text-fg-subtle" aria-hidden />
+          Preferred time
+        </legend>
         <div className="space-y-6">
           {renderSlotGroup('Morning', morningSlots)}
           {renderSlotGroup('Afternoon', afternoonSlots)}
         </div>
-        {errors.preferred_time && (
-          <p className="text-red-500 text-xs mt-2" role="alert">{errors.preferred_time}</p>
-        )}
-      </div>
+        <FieldError className="mt-3">{errors.preferred_time}</FieldError>
+      </fieldset>
 
       {/* Summary review */}
-      <div className="bg-white border border-slate-200 p-8 mt-12">
-        <p className="text-sm font-semibold text-slate-500 mb-4">Summary</p>
+      <div className="mt-10 rounded-card border border-line bg-navy-50 p-6 sm:p-8">
+        <h3 className="mb-4 text-title text-fg">Summary</h3>
         <div className="grid grid-cols-2 gap-x-6 gap-y-4 text-base">
           <SummaryRow label="Name" value={formData.name} />
           <SummaryRow label="Phone" value={formData.phone} />
           <SummaryRow label="City" value={formData.city_name} />
           <SummaryRow label="Session" value={`${formData.duration_hours} ${formData.duration_hours === '1' ? 'hour' : 'hours'}`} />
         </div>
-        <div className="flex items-center justify-between mt-6 pt-6 border-t border-slate-200">
-          <span className="text-xs font-semibold text-slate-400">Total due</span>
-          <span className="text-2xl font-black text-navy-950" style={{ fontFamily: 'Poppins, sans-serif' }}>
+        <div className="mt-6 flex items-center justify-between border-t border-navy-100 pt-6">
+          <span className="text-sm font-semibold text-fg-muted">Total due</span>
+          <span className="font-display text-h3 tabular-nums text-fg">
             {formatCentavos(CONSULTATION_HOURLY_CENTAVOS * Number(formData.duration_hours || 1))}
           </span>
         </div>
@@ -310,9 +251,9 @@ function Step3({ formData, errors, update }: StepProps) {
 
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
-    <div>
-      <p className="text-slate-400 text-xs mb-1">{label}</p>
-      <p className="text-navy-950 font-medium truncate">{value || '—'}</p>
+    <div className="min-w-0">
+      <p className="mb-1 text-xs text-fg-muted">{label}</p>
+      <p className="truncate font-medium text-fg">{value || '—'}</p>
     </div>
   );
 }
@@ -393,35 +334,41 @@ export default function ConsultationBookingPage() {
   };
 
   return (
-    <BookingSplitLayout
-      leftTag="CONSULTATION"
-      leftTitle="Consultation."
-    >
-      <div className="flex-1 p-6 sm:p-12 lg:p-16 xl:p-24 max-w-3xl w-full mx-auto lg:mx-0 flex flex-col">
-        <Link href="/booking" className="inline-flex items-center gap-2 text-slate-400 hover:text-navy-950 transition-colors text-sm font-medium mb-12 w-fit">
-          <ChevronLeft size={16} />
-          Back to index
+    <BookingSplitLayout leftTitle="Consultation.">
+      <div className="flex w-full max-w-3xl flex-1 flex-col px-4 py-10 sm:px-8 sm:py-14 lg:px-12 lg:py-16 xl:px-16">
+        <Link
+          href="/booking"
+          className="mb-10 inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-fg-muted transition-colors hover:text-fg"
+        >
+          <ChevronLeft className="size-4" aria-hidden />
+          All services
         </Link>
 
         {/* Progress */}
-        <div className="flex gap-2 mb-14">
+        <ol className="mb-12 flex gap-2">
           {STEPS.map((label, i) => {
             const done = i < step;
             const active = i === step;
             return (
-              <div key={i} className="flex-1 flex flex-col gap-2.5">
-                <div className={`h-[3px] rounded-sm transition-all duration-300 ${
-                  done ? 'bg-solar-400' : active ? 'bg-navy-950' : 'bg-slate-200'
-                }`} />
-                <span className={`text-[11px] font-semibold transition-colors ${
-                  active ? 'text-navy-950' : done ? 'text-solar-500' : 'text-slate-300'
-                }`}>
+              <li key={label} className="flex flex-1 flex-col gap-2" aria-current={active ? 'step' : undefined}>
+                <div
+                  className={cn(
+                    'h-1 rounded-full transition-colors duration-300',
+                    done ? 'bg-solar-500' : active ? 'bg-navy-950' : 'bg-slate-200',
+                  )}
+                />
+                <span
+                  className={cn(
+                    'text-xs font-semibold transition-colors',
+                    active ? 'text-fg' : done ? 'text-solar-ink' : 'text-fg-subtle',
+                  )}
+                >
                   {label}
                 </span>
-              </div>
+              </li>
             );
           })}
-        </div>
+        </ol>
 
         {/* Step Content */}
         <div className="mb-auto min-h-[400px]">
@@ -433,7 +380,7 @@ export default function ConsultationBookingPage() {
               initial="enter"
               animate="center"
               exit="exit"
-              transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+              transition={{ duration: 0.2, ease: EASE_OUT }}
             >
               {step === 0 && <Step1 formData={formData} errors={errors} update={update} />}
               {step === 1 && <Step3 formData={formData} errors={errors} update={update} />}
@@ -442,52 +389,33 @@ export default function ConsultationBookingPage() {
         </div>
 
         {/* Navigation */}
-        <div className="pt-12 mt-12 border-t border-slate-200">
-          {submitError && (
-            <p className="text-red-500 text-sm mb-6 text-center bg-red-50 px-4 py-3" role="alert">
-              {submitError}
-            </p>
-          )}
-          <div className={`flex gap-4 items-center ${step > 0 ? 'justify-between' : 'justify-end'}`}>
+        <div className="mt-12 border-t border-line pt-8">
+          <FieldError role="alert" className="mt-0 mb-6 rounded-control bg-red-50 px-4 py-3">
+            {submitError}
+          </FieldError>
+          <div className={cn('flex items-center gap-4', step > 0 ? 'justify-between' : 'justify-end')}>
             {step > 0 && (
-              <button
-                type="button"
-                onClick={goBack}
-                disabled={isSubmitting}
-                className="flex items-center gap-2 text-slate-400 hover:text-navy-950 font-semibold text-base transition-colors disabled:opacity-50"
-              >
-                <ChevronLeft size={16} />
+              <Button variant="ghost" onClick={goBack} disabled={isSubmitting}>
+                <ChevronLeft className="size-4" aria-hidden />
                 Back
-              </button>
+              </Button>
             )}
             {step < STEPS.length - 1 ? (
-              <button
-                type="button"
-                onClick={goNext}
-                className="flex items-center gap-3 px-10 py-4 rounded-full bg-solar-500 text-navy-950 font-bold text-sm tracking-wide hover:bg-solar-400 transition-colors min-h-[52px]"
-              >
-                CONTINUE
-                <ArrowRight size={16} />
-              </button>
+              <Button size="lg" onClick={goNext}>
+                Continue
+                <ArrowRight className="size-4" aria-hidden />
+              </Button>
             ) : (
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={isSubmitting}
-                className="flex items-center gap-3 px-10 py-4 rounded-full bg-solar-500 text-navy-950 font-bold text-sm tracking-wide hover:bg-solar-400 transition-colors min-h-[52px] disabled:opacity-60 disabled:cursor-not-allowed uppercase"
-              >
+              <Button size="lg" onClick={handleSubmit} loading={isSubmitting}>
                 {isSubmitting ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" />
-                    REDIRECTING…
-                  </>
+                  'Redirecting…'
                 ) : (
                   <>
-                    PROCEED TO PAYMENT
-                    <ArrowRight size={16} />
+                    Proceed to payment
+                    <ArrowRight className="size-4" aria-hidden />
                   </>
                 )}
-              </button>
+              </Button>
             )}
           </div>
         </div>

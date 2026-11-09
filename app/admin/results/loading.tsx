@@ -1,0 +1,37 @@
+export default function AdminResultsLoading() {
+  return (
+    <div>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="h-8 w-28 bg-slate-200 rounded-control animate-pulse" />
+        <div className="h-9 w-32 bg-slate-200 rounded-full animate-pulse" />
+      </div>
+
+      {/* Stat strip */}
+      <div className="grid grid-cols-2 gap-3 mb-6 max-w-xs">
+        <div className="bg-white rounded-card border border-line shadow-soft p-4 space-y-2">
+          <div className="h-7 w-12 bg-slate-200 rounded animate-pulse" />
+          <div className="h-3 w-24 bg-slate-100 rounded animate-pulse" />
+        </div>
+      </div>
+
+      {/* Table skeleton */}
+      <div className="bg-white rounded-card border border-line overflow-hidden shadow-soft">
+        <div className="bg-slate-50 border-b border-line px-4 py-3 flex gap-8">
+          {['w-16', 'w-16', 'w-12', 'w-24'].map((w, i) => (
+            <div key={i} className={`h-3 ${w} bg-slate-200 rounded animate-pulse`} />
+          ))}
+        </div>
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="flex items-center gap-4 px-4 py-3 border-b border-slate-100">
+            <div className="w-14 h-14 rounded-md bg-slate-200 animate-pulse shrink-0" />
+            <div className="w-14 h-14 rounded-md bg-slate-200 animate-pulse shrink-0" />
+            <div className="h-4 w-8 bg-slate-100 rounded animate-pulse" />
+            <div className="h-3 w-20 bg-slate-100 rounded animate-pulse" />
+            <div className="h-7 w-16 bg-slate-100 rounded-full animate-pulse ml-auto" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

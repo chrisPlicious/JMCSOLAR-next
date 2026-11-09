@@ -4,6 +4,11 @@ import { useRef } from "react";
 import { CheckCircle2, Leaf, Zap } from "lucide-react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import Button from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import Badge from "@/components/ui/Badge";
+import { Section } from "@/components/ui/Section";
+import { SectionHeader } from "@/components/ui/SectionHeader";
+import { fadeUp, revealOnScroll, stagger } from "@/lib/motion";
 const solarImg = '/assets/solar.jpg';
 
 const highlights = [
@@ -39,310 +44,144 @@ export default function About() {
   const imageY = useTransform(scrollYProgress, [0, 1], ["-8%", "8%"]);
 
   return (
-    <section id="about" className="relative bg-warm overflow-hidden">
+    <Section id="about" tone="white" className="overflow-hidden">
+      <motion.div variants={fadeUp} {...revealOnScroll}>
+        <SectionHeader title="We drive innovation to provide free and clean energy for every industry." />
+      </motion.div>
 
-      {/* Dotted background that fades out at the bottom */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          backgroundImage: 'radial-gradient(circle, rgba(148,163,184,0.25) 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
-          maskImage: 'linear-gradient(to bottom, black 0%, black 40%, transparent 85%)',
-          WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 40%, transparent 85%)',
-        }}
-      />
+      {/* ── Three-card trio ─────────────────────────────── */}
+      <motion.div
+        className="mb-16 grid grid-cols-1 gap-5 md:grid-cols-3 lg:mb-24"
+        variants={stagger(0.08)}
+        {...revealOnScroll}
+      >
+        {/* Card 1 — Dark stat card */}
+        <Card as={motion.div} variants={fadeUp} variant="dark" padding="lg" className="flex flex-col justify-between gap-12">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-fg-muted">Solar Solutions</span>
+            <span className="flex size-10 items-center justify-center rounded-control bg-white/10">
+              <Zap size={18} className="text-solar-ink" aria-hidden />
+            </span>
+          </div>
 
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-14 sm:py-20 lg:py-28">
-        {/* ── Split header (Ref 3 style) ────────────────────── */}
+          <div className="space-y-5 border-t border-line pt-6">
+            <div>
+              <span className="block font-display text-h2 text-fg tabular-nums">15+</span>
+              <span className="text-sm text-fg-muted">Brand Partners</span>
+            </div>
+            <div>
+              <span className="block font-display text-h2 text-fg tabular-nums">10+</span>
+              <span className="text-sm text-fg-muted">Projects Completed</span>
+            </div>
+          </div>
+        </Card>
+
+        {/* Card 2 — Photo card */}
         <motion.div
-          className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-14"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.6 }}
+          variants={fadeUp}
+          className="surface-dark relative aspect-[4/3] overflow-hidden rounded-card md:aspect-auto md:min-h-full"
         >
-          <p className="text-[13px] text-slate-400 uppercase tracking-[0.2em] font-medium">
-            Who We Are
-          </p>
-          <h2
-            className="text-navy-900 font-bold text-2xl sm:text-3xl lg:text-[2rem] max-w-lg leading-snug"
-            style={{ fontFamily: "Poppins, sans-serif" }}
-          >
-            We drive innovation to provide free and clean energy for every
-            industry.
-          </h2>
+          <img
+            src="/aboutSolar.jpg"
+            alt="JMC Solar Team at Work"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-linear-to-t from-navy-950/85 via-navy-950/25 to-transparent" />
+          <div className="absolute right-0 bottom-0 left-0 p-6 sm:p-8">
+            <h3 className="mb-2 text-h3 text-fg">Our Vision</h3>
+            <p className="text-sm text-fg-muted">
+              Provide free and clean energy for every industry — from homes to
+              commercial establishments.
+            </p>
+          </div>
         </motion.div>
 
-        {/* ── Three-card trio (Ref 3 + Ref 2 blend) ────────── */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-20 lg:mb-28">
-          {/* Card 1 — Dark stat card */}
-          <motion.div
-            className="bg-gradient-to-br from-navy-900 to-navy-800 rounded-3xl p-8 flex flex-col justify-between relative overflow-hidden min-h-[360px]"
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.6 }}
-          >
-            <div
-              className="absolute top-0 right-0 w-48 h-48 blob-shape opacity-10 pointer-events-none"
-              style={{
-                background:
-                  "radial-gradient(circle, #f59e0b 0%, transparent 70%)",
-              }}
-            />
-
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-16">
-                <span className="text-white/50 text-sm font-medium">
-                  Solar Solutions
-                </span>
-                <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
-                  <Zap size={18} className="text-solar-400" />
-                </div>
-              </div>
-            </div>
-
-            <div className="relative z-10 space-y-5 border-t border-white/10 pt-6">
-              <div>
-                <span
-                  className="text-white font-black text-4xl block"
-                  style={{ fontFamily: "Poppins, sans-serif" }}
-                >
-                  15+
-                </span>
-                <span className="text-white/50 text-sm">Brand Partners</span>
-              </div>
-              <div>
-                <span
-                  className="text-white font-black text-4xl block"
-                  style={{ fontFamily: "Poppins, sans-serif" }}
-                >
-                  10+
-                </span>
-                <span className="text-white/50 text-sm">
-                  Projects Completed
-                </span>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Card 2 — Photo card */}
-          <motion.div
-            className="rounded-3xl overflow-hidden relative min-h-[360px]"
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-          >
-            <img
-              src="/aboutSolar.jpg"
-              alt="JMC Solar Team at Work"
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-navy-900/80 via-navy-900/20 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-8">
-              <h3
-                className="text-white font-bold text-xl mb-2"
-                style={{ fontFamily: "Poppins, sans-serif" }}
-              >
-                Our Vision
-              </h3>
-              <p className="text-white/70 text-sm leading-relaxed">
-                Provide free and clean energy for every industry — from homes to
-                commercial establishments.
-              </p>
-            </div>
-          </motion.div>
-
-          {/* Card 3 — Light info card with hashtag badges */}
-          <motion.div
-            className="bg-white rounded-3xl p-8 flex flex-col justify-between border border-slate-100 min-h-[360px]"
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            <div>
-              <p
-                className="text-navy-900 font-semibold text-lg leading-snug mb-3"
-                style={{ fontFamily: "Poppins, sans-serif" }}
-              >
-                Always committed to quality solar installations for a
-                sustainable future
-              </p>
-              <p className="text-slate-500 text-sm leading-relaxed">
-                DOE/ERC compliant installations serving the entire Visayas
-                region with world-class solar brands.
-              </p>
-            </div>
-
-            <div className="mt-auto pt-8">
-              <div className="flex flex-wrap gap-2">
-                {tags.map((tag) => (
-                  <span
-                    key={tag.label}
-                    className={`text-xs rounded-full px-3 py-1.5 font-medium border ${
-                      tag.accent
-                        ? "text-solar-600 bg-solar-500/10 border-solar-500/20"
-                        : "text-slate-600 bg-slate-50 border-slate-100"
-                    }`}
-                  >
-                    {tag.label}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* ── Split content section (Ref 2 style) ──────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
-          {/* Left — Text content */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.6 }}
-          >
-            <span className="inline-flex items-center gap-2 text-solar-600 font-semibold text-sm uppercase tracking-widest mb-5">
-              <span className="w-8 h-px bg-solar-500" />
-              More About Us
-            </span>
-
-            <h2
-              className="text-navy-900 font-black text-3xl sm:text-4xl leading-tight mb-6"
-              style={{ fontFamily: "Poppins, sans-serif" }}
-            >
-              Renewable Energy{" "}
-              <span className="text-solar-500">Advocates</span> for the
-              Philippines
-            </h2>
-
-            <p className="text-slate-600 text-lg leading-relaxed mb-4">
-              JMC Solar PH — also known as JMC Power — is a renewable energy
-              company headquartered in Ormoc City, Leyte. We are passionate
-              advocates for the shift toward clean, sustainable energy throughout
-              the Visayas region.
+        {/* Card 3 — Light info card with hashtag badges */}
+        <Card as={motion.div} variants={fadeUp} padding="lg" className="flex flex-col justify-between">
+          <div>
+            <p className="mb-3 text-title text-fg">
+              Always committed to quality solar installations for a
+              sustainable future
             </p>
-            <p className="text-slate-500 leading-relaxed mb-8">
-              Our mission is simple:{" "}
-              <strong className="text-navy-900">
-                provide free and clean energy for every industry
-              </strong>{" "}
-              — from small residential homes to large commercial establishments
-              and industrial operations.
+            <p className="text-sm text-fg-muted">
+              DOE/ERC compliant installations serving the entire Visayas
+              region with world-class solar brands.
             </p>
+          </div>
 
-            {/* Staggered bullet points */}
-            <ul className="space-y-3.5 mb-10">
-              {highlights.map((item, i) => (
-                <motion.li
-                  key={item}
-                  className="flex items-center gap-3"
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true, margin: "-60px" }}
-                  transition={{
-                    duration: 0.4,
-                    delay: i * 0.1,
-                    ease: "easeOut",
-                  }}
-                >
-                  <div className="w-6 h-6 bg-green-eco/10 rounded-full flex items-center justify-center flex-shrink-0">
-                    <CheckCircle2 size={15} className="text-green-eco" />
-                  </div>
-                  <span className="text-slate-700 text-sm font-medium">
-                    {item}
-                  </span>
-                </motion.li>
-              ))}
-            </ul>
+          <div className="mt-auto flex flex-wrap gap-2 pt-8">
+            {tags.map((tag) => (
+              <Badge key={tag.label} tone={tag.accent ? "solar" : "neutral"}>
+                {tag.label}
+              </Badge>
+            ))}
+          </div>
+        </Card>
+      </motion.div>
 
-            <Button variant="secondary" size="md" href="/#contact">
-              Get in Touch
-            </Button>
-          </motion.div>
+      {/* ── Split content section ───────────────────────── */}
+      <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-16">
+        {/* Left — Text content */}
+        <motion.div variants={fadeUp} {...revealOnScroll}>
+          <h2 className="mb-6 text-h2 text-fg">
+            Renewable Energy Advocates for the Philippines
+          </h2>
 
-          {/* Right — Large parallax image with floating stat badges */}
-          <motion.div
-            ref={imageRef}
-            className="relative"
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.6, delay: 0.15 }}
-          >
-            <div className="rounded-3xl overflow-hidden relative aspect-[4/5]">
-              <motion.img
-                src={solarImg}
-                alt="Solar Installation"
-                className="absolute inset-0 w-full h-[120%] object-cover"
-                style={{ y: imageY, top: "-10%" }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-navy-900/20 to-transparent" />
-            </div>
+          <p className="mb-4 text-lead text-fg-muted">
+            JMC Solar PH — also known as JMC Power — is a renewable energy
+            company headquartered in Ormoc City, Leyte. We are passionate
+            advocates for the shift toward clean, sustainable energy throughout
+            the Visayas region.
+          </p>
+          <p className="mb-8 text-fg-muted">
+            Our mission is simple:{" "}
+            <strong className="text-fg">
+              provide free and clean energy for every industry
+            </strong>{" "}
+            — from small residential homes to large commercial establishments
+            and industrial operations.
+          </p>
 
-            {/* Floating stat badge — bottom-right (Ref 2 style) */}
-            <motion.div
-              className="absolute bottom-6 right-6 bg-white/90 backdrop-blur-md rounded-2xl p-5 shadow-elevated border border-white/50"
-              animate={{ y: [0, -6, 0] }}
-              transition={{
-                duration: 4,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-              style={{
-                backfaceVisibility: "hidden",
-                WebkitFontSmoothing: "antialiased",
-              }}
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-green-eco/10 rounded-xl flex items-center justify-center">
-                  <Leaf size={20} className="text-green-eco" />
-                </div>
-                <div>
-                  <span
-                    className="text-navy-900 font-black text-2xl block"
-                    style={{ fontFamily: "Poppins, sans-serif" }}
-                  >
-                    100%
-                  </span>
-                  <span className="text-slate-500 text-xs font-medium">
-                    Recommend Rate
-                  </span>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Floating brand badge — top-left */}
-            <motion.div
-              className="absolute top-6 left-6 bg-navy-900/90 backdrop-blur-md rounded-2xl px-4 py-3 shadow-elevated"
-              animate={{ y: [0, -4, 0] }}
-              transition={{
-                duration: 5,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: 1,
-              }}
-              style={{
-                backfaceVisibility: "hidden",
-                WebkitFontSmoothing: "antialiased",
-              }}
-            >
-              <div className="flex items-center gap-2">
-                <Zap
-                  size={16}
-                  className="text-solar-400"
-                  fill="currentColor"
-                />
-                <span className="text-white text-sm font-semibold">
-                  JMC Solar PH
+          <motion.ul className="mb-10 space-y-3.5" variants={stagger(0.07)} {...revealOnScroll}>
+            {highlights.map((item) => (
+              <motion.li key={item} variants={fadeUp} className="flex items-center gap-3">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-green-eco-bg">
+                  <CheckCircle2 size={15} className="text-green-eco" aria-hidden />
                 </span>
+                <span className="text-sm font-medium text-fg">{item}</span>
+              </motion.li>
+            ))}
+          </motion.ul>
+
+          <Button variant="secondary" href="/#contact">
+            Message us
+          </Button>
+        </motion.div>
+
+        {/* Right — Large parallax image with stat badge */}
+        <motion.div ref={imageRef} className="relative" variants={fadeUp} {...revealOnScroll}>
+          <div className="relative aspect-[4/5] overflow-hidden rounded-panel">
+            <motion.img
+              src={solarImg}
+              alt="Solar Installation"
+              className="absolute inset-0 h-[120%] w-full object-cover"
+              style={{ y: imageY, top: "-10%" }}
+            />
+          </div>
+
+          <div className="absolute right-6 bottom-6 rounded-card border border-line bg-white/90 p-5 shadow-elevated backdrop-blur-md">
+            <div className="flex items-center gap-3">
+              <span className="flex size-10 items-center justify-center rounded-control bg-green-eco-bg">
+                <Leaf size={20} className="text-green-eco" aria-hidden />
+              </span>
+              <div>
+                <span className="block font-display text-h3 text-fg tabular-nums">100%</span>
+                <span className="text-xs font-medium text-fg-muted">Recommend Rate</span>
               </div>
-            </motion.div>
-          </motion.div>
-        </div>
+            </div>
+          </div>
+        </motion.div>
       </div>
-    </section>
+    </Section>
   );
 }

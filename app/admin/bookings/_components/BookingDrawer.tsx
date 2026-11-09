@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import type { DbBooking } from '@/lib/firebase/types';
+import { Button } from '@/components/ui/Button';
 import { BookingDetails } from './BookingDetails';
 
 type Props = {
@@ -64,19 +65,14 @@ export function BookingDrawer({ open, booking, loading, onClose }: Props) {
         aria-modal="true"
         aria-label="Booking details"
         onTransitionEnd={() => { if (!open) setRender(false); }}
-        className={`absolute right-0 top-0 h-full w-full max-w-md bg-slate-50 shadow-2xl flex flex-col transition-transform duration-300 ease-out ${shown ? 'translate-x-0' : 'translate-x-full'}`}
+        className={`absolute right-0 top-0 h-full w-full max-w-md bg-slate-50 shadow-elevated flex flex-col transition-transform duration-300 ease-out-quart ${shown ? 'translate-x-0' : 'translate-x-full'}`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 bg-white shrink-0">
-          <p className="text-sm font-bold uppercase tracking-widest text-slate-400">Booking Details</p>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close"
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
-          >
-            <X size={18} />
-          </button>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-line bg-white shrink-0">
+          <p className="caps">Booking Details</p>
+          <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label="Close">
+            <X size={18} aria-hidden />
+          </Button>
         </div>
 
         {/* Body */}

@@ -4,66 +4,51 @@ import { SITE_URL } from '@/lib/seo/site';
 import { LOCATIONS } from '@/data/locations';
 import { isIndexableCityService } from '@/data/indexableCityServices';
 import { isProductIndexable } from '@/lib/seo/product';
-import type { DbService } from '@/lib/firebase/types';
+import { isServiceIndexable } from '@/lib/seo/service';
+import { getServices, getServiceDetail } from '@/data/services';
 import type { Product } from '@/types';
 
+// Google ignores <changefreq> and <priority>, and only trusts <lastmod> when it
+// is accurate — so entries carry a lastModified ONLY when it comes from a real
+// document timestamp. Pages built from static code/data omit it rather than
+// claiming "modified now" on every crawl.
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages: MetadataRoute.Sitemap = [
-    { url: SITE_URL, lastModified: new Date(), changeFrequency: 'weekly', priority: 1 },
-    { url: `${SITE_URL}/services`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.9 },
-    { url: `${SITE_URL}/products`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
-    { url: `${SITE_URL}/projects`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
-    { url: `${SITE_URL}/calculator`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
-    { url: `${SITE_URL}/locations`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.85 },
-    { url: `${SITE_URL}/results`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
-  ];
+    '',
+    '/services',
+    '/products',
+    '/projects',
+    '/calculator',
+    '/locations',
+    '/results',
+  ].map((path) => ({ url: `${SITE_URL}${path}` }));
 
-  // Dynamic service detail pages — only those with full ServiceDetail content
-  let servicePages: MetadataRoute.Sitemap = [];
-  let serviceSlugs: string[] = [];
-  try {
-    const [servicesSnap, detailsSnap] = await Promise.all([
-      adminDb.collection('services').get(),
-      adminDb.collection('serviceDetails').select('service_id').get(),
-    ]);
-    const withDetail = new Set(detailsSnap.docs.map((d) => d.data().service_id as string));
-    const serviceDocs = servicesSnap.docs.filter((doc) => withDetail.has(doc.id));
-    serviceSlugs = serviceDocs.map((doc) => (doc.data() as DbService).slug);
-    servicePages = serviceDocs.map((doc) => {
-      const data = doc.data() as DbService;
-      return {
-        url: `${SITE_URL}/services/${data.slug}`,
-        lastModified: new Date(data.updated_at || data.created_at),
-        changeFrequency: 'monthly' as const,
-        priority: 0.7,
-      };
-    });
-  } catch (err) {
-    console.error('[sitemap] Failed to fetch service pages:', err);
-  }
+  // Service detail pages — same gate as the page's robots (isServiceIndexable).
+  const services = getServices();
+  const serviceSlugs = services.map((s) => s.slug);
+  const servicePages: MetadataRoute.Sitemap = services.flatMap((s) => {
+    if (!isServiceIndexable(getServiceDetail(s.slug))) return [];
+    const t = Date.parse(s.updated_at);
+    return [
+      {
+        url: `${SITE_URL}/services/${s.slug}`,
+        ...(Number.isFinite(t) && { lastModified: new Date(t) }),
+      },
+    ];
+  });
 
-  // Location landing pages — one per city/province slug
+  // Location landing pages — one per city/province slug.
   const locationPages: MetadataRoute.Sitemap = LOCATIONS.map((loc) => ({
     url: `${SITE_URL}/locations/${loc.slug}`,
-    lastModified: new Date(),
-    changeFrequency: 'monthly' as const,
-    priority: loc.tier === 'municipality' ? 0.85 : 0.8,
   }));
 
   // City × service cross-pages — only allowlisted combos (data/indexableCityServices.ts).
   // Empty allowlist = none emitted: the rest are pruned (noindex) so must NOT appear here.
-  const cityServicePages: MetadataRoute.Sitemap = serviceSlugs.length > 0
-    ? LOCATIONS.flatMap((loc) =>
-        serviceSlugs
-          .filter((serviceSlug) => isIndexableCityService(loc.slug, serviceSlug))
-          .map((serviceSlug) => ({
-            url: `${SITE_URL}/locations/${loc.slug}/${serviceSlug}`,
-            lastModified: new Date(),
-            changeFrequency: 'monthly' as const,
-            priority: 0.7,
-          }))
-      )
-    : [];
+  const cityServicePages: MetadataRoute.Sitemap = LOCATIONS.flatMap((loc) =>
+    serviceSlugs
+      .filter((serviceSlug) => isIndexableCityService(loc.slug, serviceSlug))
+      .map((serviceSlug) => ({ url: `${SITE_URL}/locations/${loc.slug}/${serviceSlug}` })),
+  );
 
   // Product detail pages — only substantial products (isProductIndexable gate), so
   // thin/slug-less products stay out of the index just like the pruned location combos.
@@ -73,12 +58,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     productPages = snap.docs
       .map((doc) => ({ id: doc.id, ...doc.data() }) as Product)
       .filter(isProductIndexable)
-      .map((p) => ({
-        url: `${SITE_URL}/products/${p.slug}`,
-        lastModified: new Date(p.created_at),
-        changeFrequency: 'monthly' as const,
-        priority: 0.6,
-      }));
+      // No lastModified: product docs carry only created_at (edits don't stamp a
+      // date), and a creation date would under-report every later edit.
+      .map((p) => ({ url: `${SITE_URL}/products/${p.slug}` }));
   } catch (err) {
     console.error('[sitemap] Failed to fetch product pages:', err);
   }

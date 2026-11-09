@@ -17,7 +17,8 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ['janitor-cultivate-arrive.ngrok-free.dev'],
+  // ngrok tunnel domains allowed to reach the dev server (HMR socket and dev assets).
+  allowedDevOrigins: ['janitor-cultivate-arrive.ngrok-free.dev', 'fiber-cesarean-shoplift.ngrok-free.dev'],
   turbopack: {
     root: __dirname,
   },

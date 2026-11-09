@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sun,
@@ -11,15 +10,20 @@ import {
   MapPin,
   TrendingUp,
   Leaf,
-  ArrowRight,
   ChevronDown,
-  Calculator,
   RotateCcw,
   Info,
   CheckCircle2,
-  Sparkles,
 } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
+import PageHero from '@/components/ui/PageHero';
+import { Section } from '@/components/ui/Section';
+import { Button } from '@/components/ui/Button';
+import { FieldHint, Input, Label } from '@/components/ui/Field';
+import Badge from '@/components/ui/Badge';
+import CtaBand from '@/components/ui/CtaBand';
+import { DURATION, EASE_OUT } from '@/lib/motion';
+import { cn } from '@/lib/utils';
 import {
   calculate,
   REGIONS,
@@ -73,20 +77,20 @@ function Tooltip({ text }: { text: string }) {
         onMouseLeave={() => setShow(false)}
         onFocus={() => setShow(true)}
         onBlur={() => setShow(false)}
-        className="text-slate-400 hover:text-slate-500 transition-colors cursor-pointer"
+        className="text-fg-subtle hover:text-fg-muted transition-colors cursor-pointer rounded-full"
         aria-label="More info"
         type="button"
       >
-        <Info size={12} />
+        <Info size={12} aria-hidden />
       </button>
       <AnimatePresence>
         {show && (
           <motion.div
-            initial={{ opacity: 0, y: 6, scale: 0.94 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 6, scale: 0.94 }}
-            transition={{ duration: 0.15 }}
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 bg-navy-950 text-white text-[11px] leading-relaxed px-3 py-2 rounded-xl shadow-xl z-50 pointer-events-none"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 6 }}
+            transition={{ duration: DURATION.fast, ease: EASE_OUT }}
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 bg-navy-950 text-white text-xs font-normal normal-case tracking-normal leading-relaxed px-3 py-2 rounded-control shadow-elevated z-50 pointer-events-none"
           >
             {text}
             <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-navy-950" />
@@ -105,17 +109,15 @@ function CoverageBar({ percent }: { percent: number }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-1.5">
-        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
-          Bill Coverage
-        </span>
-        <span className="text-[11px] font-bold text-solar-600">{percent}%</span>
+        <span className="caps">Bill Coverage</span>
+        <span className="text-xs font-bold text-solar-ink tabular-nums">{percent}%</span>
       </div>
       <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
         <motion.div
-          className="h-full rounded-full bg-gradient-to-r from-solar-400 to-solar-500"
+          className="h-full rounded-full bg-solar-500"
           initial={{ width: 0 }}
           animate={{ width: `${percent}%` }}
-          transition={{ duration: 0.9, ease: 'easeOut', delay: 0.2 }}
+          transition={{ duration: DURATION.slow, ease: EASE_OUT, delay: 0.2 }}
         />
       </div>
     </div>
@@ -131,24 +133,22 @@ function PaybackBar({ low, high }: { low: number; high: number }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-1.5">
-        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
-          Payback Timeline (25 yr)
-        </span>
-        <span className="text-[11px] font-bold text-navy-900">
+        <span className="caps">Payback Timeline (25 yr)</span>
+        <span className="text-xs font-bold text-fg tabular-nums">
           {low}–{high} yrs
         </span>
       </div>
       <div className="relative h-2 bg-slate-100 rounded-full overflow-hidden">
         <motion.div
-          className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500"
+          className="h-full rounded-full bg-green-eco"
           initial={{ width: 0 }}
           animate={{ width: `${midPercent}%` }}
-          transition={{ duration: 0.9, ease: 'easeOut', delay: 0.3 }}
+          transition={{ duration: DURATION.slow, ease: EASE_OUT, delay: 0.3 }}
         />
       </div>
       <div className="flex justify-between mt-1">
         {[0, 5, 10, 15, 20, 25].map((y) => (
-          <span key={y} className="text-[9px] text-slate-300 font-medium">
+          <span key={y} className="text-xs text-fg-subtle font-medium tabular-nums">
             {y}yr
           </span>
         ))}
@@ -166,25 +166,25 @@ const SYSTEM_CONFIG: Record<
   { icon: React.ReactNode; color: string; bg: string; border: string; accent: string }
 > = {
   'grid-tied': {
-    icon: <Sun size={18} strokeWidth={2} />,
-    color: 'text-solar-600',
+    icon: <Sun size={18} strokeWidth={2} aria-hidden />,
+    color: 'text-solar-ink',
     bg: 'bg-solar-50',
-    border: 'border-solar-200',
+    border: 'border-solar-300',
     accent: 'bg-solar-500',
   },
   hybrid: {
-    icon: <Battery size={18} strokeWidth={2} />,
-    color: 'text-blue-600',
-    bg: 'bg-blue-50',
-    border: 'border-blue-200',
-    accent: 'bg-blue-500',
+    icon: <Battery size={18} strokeWidth={2} aria-hidden />,
+    color: 'text-navy-700',
+    bg: 'bg-navy-50',
+    border: 'border-navy-300',
+    accent: 'bg-navy-700',
   },
   'off-grid': {
-    icon: <WifiOff size={18} strokeWidth={2} />,
-    color: 'text-emerald-600',
-    bg: 'bg-emerald-50',
-    border: 'border-emerald-200',
-    accent: 'bg-emerald-500',
+    icon: <WifiOff size={18} strokeWidth={2} aria-hidden />,
+    color: 'text-green-800',
+    bg: 'bg-green-eco-bg',
+    border: 'border-green-200',
+    accent: 'bg-green-eco',
   },
 };
 
@@ -242,12 +242,12 @@ function SavingsChart({ result }: { result: CalculatorResult }) {
       >
         <defs>
           <linearGradient id="withoutGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#0f1f40" stopOpacity="0.12" />
-            <stop offset="100%" stopColor="#0f1f40" stopOpacity="0.01" />
+            <stop offset="0%" stopColor="var(--color-navy-900)" stopOpacity="0.12" />
+            <stop offset="100%" stopColor="var(--color-navy-900)" stopOpacity="0.01" />
           </linearGradient>
           <linearGradient id="solarGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.25" />
-            <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.02" />
+            <stop offset="0%" stopColor="var(--color-solar-500)" stopOpacity="0.25" />
+            <stop offset="100%" stopColor="var(--color-solar-500)" stopOpacity="0.02" />
           </linearGradient>
         </defs>
 
@@ -259,10 +259,10 @@ function SavingsChart({ result }: { result: CalculatorResult }) {
               x2={W - PAD.right}
               y1={tick.y}
               y2={tick.y}
-              stroke="#f1f5f9"
+              stroke="var(--color-slate-100)"
               strokeWidth={1}
             />
-            <text x={PAD.left - 8} y={tick.y + 4} textAnchor="end" fontSize={9} fill="#94a3b8">
+            <text x={PAD.left - 8} y={tick.y + 4} textAnchor="end" fontSize={9} fill="var(--color-slate-500)">
               {formatPeso(tick.val)}
             </text>
           </g>
@@ -276,7 +276,7 @@ function SavingsChart({ result }: { result: CalculatorResult }) {
             y={H - PAD.bottom + 18}
             textAnchor="middle"
             fontSize={9}
-            fill="#94a3b8"
+            fill="var(--color-slate-500)"
           >
             Yr {yr}
           </text>
@@ -290,7 +290,7 @@ function SavingsChart({ result }: { result: CalculatorResult }) {
         <path
           d={toLinePath(withoutSolarVals)}
           fill="none"
-          stroke="#0f1f40"
+          stroke="var(--color-navy-900)"
           strokeWidth={2}
           strokeLinejoin="round"
           strokeLinecap="round"
@@ -298,7 +298,7 @@ function SavingsChart({ result }: { result: CalculatorResult }) {
         <path
           d={toLinePath(withSolarVals)}
           fill="none"
-          stroke="#f59e0b"
+          stroke="var(--color-solar-500)"
           strokeWidth={2.5}
           strokeLinejoin="round"
           strokeLinecap="round"
@@ -312,7 +312,7 @@ function SavingsChart({ result }: { result: CalculatorResult }) {
               x2={scaleX(paybackYear)}
               y1={PAD.top}
               y2={H - PAD.bottom}
-              stroke="#10b981"
+              stroke="var(--color-green-eco)"
               strokeWidth={1.5}
               strokeDasharray="5 3"
             />
@@ -322,7 +322,7 @@ function SavingsChart({ result }: { result: CalculatorResult }) {
               width={40}
               height={14}
               rx={4}
-              fill="#10b981"
+              fill="var(--color-green-eco)"
             />
             <text
               x={scaleX(paybackYear)}
@@ -342,7 +342,7 @@ function SavingsChart({ result }: { result: CalculatorResult }) {
           cx={scaleX(25)}
           cy={scaleY(withoutSolarVals[25]!)}
           r={4}
-          fill="#0f1f40"
+          fill="var(--color-navy-900)"
           stroke="white"
           strokeWidth={2}
         />
@@ -350,7 +350,7 @@ function SavingsChart({ result }: { result: CalculatorResult }) {
           cx={scaleX(25)}
           cy={scaleY(withSolarVals[25]!)}
           r={4}
-          fill="#f59e0b"
+          fill="var(--color-solar-500)"
           stroke="white"
           strokeWidth={2}
         />
@@ -358,16 +358,16 @@ function SavingsChart({ result }: { result: CalculatorResult }) {
 
       {/* Legend */}
       <div className="flex items-center gap-6 mt-3 justify-center flex-wrap">
-        <div className="flex items-center gap-2 text-[11px] text-slate-500">
-          <span className="w-6 h-[2px] bg-navy-900 inline-block rounded-full" />
+        <div className="flex items-center gap-2 text-xs text-fg-subtle">
+          <span className="w-6 h-[2px] bg-navy-900 inline-block rounded-full" aria-hidden />
           Without solar
         </div>
-        <div className="flex items-center gap-2 text-[11px] text-slate-500">
-          <span className="w-6 h-[2.5px] bg-solar-500 inline-block rounded-full" />
+        <div className="flex items-center gap-2 text-xs text-fg-subtle">
+          <span className="w-6 h-[2.5px] bg-solar-500 inline-block rounded-full" aria-hidden />
           With solar
         </div>
-        <div className="flex items-center gap-2 text-[11px] text-slate-500">
-          <span className="inline-block w-px h-4 border-l border-dashed border-emerald-500" />
+        <div className="flex items-center gap-2 text-xs text-fg-subtle">
+          <span className="inline-block w-px h-4 border-l border-dashed border-green-eco" aria-hidden />
           Payback point
         </div>
       </div>
@@ -437,119 +437,67 @@ export default function SolarCalculator() {
     setResult(null);
   }
 
-  const sys = SYSTEM_CONFIG[systemType];
-
   // Stagger animation for metric cards
   const cardAnim = (i: number) => ({
     initial: { opacity: 0, y: 16 } as const,
     animate: { opacity: 1, y: 0 } as const,
-    transition: { delay: i * 0.07, duration: 0.4, ease: 'easeOut' as const },
+    transition: { delay: i * 0.07, duration: 0.4, ease: EASE_OUT },
   });
 
   return (
     <Layout>
-      {/* ── Hero ── */}
-      <div className="relative bg-gradient-to-br from-navy-950 via-navy-900 to-navy-800 pb-24 md:pb-28 pt-32 px-4 overflow-hidden">
-        {/* Decorative glow */}
-        <div className="absolute -top-24 -right-24 w-96 h-96 bg-solar-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/5 rounded-full blur-2xl pointer-events-none" />
+      <PageHero
+        title="How much could you save with solar?"
+        lead="Enter your monthly kWh usage. Get your estimated system size, savings, and payback period — tailored to your region."
+      />
 
-        <div className="relative max-w-6xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, ease: [0.25, 0.46, 0.45, 0.94] }}
-          >
-            {/* Breadcrumb */}
-            <div className="flex items-center gap-2 text-white/40 text-sm mb-10 font-medium">
-              <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
-              <span>/</span>
-              <span className="text-white/70">Solar Calculator</span>
-            </div>
-
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-12 h-12 bg-solar-500/20 rounded-2xl flex items-center justify-center ring-1 ring-solar-500/30">
-                <Calculator size={22} className="text-solar-400" />
-              </div>
-              <span className="text-solar-400 text-sm font-bold uppercase tracking-widest">
-                Free Tool
-              </span>
-            </div>
-
-            <h1
-              className="text-white font-black text-4xl sm:text-5xl lg:text-6xl leading-[1.1] mb-4"
-              style={{ fontFamily: 'Poppins, sans-serif' }}
-            >
-              How much could you
-              <br />
-              <span className="text-solar-400">save with solar?</span>
-            </h1>
-            <p className="text-white/60 text-base sm:text-lg max-w-xl leading-relaxed">
-              Enter your monthly kWh usage. Get your estimated system size, savings,
-              and payback period — tailored to your region.
-            </p>
-          </motion.div>
-        </div>
-      </div>
-
-      {/* ── Calculator ── */}
-      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 mt-6 pb-16">
+      <Section tone="tint">
         <motion.div
-          className="bg-white rounded-3xl shadow-2xl shadow-navy-900/10 border border-slate-100/80 overflow-hidden"
-          initial={{ opacity: 0, y: 32 }}
+          className="bg-white rounded-panel shadow-card border border-line overflow-hidden"
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.15 }}
+          transition={{ duration: DURATION.slow, ease: EASE_OUT, delay: 0.1 }}
         >
           <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr]">
 
             {/* ──── Input panel ──── */}
-            <div className="p-7 sm:p-9 lg:border-r border-b lg:border-b-0 border-slate-100">
+            <div className="p-7 sm:p-9 lg:border-r border-b lg:border-b-0 border-line">
 
-              {/* Section label */}
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.18em] mb-4">
-                Step 1 — Your Details
-              </p>
+              <p className="caps mb-5">Step 1 — Your Details</p>
 
-              {/* Consumption input */}
+              {/* Consumption input (prefix adornment, so wired by hand instead of <Field>) */}
               <div className="mb-5">
-                <label
-                  htmlFor="consumption-input"
-                  className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2"
-                >
-                  Monthly Consumption
-                </label>
+                <Label htmlFor="consumption-input">Monthly Consumption</Label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold select-none">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-fg-subtle text-sm font-bold select-none" aria-hidden>
                     kWh
                   </span>
-                  <input
+                  <Input
                     id="consumption-input"
                     type="text"
                     inputMode="decimal"
+                    aria-describedby="consumption-input-hint"
                     value={monthlyKwh}
                     onChange={(e) =>
                       setMonthlyKwh(e.target.value.replace(/[^0-9.,]/g, ''))
                     }
                     placeholder="362"
-                    className="w-full pl-14 pr-4 py-4 border-2 border-slate-200 rounded-2xl text-navy-900 font-bold text-lg focus:outline-none focus:border-solar-400 focus:ring-4 focus:ring-solar-400/10 transition-all duration-200 placeholder:text-slate-300 placeholder:font-medium"
+                    className="pl-14 font-bold tabular-nums"
                   />
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
+                <FieldHint id="consumption-input-hint">
                   Find this on your bill under &quot;kWh used this period&quot;
-                </p>
+                </FieldHint>
               </div>
 
               {/* Location */}
               <div className="mb-6" ref={locationRef}>
-                <label
-                  htmlFor="location-search"
-                  className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2"
-                >
-                  <MapPin size={10} className="inline mr-1 -mt-px" />
+                <Label htmlFor="location-search">
+                  <MapPin size={12} className="inline mr-1 -mt-px text-fg-subtle" aria-hidden />
                   Location / Utility
-                </label>
+                </Label>
                 <div className="relative">
-                  <input
+                  <Input
                     id="location-search"
                     type="text"
                     autoComplete="off"
@@ -560,14 +508,15 @@ export default function SolarCalculator() {
                     }}
                     onFocus={() => setShowLocationDropdown(true)}
                     placeholder="Search location or utility…"
-                    className="w-full pl-4 pr-10 py-3.5 border-2 border-slate-200 rounded-2xl text-navy-900 font-semibold text-sm focus:outline-none focus:border-solar-400 focus:ring-4 focus:ring-solar-400/10 transition-all duration-200 bg-white"
+                    className="pr-10 font-semibold"
                   />
                   <ChevronDown
                     size={16}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
+                    aria-hidden
                   />
                   {showLocationDropdown && (
-                    <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden">
+                    <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-line rounded-control shadow-elevated overflow-hidden">
                       <div className="max-h-52 overflow-y-auto">
                         {filteredRegions.length > 0 ? (
                           filteredRegions.map(([key, val]) => (
@@ -581,11 +530,12 @@ export default function SolarCalculator() {
                                 setShowLocationDropdown(false);
                                 if (key !== 'other') setCustomRate('');
                               }}
-                              className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                              className={cn(
+                                'w-full text-left px-4 py-2.5 text-sm transition-colors',
                                 region === key
-                                  ? 'bg-solar-50 text-solar-700 font-semibold'
-                                  : 'text-navy-900 hover:bg-slate-50'
-                              }`}
+                                  ? 'bg-solar-50 text-solar-ink font-semibold'
+                                  : 'text-fg hover:bg-slate-50',
+                              )}
                             >
                               {val.label}
                             </button>
@@ -599,7 +549,7 @@ export default function SolarCalculator() {
                               setLocationSearch(REGIONS.other.label);
                               setShowLocationDropdown(false);
                             }}
-                            className="w-full text-left px-4 py-2.5 text-sm text-slate-500 hover:bg-slate-50"
+                            className="w-full text-left px-4 py-2.5 text-sm text-fg-muted hover:bg-slate-50"
                           >
                             Other / Not listed
                           </button>
@@ -610,22 +560,18 @@ export default function SolarCalculator() {
                 </div>
 
                 {/* Rate — always visible; read-only for known regions, editable for Other */}
-                <div className="mt-3">
-                  <label
-                    htmlFor="custom-rate"
-                    className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2"
-                  >
-                    Your Rate (₱ / kWh)
-                  </label>
+                <div className="mt-4">
+                  <Label htmlFor="custom-rate">Your Rate (₱ / kWh)</Label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold select-none">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-fg-subtle text-sm font-bold select-none" aria-hidden>
                       ₱
                     </span>
-                    <input
+                    <Input
                       id="custom-rate"
                       type="text"
                       inputMode="decimal"
                       readOnly={region !== 'other'}
+                      aria-describedby={region === 'other' ? 'custom-rate-hint' : undefined}
                       value={
                         region !== 'other'
                           ? REGIONS[region].rate.toString()
@@ -636,26 +582,24 @@ export default function SolarCalculator() {
                         setCustomRate(e.target.value.replace(/[^0-9.,]/g, ''))
                       }
                       placeholder="12.00"
-                      className={`w-full pl-8 pr-4 py-3.5 border-2 rounded-2xl font-bold text-sm transition-all duration-200 placeholder:text-slate-300 ${
-                        region !== 'other'
-                          ? 'border-slate-100 bg-slate-50 text-slate-400 cursor-default select-none'
-                          : 'border-slate-200 bg-white text-navy-900 focus:outline-none focus:border-solar-400 focus:ring-4 focus:ring-solar-400/10'
-                      }`}
+                      className={cn(
+                        'pl-8 font-bold tabular-nums',
+                        region !== 'other' &&
+                          'border-slate-200 bg-slate-50 text-fg-muted cursor-default select-none hover:border-slate-200',
+                      )}
                     />
                   </div>
                   {region === 'other' && (
-                    <p className="text-[11px] text-slate-400 mt-1.5">
+                    <FieldHint id="custom-rate-hint">
                       Check your monthly bill for the rate per kWh
-                    </p>
+                    </FieldHint>
                   )}
                 </div>
               </div>
 
               {/* System type */}
-              <div className="mb-7">
-                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-3">
-                  System Type
-                </p>
+              <fieldset className="mb-7">
+                <legend className="mb-3 text-sm font-semibold text-fg">System Type</legend>
                 <div className="flex flex-col gap-2">
                   {(Object.keys(SYSTEM_TYPE_LABELS) as SystemType[]).filter((t) => t !== 'off-grid').map((type) => {
                     const cfg = SYSTEM_CONFIG[type];
@@ -664,32 +608,35 @@ export default function SolarCalculator() {
                       <button
                         key={type}
                         type="button"
+                        aria-pressed={active}
                         onClick={() => setSystemType(type)}
-                        className={`relative flex items-start gap-3 px-4 py-3.5 rounded-2xl border-2 text-left transition-all duration-200 cursor-pointer overflow-hidden ${
+                        className={cn(
+                          'relative flex items-start gap-3 px-4 py-3.5 rounded-control border-2 text-left transition-colors duration-200 cursor-pointer overflow-hidden',
                           active
-                            ? `${cfg.border} ${cfg.bg} ring-2 ring-offset-1 ${cfg.border.replace('border', 'ring')}`
-                            : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50/60'
-                        }`}
+                            ? `${cfg.border} ${cfg.bg}`
+                            : 'border-line hover:border-slate-300 bg-white hover:bg-slate-50',
+                        )}
                       >
                         {/* Left accent bar */}
                         <motion.div
                           className={`absolute left-0 top-0 bottom-0 w-1 ${cfg.accent} rounded-r-sm`}
                           initial={false}
                           animate={{ scaleY: active ? 1 : 0 }}
-                          transition={{ duration: 0.2 }}
+                          transition={{ duration: 0.2, ease: EASE_OUT }}
                         />
                         <span
-                          className={`flex-shrink-0 mt-0.5 transition-colors duration-200 ${
-                            active ? cfg.color : 'text-slate-400'
-                          }`}
+                          className={cn(
+                            'flex-shrink-0 mt-0.5 transition-colors duration-200',
+                            active ? cfg.color : 'text-slate-500',
+                          )}
                         >
                           {cfg.icon}
                         </span>
-                        <div className="min-w-0">
-                          <p className={`text-sm font-bold transition-colors duration-200 ${active ? cfg.color : 'text-navy-900'}`}>
+                        <div className="min-w-0 pr-5">
+                          <p className={cn('text-sm font-bold transition-colors duration-200', active ? cfg.color : 'text-fg')}>
                             {SYSTEM_TYPE_LABELS[type]}
                           </p>
-                          <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">
+                          <p className="text-xs text-fg-muted mt-0.5 leading-relaxed">
                             {SYSTEM_TYPE_DESCRIPTIONS[type]}
                           </p>
                         </div>
@@ -697,50 +644,42 @@ export default function SolarCalculator() {
                           <CheckCircle2
                             size={15}
                             className={`absolute right-3 top-3 flex-shrink-0 ${cfg.color}`}
+                            aria-hidden
                           />
                         )}
                       </button>
                     );
                   })}
                 </div>
-              </div>
+              </fieldset>
 
               {/* CTA */}
               <div className="flex flex-col gap-2.5">
-                <button
-                  type="button"
-                  onClick={handleCalculate}
-                  disabled={!canCalculate}
-                  className={`w-full py-4 rounded-2xl font-bold text-[15px] transition-all duration-200 flex items-center justify-center gap-2.5 ${
-                    canCalculate
-                      ? 'bg-solar-500 hover:bg-solar-400 text-white shadow-lg shadow-solar-500/25 hover:shadow-solar-400/35 hover:-translate-y-0.5 cursor-pointer'
-                      : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                  }`}
-                >
-                  <Zap size={18} className={canCalculate ? 'text-white' : 'text-slate-400'} />
+                <Button size="lg" fullWidth onClick={handleCalculate} disabled={!canCalculate}>
+                  <Zap className="size-4" aria-hidden />
                   Calculate My Savings
-                </button>
+                </Button>
 
                 <AnimatePresence>
                   {calculated && (
-                    <motion.button
-                      type="button"
-                      onClick={handleReset}
+                    <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="w-full py-2.5 rounded-2xl font-semibold text-sm text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                      transition={{ duration: DURATION.base, ease: EASE_OUT }}
                     >
-                      <RotateCcw size={13} />
-                      Start over
-                    </motion.button>
+                      <Button variant="ghost" size="sm" fullWidth onClick={handleReset} className="text-fg-muted">
+                        <RotateCcw className="size-3.5" aria-hidden />
+                        Start over
+                      </Button>
+                    </motion.div>
                   )}
                 </AnimatePresence>
               </div>
             </div>
 
             {/* ──── Results panel ──── */}
-            <div className="p-7 sm:p-9 bg-slate-50/50">
+            <div className="p-7 sm:p-9 bg-navy-50/60">
               <AnimatePresence mode="wait">
                 {!calculated || !result ? (
                   /* Placeholder state */
@@ -748,32 +687,23 @@ export default function SolarCalculator() {
                     key="placeholder"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    exit={{ opacity: 0, scale: 0.98 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: DURATION.base, ease: EASE_OUT }}
                     className="h-full min-h-[400px] flex flex-col items-center justify-center text-center py-8"
                   >
-                    <div className="relative mb-6">
-                      <div className="w-24 h-24 bg-gradient-to-br from-solar-400/20 to-solar-500/10 rounded-3xl flex items-center justify-center">
-                        <Sun size={40} className="text-solar-400" />
-                      </div>
-                      <div className="absolute -top-1 -right-1 w-7 h-7 bg-navy-900 rounded-xl flex items-center justify-center">
-                        <Sparkles size={13} className="text-solar-400" />
-                      </div>
+                    <div className="mb-6 grid size-20 place-items-center rounded-card bg-solar-50 text-solar-600">
+                      <Sun size={36} aria-hidden />
                     </div>
-                    <h3
-                      className="text-navy-900 font-black text-2xl mb-2"
-                      style={{ fontFamily: 'Poppins, sans-serif' }}
-                    >
-                      Your results await
-                    </h3>
-                    <p className="text-slate-400 text-sm max-w-xs leading-relaxed">
+                    <h2 className="text-h3 text-fg mb-2">Your results await</h2>
+                    <p className="text-fg-muted text-sm max-w-xs leading-relaxed">
                       Enter your monthly kWh usage and location on the left, then hit{' '}
-                      <strong className="text-navy-900">Calculate My Savings</strong>.
+                      <strong className="text-fg">Calculate My Savings</strong>.
                     </p>
 
                     {/* Preview cards skeleton */}
-                    <div className="mt-8 grid grid-cols-2 gap-3 w-full max-w-xs opacity-30 pointer-events-none select-none">
+                    <div className="mt-8 grid grid-cols-2 gap-3 w-full max-w-xs opacity-40 pointer-events-none select-none" aria-hidden>
                       {[...Array(4)].map((_, i) => (
-                        <div key={i} className="bg-white rounded-2xl h-16 border border-slate-200" />
+                        <div key={i} className="bg-white rounded-control h-16 border border-line" />
                       ))}
                     </div>
                   </motion.div>
@@ -785,32 +715,27 @@ export default function SolarCalculator() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
+                    transition={{ duration: DURATION.base, ease: EASE_OUT }}
                   >
-                    {/* Section label */}
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.18em] mb-4">
+                    <h2 className="mb-4 text-xs font-semibold uppercase tracking-wide text-fg-muted">
                       Step 2 — Your Estimated Results
-                    </p>
+                    </h2>
 
                     {/* ── Hero savings metric ── */}
                     <motion.div
                       {...cardAnim(0)}
-                      className="relative bg-gradient-to-br from-navy-900 to-navy-800 rounded-2xl p-6 mb-4 overflow-hidden"
+                      className="surface-dark bg-navy-900 rounded-card p-6 mb-4"
                     >
-                      <div className="absolute top-0 right-0 w-40 h-40 bg-solar-500/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
-                      <p className="text-white/50 text-[11px] font-bold uppercase tracking-widest mb-1">
+                      <p className="text-fg-muted text-xs font-semibold uppercase tracking-wide mb-1">
                         Estimated Monthly Savings
                       </p>
                       <div className="flex items-end gap-2 mb-1">
-                        <span
-                          className="text-solar-400 font-black text-4xl sm:text-5xl leading-none"
-                          style={{ fontFamily: 'Poppins, sans-serif' }}
-                        >
+                        <span className="font-display text-h1 text-solar-ink tabular-nums">
                           ₱{animatedSavings.toLocaleString()}
                         </span>
-                        <span className="text-white/40 text-sm font-medium mb-1.5">/mo</span>
+                        <span className="text-fg-subtle text-sm font-medium mb-1.5">/mo</span>
                       </div>
-                      <p className="text-white/50 text-xs">
+                      <p className="text-fg-muted text-xs tabular-nums">
                         ₱{result.annualSavings.toLocaleString()} per year
                         {' · '}
                         At ₱{result.monthlyElectricityRate}/kWh
@@ -819,19 +744,19 @@ export default function SolarCalculator() {
                       {/* Coverage bar inside hero */}
                       <div className="mt-4">
                         <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-white/40 text-[10px] font-bold uppercase tracking-widest">
+                          <span className="text-fg-subtle text-xs font-semibold uppercase tracking-wide">
                             Bill Coverage
                           </span>
-                          <span className="text-solar-400 text-[11px] font-bold">
+                          <span className="text-solar-ink text-xs font-bold tabular-nums">
                             {result.coveragePercent}%
                           </span>
                         </div>
                         <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
                           <motion.div
-                            className="h-full rounded-full bg-gradient-to-r from-solar-400 to-solar-500"
+                            className="h-full rounded-full bg-solar-500"
                             initial={{ width: 0 }}
                             animate={{ width: `${result.coveragePercent}%` }}
-                            transition={{ duration: 1, ease: 'easeOut', delay: 0.3 }}
+                            transition={{ duration: DURATION.slow, ease: EASE_OUT, delay: 0.3 }}
                           />
                         </div>
                       </div>
@@ -867,20 +792,17 @@ export default function SolarCalculator() {
                         <motion.div
                           key={card.label}
                           {...cardAnim(i + 1)}
-                          className="bg-white rounded-2xl px-4 py-4 border border-slate-100 shadow-sm"
+                          className="bg-white rounded-control px-4 py-4 border border-line shadow-soft"
                         >
-                          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex items-center">
+                          <div className="caps mb-1.5 flex items-center">
                             {card.label}
                             {card.tooltip && <Tooltip text={card.tooltip} />}
                           </div>
-                          <p
-                            className="text-navy-900 font-black text-base leading-tight"
-                            style={{ fontFamily: 'Poppins, sans-serif' }}
-                          >
+                          <p className="font-display text-xl font-extrabold text-fg tabular-nums">
                             {card.value}
                           </p>
                           {card.sub && (
-                            <p className="text-slate-400 text-[11px] mt-0.5">{card.sub}</p>
+                            <p className="text-fg-subtle text-xs mt-0.5">{card.sub}</p>
                           )}
                         </motion.div>
                       ))}
@@ -889,7 +811,7 @@ export default function SolarCalculator() {
                     {/* ── Payback bar ── */}
                     <motion.div
                       {...cardAnim(5)}
-                      className="bg-white rounded-2xl px-5 py-4 border border-slate-100 shadow-sm mb-3"
+                      className="bg-white rounded-control px-5 py-4 border border-line shadow-soft mb-3"
                     >
                       <PaybackBar low={result.paybackLow} high={result.paybackHigh} />
                     </motion.div>
@@ -897,20 +819,20 @@ export default function SolarCalculator() {
                     {/* ── CO2 badge ── */}
                     <motion.div
                       {...cardAnim(6)}
-                      className="flex items-center gap-4 bg-emerald-50 border border-emerald-100 rounded-2xl px-5 py-4 mb-3"
+                      className="flex items-center gap-4 bg-green-eco-bg border border-green-200 rounded-control px-5 py-4 mb-3"
                     >
-                      <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <Leaf size={18} className="text-emerald-600" />
+                      <div className="w-10 h-10 bg-white rounded-control flex items-center justify-center flex-shrink-0">
+                        <Leaf size={18} className="text-green-800" aria-hidden />
                       </div>
                       <div>
-                        <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-green-800">
                           Environmental Impact
                         </p>
-                        <p className="text-navy-900 font-semibold text-sm mt-0.5">
+                        <p className="text-fg font-semibold text-sm mt-0.5 tabular-nums">
                           {result.co2ReductionKgPerYear.toLocaleString()} kg CO₂ avoided/yr
-                          <span className="text-slate-500 font-normal">
+                          <span className="text-fg-muted font-normal">
                             {' ≈ '}
-                            <strong className="text-emerald-600">
+                            <strong className="text-green-800">
                               {result.treesEquivalent} trees
                             </strong>{' '}
                             planted
@@ -926,17 +848,18 @@ export default function SolarCalculator() {
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: 'auto' }}
                           exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: DURATION.base, ease: EASE_OUT }}
                           className="overflow-hidden mb-3"
                         >
-                          <div className="bg-blue-50 border border-blue-100 rounded-2xl px-5 py-4">
-                            <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-1">
+                          <div className="bg-white border border-navy-100 rounded-control px-5 py-4">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-navy-700 mb-1">
                               Net Metering Credit
                             </p>
-                            <p className="text-navy-900 font-semibold text-sm">
+                            <p className="text-fg font-semibold text-sm tabular-nums">
                               ~{formatPesoFull(result.netMeteringCreditMonthly)}/mo from{' '}
                               {result.excessKwh} kWh excess exported
                             </p>
-                            <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                            <p className="text-xs text-fg-subtle mt-1 leading-relaxed">
                               Credits at gen rate (~₱6.50/kWh), not full retail. Resets annually.
                             </p>
                           </div>
@@ -945,7 +868,7 @@ export default function SolarCalculator() {
                     </AnimatePresence>
 
                     {/* Disclaimer */}
-                    <p className="text-[10px] text-slate-400 leading-relaxed">
+                    <p className="text-xs text-fg-muted leading-relaxed">
                       * Estimates based on regional averages. Actual savings vary with roof
                       orientation, shading, and installer pricing.
                     </p>
@@ -960,74 +883,34 @@ export default function SolarCalculator() {
         <AnimatePresence>
           {calculated && result && (
             <motion.div
-              initial={{ opacity: 0, y: 32 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 16 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="mt-6 bg-white rounded-3xl shadow-sm border border-slate-100 p-7 sm:p-10"
+              transition={{ duration: DURATION.slow, ease: EASE_OUT, delay: 0.1 }}
+              className="mt-6 bg-white rounded-panel shadow-soft border border-line p-7 sm:p-10"
             >
               <div className="flex items-start justify-between gap-4 mb-6 flex-wrap">
                 <div>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.18em] mb-1">
-                    25-Year Projection
-                  </p>
-                  <h3
-                    className="text-navy-900 font-black text-xl"
-                    style={{ fontFamily: 'Poppins, sans-serif' }}
-                  >
-                    Cumulative Cost Comparison
-                  </h3>
+                  <p className="caps mb-1">25-Year Projection</p>
+                  <h2 className="text-h3 text-fg">Cumulative Cost Comparison</h2>
                 </div>
-                <div className="flex items-center gap-1.5 bg-emerald-50 text-emerald-600 rounded-full px-3.5 py-2 text-xs font-bold border border-emerald-100">
-                  <TrendingUp size={13} />
-                  Payback in {result.paybackLow}–{result.paybackHigh} years
-                </div>
+                <Badge tone="success" className="px-3.5 py-1.5">
+                  <TrendingUp size={13} aria-hidden />
+                  <span className="tabular-nums">
+                    Payback in {result.paybackLow}–{result.paybackHigh} years
+                  </span>
+                </Badge>
               </div>
               <SavingsChart result={result} />
             </motion.div>
           )}
         </AnimatePresence>
+      </Section>
 
-        {/* ── CTA ── */}
-        <motion.div
-          className="mt-6 relative bg-gradient-to-br from-navy-900 to-navy-800 rounded-3xl px-6 py-12 sm:px-12 sm:py-16 text-center overflow-hidden"
-          initial={{ opacity: 0, y: 32 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-60px' }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="absolute top-0 right-0 w-64 h-64 bg-solar-500/10 rounded-full -translate-y-1/2 translate-x-1/4 blur-3xl" />
-          <div className="relative">
-            <div className="inline-flex items-center gap-2 bg-solar-500/15 text-solar-400 rounded-full px-4 py-1.5 text-xs font-bold mb-5 border border-solar-500/20">
-              <Sparkles size={12} />
-              Free — no obligations
-            </div>
-            <h2
-              className="text-white font-black text-2xl sm:text-3xl mb-3"
-              style={{ fontFamily: 'Poppins, sans-serif' }}
-            >
-              Ready to go solar?
-            </h2>
-            <p className="text-white/60 text-base sm:text-lg mb-8 max-w-md mx-auto leading-relaxed">
-              Get a free on-site assessment and accurate quote from our team.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link
-                href="/#contact"
-                className="inline-flex items-center gap-2 bg-solar-500 hover:bg-solar-400 text-white font-bold px-7 py-3.5 rounded-2xl transition-all duration-200 shadow-lg shadow-solar-500/25 hover:-translate-y-0.5 hover:shadow-solar-400/35"
-              >
-                Get a Free Quote <ArrowRight size={17} />
-              </Link>
-              <Link
-                href="/services"
-                className="inline-flex items-center gap-2 text-white/50 hover:text-white font-semibold transition-colors duration-200 text-sm"
-              >
-                View our services →
-              </Link>
-            </div>
-          </div>
-        </motion.div>
-      </div>
+      <CtaBand
+        title="Ready to go solar?"
+        body="Get a free on-site assessment and accurate quote from our team."
+      />
     </Layout>
   );
 }

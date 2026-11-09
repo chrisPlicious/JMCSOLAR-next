@@ -33,19 +33,6 @@ export type DbProduct = {
   created_at: string;
 };
 
-export type DbService = {
-  id: string;
-  slug: string;
-  icon: string;
-  title: string;
-  description: string;
-  highlight: boolean;
-  display_order: number;
-  photo_url?: string;
-  created_at: string;
-  updated_at: string;
-};
-
 export type ReviewStatus = 'pending' | 'approved' | 'rejected';
 
 export type DbReview = {
@@ -72,21 +59,6 @@ export type DbContactSubmission = {
   system_type: string | null;
   message: string | null;
   created_at: string;
-};
-
-export type DbServiceDetail = {
-  id: string;
-  service_id: string;
-  tagline: string;
-  overview: string;
-  what_is_it: string;
-  how_it_works: { step: string; description: string }[];
-  benefits: { iconName: string; title: string; description: string }[];
-  use_cases: { item: string }[];
-  specs: { label: string; value: string }[];
-  sources: { title: string; url: string; publisher: string }[];
-  created_at: string;
-  updated_at: string;
 };
 
 export type WithId<T> = T & { id: string }

@@ -1,14 +1,22 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { adminDb } from '@/lib/firebase/admin';
 import ServicePageLayout from '@/components/ui/ServicePageLayout';
 import ServiceEmptyState from '@/components/ui/ServiceEmptyState';
-import type { DbService, DbServiceDetail } from '@/lib/firebase/types';
+import PowerFlowSimulatorLazy from '@/page-components/services/PowerFlowSimulatorLazy';
+import { isSimulatorSystem } from '@/lib/power-flow/systems';
+import { getServiceBySlug, getServiceDetail, getServices } from '@/data/services';
 import { SITE_URL } from '@/lib/seo/site';
 import { makeBreadcrumbLd } from '@/lib/seo/breadcrumb';
-import { buildAreaServedArray } from '@/lib/seo/serviceArea';
+import { pageMetadata } from '@/lib/seo/metadata';
+import { BUSINESS_ID } from '@/lib/seo/organization';
+import { isServiceIndexable } from '@/lib/seo/service';
 
-export const revalidate = 60;
+// Services are defined in code, so every route is known at build time.
+export const dynamicParams = false;
+
+export function generateStaticParams() {
+  return getServices().map((s) => ({ id: s.slug }));
+}
 
 export async function generateMetadata({
   params,
@@ -16,22 +24,17 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id: slug } = await params;
-  const snap = await adminDb
-    .collection('services')
-    .where('slug', '==', slug)
-    .limit(1)
-    .get();
-  if (snap.empty) return {};
-  const service = snap.docs[0].data() as DbService;
-  return {
+  const service = getServiceBySlug(slug);
+  if (!service) return {};
+  const detail = getServiceDetail(slug);
+  return pageMetadata({
     title: service.title,
     description: service.description,
-    alternates: { canonical: `/services/${slug}` },
-    openGraph: {
-      title: `${service.title} | JMC Solar PH`,
-      description: service.description,
-    },
-  };
+    path: `/services/${slug}`,
+    routeImage: true,
+    // Same gate as the sitemap: empty or intro-only service pages stay noindex.
+    index: isServiceIndexable(detail),
+  });
 }
 
 export default async function ServiceDetailPage({
@@ -41,29 +44,21 @@ export default async function ServiceDetailPage({
 }) {
   const { id: slug } = await params;
 
-  const snap = await adminDb.collection('services').where('slug', '==', slug).limit(1).get();
+  const service = getServiceBySlug(slug);
+  if (!service) notFound();
 
-  if (snap.empty) {
-    notFound();
-  }
-
-  const serviceDoc = snap.docs[0];
-  const service = { id: serviceDoc.id, ...serviceDoc.data() } as DbService;
-
-  const detailQuery = await adminDb.collection('serviceDetails').where('service_id', '==', service.id).limit(1).get();
-  const detail = !detailQuery.empty ? (detailQuery.docs[0].data() as DbServiceDetail) : null;
-
+  const detail = getServiceDetail(slug);
   if (!detail) {
     return <ServiceEmptyState service={service} />;
   }
 
+  // areaServed lives on the business node (root layout); provider points at it.
   const serviceLd = {
     '@context': 'https://schema.org',
     '@type': 'Service',
     name: service.title,
     description: service.description,
-    provider: { '@id': `${SITE_URL}/#business` },
-    areaServed: buildAreaServedArray(),
+    provider: { '@id': BUSINESS_ID },
     url: `${SITE_URL}/services/${slug}`,
   };
 
@@ -86,8 +81,9 @@ export default async function ServiceDetailPage({
         overview={detail.overview}
         whatIsIt={detail.what_is_it}
         howItWorks={detail.how_it_works}
+        simulator={isSimulatorSystem(slug) ? <PowerFlowSimulatorLazy system={slug} /> : undefined}
         benefits={detail.benefits}
-        useCases={detail.use_cases.map((u) => u.item)}
+        useCases={detail.use_cases}
         specs={detail.specs}
         sources={detail.sources}
       />

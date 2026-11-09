@@ -1,3 +1,5 @@
+import { BUSINESS } from '@/lib/seo/business';
+
 export type LocationTier = 'municipality' | 'province';
 
 export interface ServiceLocation {
@@ -315,7 +317,7 @@ export const LOCATIONS: ServiceLocation[] = [
       },
       {
         q: 'How do I get a free solar assessment in Maasin?',
-        a: 'Use our inquiry form or call us at 0917 508 8220. We\'ll schedule a site visit to your Maasin property and provide a detailed proposal.',
+        a: `Use our inquiry form or call us at ${BUSINESS.phone.display}. We'll schedule a site visit to your Maasin property and provide a detailed proposal.`,
       },
       {
         q: 'Do you install commercial solar in Maasin City?',
@@ -497,7 +499,7 @@ export const LOCATIONS: ServiceLocation[] = [
       },
       {
         q: 'How do I contact JMC Solar PH for a Talisay City quote?',
-        a: 'Use the inquiry form on this page or call 0917 508 8220. We\'ll arrange a free site assessment at your Talisay City property.',
+        a: `Use the inquiry form on this page or call ${BUSINESS.phone.display}. We'll arrange a free site assessment at your Talisay City property.`,
       },
     ],
   },
@@ -528,7 +530,7 @@ export const LOCATIONS: ServiceLocation[] = [
       },
       {
         q: 'How do I get a solar quote for my Liloan property?',
-        a: 'Fill out the inquiry form or call 0917 508 8220. We\'ll schedule a free site visit to your Liloan home or business.',
+        a: `Fill out the inquiry form or call ${BUSINESS.phone.display}. We'll schedule a free site visit to your Liloan home or business.`,
       },
     ],
   },
@@ -590,7 +592,7 @@ export const LOCATIONS: ServiceLocation[] = [
       },
       {
         q: 'How do I start the solar process in Danao City?',
-        a: 'Contact us via the form on this page or call 0917 508 8220. We\'ll schedule a free site assessment and provide a detailed solar proposal.',
+        a: `Contact us via the form on this page or call ${BUSINESS.phone.display}. We'll schedule a free site assessment and provide a detailed solar proposal.`,
       },
     ],
   },
@@ -776,6 +778,14 @@ export function getProvinceLocations(): ServiceLocation[] {
 export function getProvinceSlug(provinceName: string | undefined): string | undefined {
   if (!provinceName) return undefined;
   return LOCATIONS.find((l) => l.tier === 'province' && l.name === provinceName)?.slug;
+}
+
+/**
+ * "Leyte" → "Leyte Province", but "Cebu Province" stays as-is (some names
+ * already carry the suffix, which used to render "Cebu Province Province").
+ */
+export function provinceLabel(name: string): string {
+  return /\bprovince$/i.test(name.trim()) ? name : `${name} Province`;
 }
 
 export type FooterCity = { slug: string; name: string };

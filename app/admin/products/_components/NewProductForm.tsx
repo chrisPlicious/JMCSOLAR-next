@@ -4,14 +4,13 @@ import { useActionState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { createProductAction } from '../actions';
-import Link from 'next/link';  
+import { Field, Input, Select, Textarea } from '@/components/ui/Field';
+import {
+  AdminFormCard, AdminFormHeader, FormErrorBanner, FormSection, StickySaveBar, fileInputClass,
+} from '../../_components/AdminForm';
 
 const categories = ['panels', 'batteries', 'inverters', 'controllers', 'converters'];
 const services = ['hybrid', 'ongrid', 'bess', 'pump', 'ev', 'ups', 'controller'];
-
-const inputCls =
-  'w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-navy-950 outline-none focus:ring-2 focus:ring-solar-500/30 focus:border-solar-500 transition-colors';
-const labelCls = 'block text-sm font-medium text-slate-700 mb-1.5';
 
 export default function NewProductForm() {
   const router = useRouter();
@@ -28,146 +27,64 @@ export default function NewProductForm() {
 
   return (
     <>
-      {/* Page header */}
-      <div className="flex items-center gap-3 mb-6">
-        <Link
-          href="/admin/products"
-          className="text-slate-400 hover:text-slate-600 transition-colors"
-        >
-          <svg width="20" height="20" fill="none" viewBox="0 0 20 20">
-            <path
-              d="M12 15l-5-5 5-5"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </Link>
-        <h1 className="font-display font-black text-navy-950 text-2xl">New Product</h1>
-      </div>
+      <AdminFormHeader title="New Product" backHref="/admin/products" />
 
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-[0_4px_24px_0_rgb(0_0_0/0.06)] p-8 max-w-3xl mb-24">
-        {state?.error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
-            {state.error}
-          </div>
-        )}
+      <AdminFormCard className="mb-24">
+        <FormErrorBanner>{state?.error}</FormErrorBanner>
 
         <form id="main-form" action={formAction} className="space-y-5">
-          {/* Section: Basic Information */}
-          <div className="flex items-center gap-3 my-6">
-            <span className="text-xs font-bold uppercase tracking-widest text-slate-400 whitespace-nowrap">
-              Basic Information
-            </span>
-            <hr className="flex-1 border-slate-100" />
-          </div>
+          <FormSection title="Basic Information" />
 
-          <div>
-            <label className={labelCls}>
-              Name <span className="text-red-400">*</span>
-            </label>
-            <input name="name" required className={inputCls} />
-          </div>
-          <div>
-            <label className={labelCls}>Brand</label>
-            <input name="brand" className={inputCls} />
-          </div>
+          <Field id="product-name" label="Name" required>
+            <Input name="name" />
+          </Field>
+          <Field id="product-brand" label="Brand">
+            <Input name="brand" />
+          </Field>
 
-          {/* Section: Classification */}
-          <div className="flex items-center gap-3 my-6">
-            <span className="text-xs font-bold uppercase tracking-widest text-slate-400 whitespace-nowrap">
-              Classification
-            </span>
-            <hr className="flex-1 border-slate-100" />
-          </div>
+          <FormSection title="Classification" />
 
-          <div>
-            <label className={labelCls}>
-              Category <span className="text-red-400">*</span>
-            </label>
-            <select name="category" required className={inputCls}>
+          <Field id="product-category" label="Category" required>
+            <Select name="category">
               {categories.map((c) => (
                 <option key={c} value={c} className="capitalize">
                   {c}
                 </option>
               ))}
-            </select>
-          </div>
-          <div>
-            <label className={labelCls}>Related Service</label>
-            <select name="related_service" className={inputCls}>
+            </Select>
+          </Field>
+          <Field id="product-related-service" label="Related Service">
+            <Select name="related_service">
               <option value="">None</option>
               {services.map((s) => (
                 <option key={s} value={s}>
                   {s}
                 </option>
               ))}
-            </select>
-          </div>
+            </Select>
+          </Field>
 
-          {/* Section: Details */}
-          <div className="flex items-center gap-3 my-6">
-            <span className="text-xs font-bold uppercase tracking-widest text-slate-400 whitespace-nowrap">
-              Details
-            </span>
-            <hr className="flex-1 border-slate-100" />
-          </div>
+          <FormSection title="Details" />
 
-          <div>
-            <label className={labelCls}>Specs</label>
-            <input
-              name="specs"
-              placeholder="e.g. 550W · Mono PERC"
-              className={inputCls}
-            />
-          </div>
-          <div>
-            <label className={labelCls}>Description</label>
-            <textarea name="description" rows={4} className={inputCls} />
-          </div>
-          <div>
-            <label className={labelCls}>Badge</label>
-            <input name="badge" placeholder="e.g. Best Seller" className={inputCls} />
-          </div>
+          <Field id="product-specs" label="Specs">
+            <Input name="specs" placeholder="e.g. 550W · Mono PERC" />
+          </Field>
+          <Field id="product-description" label="Description">
+            <Textarea name="description" rows={4} />
+          </Field>
+          <Field id="product-badge" label="Badge">
+            <Input name="badge" placeholder="e.g. Best Seller" />
+          </Field>
 
-          {/* Section: Media */}
-          <div className="flex items-center gap-3 my-6">
-            <span className="text-xs font-bold uppercase tracking-widest text-slate-400 whitespace-nowrap">
-              Media
-            </span>
-            <hr className="flex-1 border-slate-100" />
-          </div>
+          <FormSection title="Media" />
 
-          <div>
-            <label className={labelCls}>Product Image</label>
-            <input
-              name="image"
-              type="file"
-              accept="image/*"
-              className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-solar-500/10 file:text-solar-600 file:font-medium hover:file:bg-solar-500/20 file:cursor-pointer"
-            />
-          </div>
+          <Field id="product-image" label="Product Image">
+            <input name="image" type="file" accept="image/*" className={fileInputClass} />
+          </Field>
         </form>
-      </div>
+      </AdminFormCard>
 
-      {/* Sticky save bar */}
-      <div className="fixed bottom-0 left-64 right-0 bg-white border-t border-slate-200 shadow-[0_-4px_16px_0_rgb(0_0_0/0.06)] px-8 py-4 flex items-center justify-end gap-3 z-30">
-        <Link
-          href="/admin/products"
-          className="text-slate-500 hover:text-slate-700 text-sm transition-colors"
-        >
-          Cancel
-        </Link>
-        <button
-          type="submit"
-          form="main-form"
-          disabled={isPending}
-          className="bg-solar-500 hover:bg-solar-400 disabled:opacity-60 text-navy-950 font-bold px-6 py-2.5 rounded-xl text-sm transition-colors"
-        >
-          {isPending ? 'Saving…' : 'Create Product'}
-        </button>
-      </div>
+      <StickySaveBar cancelHref="/admin/products" pending={isPending} label="Create Product" />
     </>
   );
 }

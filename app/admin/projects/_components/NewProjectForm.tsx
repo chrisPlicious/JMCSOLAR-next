@@ -4,13 +4,12 @@ import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createProjectAction } from "../actions";
-import Link from "next/link";
 import DragDropImageUploader from "./DragDropImageUploader";
 import { LOCATIONS } from "@/data/locations";
-
-const inputCls =
-  "w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-navy-950 outline-none focus:ring-2 focus:ring-solar-500/30 focus:border-solar-500 transition-colors";
-const labelCls = "block text-sm font-medium text-slate-700 mb-1.5";
+import { Field, Input, Label, Select, Textarea } from "@/components/ui/Field";
+import {
+  AdminFormCard, AdminFormHeader, FormErrorBanner, FormSection, StickySaveBar,
+} from "../../_components/AdminForm";
 
 const categories = [
   "residential",
@@ -37,181 +36,72 @@ export default function NewProjectForm() {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
-        <Link
-          href="/admin/projects"
-          className="text-slate-400 hover:text-slate-600 transition-colors"
-        >
-          <svg width="20" height="20" fill="none" viewBox="0 0 20 20">
-            <path
-              d="M12 15l-5-5 5-5"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </Link>
-        <h1 className="font-display font-black text-navy-950 text-2xl">
-          New Project
-        </h1>
-      </div>
+      <AdminFormHeader title="New Project" backHref="/admin/projects" />
 
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-card p-8 max-w-3xl mb-24">
-        {state?.error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
-            {state.error}
-          </div>
-        )}
+      <AdminFormCard className="mb-24">
+        <FormErrorBanner>{state?.error}</FormErrorBanner>
 
         <form id="main-form" action={formAction} className="space-y-5">
-          {/* Section: Basic Information */}
-          <div className="flex items-center gap-3 my-6">
-            <span className="text-xs font-bold uppercase tracking-widest text-slate-400 whitespace-nowrap">
-              Basic Information
-            </span>
-            <hr className="flex-1 border-slate-100" />
-          </div>
+          <FormSection title="Basic Information" />
 
-          <div>
-            <label htmlFor="title" className={labelCls}>
-              Title
-            </label>
-            <input id="title" name="title" required className={inputCls} />
-          </div>
+          <Field id="title" label="Title" required>
+            <Input name="title" />
+          </Field>
 
-          <div>
-            <label htmlFor="category" className={labelCls}>
-              Category
-            </label>
-            <select id="category" name="category" required className={inputCls}>
+          <Field id="category" label="Category" required>
+            <Select name="category">
               <option value="">Select a category</option>
               {categories.map((cat) => (
                 <option key={cat} value={cat}>
                   {cat.charAt(0).toUpperCase() + cat.slice(1)}
                 </option>
               ))}
-            </select>
-          </div>
+            </Select>
+          </Field>
 
-          <div>
-            <label htmlFor="city_slug" className={labelCls}>
-              City / Area
-            </label>
-            <select id="city_slug" name="city_slug" className={inputCls}>
+          <Field id="city_slug" label="City / Area">
+            <Select name="city_slug">
               <option value="">Other / unlisted</option>
               {LOCATIONS.filter((l) => l.tier === 'municipality').map((loc) => (
                 <option key={loc.slug} value={loc.slug}>
                   {loc.name}{loc.province ? ` — ${loc.province}` : ''}
                 </option>
               ))}
-            </select>
-          </div>
+            </Select>
+          </Field>
+
+          <Field id="location" label="Location Detail">
+            <Input name="location" placeholder="e.g. Brgy Cogon, Ormoc City" />
+          </Field>
+
+          <Field id="system_size" label="System Size">
+            <Input name="system_size" placeholder="e.g. 10 kWp" />
+          </Field>
+
+          <Field id="completed_at" label="Completed At" hint="Month and year the project was completed">
+            <Input name="completed_at" type="month" />
+          </Field>
+
+          <FormSection title="Details" />
+
+          <Field id="description" label="Description">
+            <Textarea name="description" rows={4} />
+          </Field>
+
+          <Field id="facebook_url" label="Facebook Post URL">
+            <Input name="facebook_url" type="url" placeholder="https://facebook.com/..." />
+          </Field>
+
+          <FormSection title="Media" />
 
           <div>
-            <label htmlFor="location" className={labelCls}>
-              Location Detail
-            </label>
-            <input
-              id="location"
-              name="location"
-              placeholder="e.g. Brgy Cogon, Ormoc City"
-              className={inputCls}
-            />
-          </div>
-
-          <div>
-            <label htmlFor="system_size" className={labelCls}>
-              System Size
-            </label>
-            <input
-              id="system_size"
-              name="system_size"
-              placeholder="e.g. 10 kWp"
-              className={inputCls}
-            />
-          </div>
-
-          <div>
-            <label htmlFor="completed_at" className={labelCls}>
-              Completed At
-            </label>
-            <input
-              id="completed_at"
-              name="completed_at"
-              type="month"
-              className={inputCls}
-            />
-            <p className="text-xs text-slate-400 mt-1">
-              Month and year the project was completed
-            </p>
-          </div>
-
-          {/* Section: Details */}
-          <div className="flex items-center gap-3 my-6">
-            <span className="text-xs font-bold uppercase tracking-widest text-slate-400 whitespace-nowrap">
-              Details
-            </span>
-            <hr className="flex-1 border-slate-100" />
-          </div>
-
-          <div>
-            <label htmlFor="description" className={labelCls}>
-              Description
-            </label>
-            <textarea
-              id="description"
-              name="description"
-              rows={4}
-              className={inputCls}
-            />
-          </div>
-
-          <div>
-            <label htmlFor="facebook_url" className={labelCls}>
-              Facebook Post URL
-            </label>
-            <input
-              id="facebook_url"
-              name="facebook_url"
-              type="url"
-              placeholder="https://facebook.com/..."
-              className={inputCls}
-            />
-          </div>
-
-          {/* Section: Media */}
-          <div className="flex items-center gap-3 my-6">
-            <span className="text-xs font-bold uppercase tracking-widest text-slate-400 whitespace-nowrap">
-              Media
-            </span>
-            <hr className="flex-1 border-slate-100" />
-          </div>
-
-          <div>
-            <label className={labelCls}>Project Photos</label>
+            <Label>Project Photos</Label>
             <DragDropImageUploader name="images" />
           </div>
         </form>
-      </div>
+      </AdminFormCard>
 
-      {/* Sticky save bar */}
-      <div className="fixed bottom-0 left-64 right-0 bg-white border-t border-slate-200 shadow-[0_-4px_16px_0_rgb(0_0_0/0.06)] px-8 py-4 flex items-center justify-end gap-3 z-30">
-        <Link
-          href="/admin/projects"
-          className="text-slate-500 hover:text-slate-700 text-sm transition-colors"
-        >
-          Cancel
-        </Link>
-        <button
-          type="submit"
-          form="main-form"
-          disabled={isPending}
-          className="bg-solar-500 hover:bg-solar-400 disabled:opacity-60 text-navy-950 font-bold px-6 py-2.5 rounded-xl text-sm transition-colors"
-        >
-          {isPending ? "Saving…" : "Create Project"}
-        </button>
-      </div>
+      <StickySaveBar cancelHref="/admin/projects" pending={isPending} label="Create Project" />
     </div>
   );
 }

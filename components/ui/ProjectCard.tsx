@@ -2,36 +2,22 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { MapPin, Zap, ExternalLink } from 'lucide-react';
+import { MapPin, Zap, ExternalLink, Images } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { Project } from '../../types';
+import { fadeUp, revealOnScroll } from '@/lib/motion';
+import Badge from './Badge';
 
 interface ProjectCardProps {
   project: Project;
   onClick?: () => void;
 }
 
-const categoryGradients: Record<Project['category'], string> = {
-  residential:  'from-blue-700 via-blue-500 to-blue-400',
-  commercial:   'from-purple-700 via-purple-500 to-purple-400',
-  industrial:   'from-orange-700 via-orange-500 to-orange-400',
-  agricultural: 'from-green-700 via-green-500 to-green-400',
-};
-
-const categoryIcons: Record<Project['category'], string> = {
-  residential:  '🏠',
-  commercial:   '🏢',
-  industrial:   '🏭',
-  agricultural: '🌾',
-};
-
 export default function ProjectCard({ project, onClick }: ProjectCardProps) {
-  const hasGallery = (project.images?.length ?? 0) > 0;
-
   // next/image throws (and 500s the whole page) on a src that isn't an absolute
   // URL or a root-relative path. Some Firestore project docs hold a bare storage
   // path (e.g. "project-images/…jpg"); guard so a bad path degrades to the
-  // gradient fallback instead of crashing a page we want indexed.
+  // navy fallback instead of crashing a page we want indexed.
   const coverSrc =
     project.cover_image_path && /^(https?:\/\/|\/)/.test(project.cover_image_path)
       ? project.cover_image_path
@@ -47,18 +33,13 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
 
   return (
     <motion.div
-      className={`relative w-full h-[220px] sm:h-[340px] md:h-[460px] lg:h-[580px] rounded-2xl overflow-hidden select-none ${onClick ? 'cursor-pointer' : ''}`}
-      onClick={onClick}
+      className={`group surface-dark relative w-full aspect-[4/3] overflow-hidden rounded-card bg-navy-900 shadow-soft select-none transition-shadow duration-300 ease-out-quart hover:shadow-card-hover ${coverSrc ? '' : 'texture-module'}`}
       onMouseEnter={prefetchGallery}
       onTouchStart={prefetchGallery}
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-60px' }}
-      transition={{ duration: 0.5 }}
-      whileHover={{ scale: 1.015, transition: { duration: 0.3, ease: 'easeOut' } }}
+      variants={fadeUp}
+      {...revealOnScroll}
     >
-
-      {/* Background: image if available, gradient fallback */}
+      {/* Background: image if available, navy fallback */}
       {coverSrc ? (
         // M7: next/image for Vercel optimisation + LCP
         <Image
@@ -66,15 +47,31 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
           alt={project.title}
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          className="object-cover"
+          className="object-cover transition-transform duration-500 ease-out-quart group-hover:scale-[1.03]"
           draggable={false}
         />
       ) : (
-        <div className={`absolute inset-0 bg-linear-to-br ${categoryGradients[project.category]}`} />
+        <div className="absolute inset-0 flex items-center justify-center" aria-hidden>
+          <Images className="size-12 text-fg-subtle" />
+        </div>
       )}
 
-      {/* Dark overlay for readability */}
-      <div className="absolute inset-0 bg-black/20 hover:bg-black/0 transition-colors duration-500" />
+      {/* Whole-card gallery trigger: a real button so keyboard users can open
+          it. Overlay copy is pointer-transparent; links sit above at z-20. */}
+      {onClick && (
+        <button
+          type="button"
+          onClick={onClick}
+          onFocus={prefetchGallery}
+          aria-label={`View photos of ${project.title}`}
+          className="absolute inset-0 z-10 cursor-pointer rounded-card"
+        />
+      )}
+
+      {/* Category — top left */}
+      <Badge variant={project.category} className="absolute top-4 left-4 z-20 capitalize">
+        {project.category}
+      </Badge>
 
       {/* Facebook link — top right */}
       {project.facebook_url && (
@@ -82,42 +79,31 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
           href={project.facebook_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="absolute top-4 right-4 z-10 inline-flex items-center justify-center bg-white/20 backdrop-blur-sm text-white p-2 rounded-full hover:bg-white/40 transition-colors duration-200"
+          aria-label={`View ${project.title} on Facebook`}
+          className="absolute top-4 right-4 z-20 inline-flex size-9 items-center justify-center rounded-full bg-navy-950/60 text-fg backdrop-blur-sm transition-colors duration-200 hover:bg-navy-950/80"
           onClick={(e) => e.stopPropagation()}
         >
-          <ExternalLink size={18} />
+          <ExternalLink className="size-4" aria-hidden />
         </a>
       )}
 
-      {/* Centered emoji — only when no image */}
-      {!coverSrc && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-7xl opacity-20">{categoryIcons[project.category]}</span>
-        </div>
-      )}
-
       {/* Bottom info overlay */}
-      <div className="absolute bottom-0 inset-x-0 bg-linear-to-t from-black/75 via-black/40 to-transparent p-5 pt-10 z-10">
-        <h3
-          className="text-white font-bold text-sm md:text-xl leading-snug mb-2"
-          style={{ fontFamily: 'Poppins, sans-serif' }}
-        >
-          {project.title}
-        </h3>
-        <div className="flex items-center gap-3 text-white/80 text-xs">
+      <div className="pointer-events-none absolute bottom-0 inset-x-0 z-10 bg-linear-to-t from-navy-950/85 via-navy-950/45 to-transparent p-5 pt-12">
+        <h3 className="text-title text-fg mb-2">{project.title}</h3>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-fg-muted">
           {project.system_size && (
             <span className="flex items-center gap-1">
-              <Zap size={15} className="text-solar-400" />
+              <Zap className="size-4 text-solar-ink" aria-hidden />
               {project.system_size}
             </span>
           )}
           {project.location && (
             <span className="flex items-center gap-1">
-              <MapPin size={15} />
+              <MapPin className="size-4" aria-hidden />
               {project.city_slug ? (
                 <Link
                   href={`/locations/${project.city_slug}`}
-                  className="hover:text-solar-300 transition-colors"
+                  className="pointer-events-auto relative z-20 hover:text-solar-ink hover:underline"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {project.location}
