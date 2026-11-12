@@ -106,9 +106,9 @@ export const PANEL_KW = 0.55;
 export const panelsFor = (kw: number) => Math.ceil(kw / PANEL_KW - 1e-9);
 
 /**
- * Most the home can draw. With the grid up there's no cap: whatever solar and
+ * Most the site can draw. With the grid up there's no cap: whatever solar and
  * battery can't cover, the grid (LEYECO) supplies. In a brownout only solar and
- * battery are left, so the home can't draw more than the system is rated for.
+ * battery are left, so the site can't draw more than the system is rated for.
  */
 export const loadCap = (s: Pick<SimInput, 'gridUp' | 'pvKwp'>) => (s.gridUp ? Infinity : s.pvKwp);
 

@@ -88,15 +88,15 @@ describe('hybrid dispatch', () => {
     expect(v.story).not.toContain('holding');
   });
 
-  test('a brownout runs the home on the battery', () => {
+  test('a brownout runs the site on the battery', () => {
     const s = input({ load: 1.8, soc: 70, gridUp: false });
     const r = hybrid.dispatch(s);
     expect(r.discharge).toBeCloseTo(1.8);
     expect(r.unserved).toBe(0);
-    expect(hybrid.view(s, r, false).story).toContain('Your lights stay on.');
+    expect(hybrid.view(s, r, false).story).toContain('Your lights and equipment stay on.');
   });
 
-  test('solar and battery reach the home at no more than the inverter rating; the grid adds the rest', () => {
+  test('solar and battery reach the site at no more than the inverter rating; the grid adds the rest', () => {
     const s = input({ pvKwp: 5, solar: 3, load: 9, soc: 60 });
     const r = hybrid.dispatch(s);
     expect(r.direct).toBeCloseTo(3);
@@ -105,7 +105,7 @@ describe('hybrid dispatch', () => {
     expect(hybrid.view(s, r, false).story).toContain('the grid adds the rest');
   });
 
-  test('in a brownout the home goes short only once the battery hits its cut-off', () => {
+  test('in a brownout the site goes short only once the battery hits its cut-off', () => {
     const s = input({ load: 3, soc: 5, gridUp: false });
     const r = hybrid.dispatch(s);
     expect(r.discharge).toBe(0);
