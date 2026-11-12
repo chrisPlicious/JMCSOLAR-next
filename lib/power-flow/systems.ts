@@ -4,7 +4,6 @@ import {
   kw,
   list,
   peso,
-  withLoad,
   zero,
   type Device,
   type Flow,
@@ -57,15 +56,30 @@ export interface SimView {
   summary: string; // accessible name for the diagram
 }
 
+/**
+ * A size the visitor sets: any value in [min, max] (typed or nudged by `step`),
+ * with a few common sizes one tap away.
+ */
+export interface SizeRange {
+  min: number;
+  max: number;
+  step: number;
+  presets: number[];
+}
+
 export interface SystemDef {
   id: SystemId;
   title: string;
-  /** Sizes the visitor can pick (usable kWh), the charge/discharge limit and the reserve tick. */
-  battery?: { sizes: number[]; kW: number; tick: number };
+  /** System size the visitor can pick (kW). */
+  sizes: SizeRange;
+  inverterKind: string;
+  /** Size the visitor can pick (usable kWh) and the reserve tick. */
+  battery?: { sizes: SizeRange; tick: number };
   initial: SimInput;
   flows: Flow[];
   layouts: Record<LayoutName, Layout>;
-  brownout: [number, number];
+  /** Scheduled outage during "Play a day". Only a system that rides through one has it (and a brownout switch). */
+  brownout?: [number, number];
   dispatch(s: SimInput, dtH?: number): FlowResult;
   view(s: SimInput, r: FlowResult, narrow: boolean): SimView;
 }
@@ -74,6 +88,12 @@ export interface SystemDef {
 // generation charge credited for net-metering exports.
 const RATE = REGIONS['eastern-visayas-ormoc'].rate;
 const CREDIT = REGIONS['eastern-visayas-ormoc'].genCharge;
+
+// Anything from a single-panel starter to a commercial rooftop; the presets are
+// the residential sizes we quote most.
+const SIZES: SizeRange = { min: 1, max: 500, step: 0.5, presets: [3, 5, 8, 10, 12] };
+const BATTERY_SIZES: SizeRange = { min: 2, max: 1000, step: 1, presets: [5, 10, 15, 20] };
+const size = (s: SimInput) => `${s.pvKwp} kW`;
 
 function gridKpi(s: SimInput, r: FlowResult): KpiView {
   return {
@@ -123,7 +143,7 @@ function solarKpi(s: SimInput, r: FlowResult, extraSub?: string): KpiView {
   };
 }
 
-function savingKpi(s: SimInput, r: FlowResult, gridDownSub: string): KpiView {
+function savingKpi(s: SimInput, r: FlowResult, gridDownSub = 'Grid down'): KpiView {
   if (!s.gridUp) return { id: 'save', label: 'Saving now', value: '—', sub: gridDownSub, tone: 'save' };
   const bill = r.imp * RATE - r.exp * CREDIT;
   return {
@@ -136,10 +156,17 @@ function savingKpi(s: SimInput, r: FlowResult, gridDownSub: string): KpiView {
 }
 
 // ── Hybrid ─────────────────────────────────────────────────────
-// The 5 kW charge/discharge limit is the inverter's, so it holds for every battery size.
-const HYBRID = { kW: 5, reserve: 20, cutoff: 5 };
+const HYBRID = { reserve: 20, cutoff: 5 };
+const belowReserve = (s: SimInput) => s.soc < HYBRID.reserve - 0.05;
 
+/**
+ * The inverter is rated at the system size: it charges the battery at no more
+ * than that, and solar plus battery reach the home at no more than that. With
+ * the grid up, anything past it comes from the grid; in a brownout the home's
+ * draw is already capped at it (see loadCap).
+ */
 function hybridDispatch(s: SimInput, dtH?: number): FlowResult {
+  const rating = s.pvKwp;
   const direct = Math.min(s.solar, s.load);
   let surplus = s.solar - direct;
   let deficit = s.load - direct;
@@ -150,14 +177,14 @@ function hybridDispatch(s: SimInput, dtH?: number): FlowResult {
   // deficit → battery (above its floor) → grid (or unserved in a brownout).
   if (surplus > 0) {
     const room = dtH ? (((100 - s.soc) / 100) * s.battKWh) / dtH : Infinity;
-    if (s.soc < 99.95) charge = Math.min(surplus, HYBRID.kW, room);
+    if (s.soc < 99.95) charge = Math.min(surplus, rating, room);
     surplus -= charge;
     if (s.gridUp && s.netMetering) exp = surplus;
     else curtailed = surplus;
   }
   if (deficit > 0) {
     const avail = dtH ? (((s.soc - floor) / 100) * s.battKWh) / dtH : Infinity;
-    if (s.soc > floor + 0.05) discharge = Math.max(0, Math.min(deficit, HYBRID.kW, avail));
+    if (s.soc > floor + 0.05) discharge = Math.max(0, Math.min(deficit, rating - direct, avail));
     deficit -= discharge;
     if (s.gridUp) imp = deficit;
     else unserved = deficit;
@@ -171,7 +198,6 @@ function hybridDispatch(s: SimInput, dtH?: number): FlowResult {
     imp: zero(imp),
     unserved: zero(unserved),
     floor,
-    tripped: false,
   };
 }
 
@@ -186,45 +212,50 @@ function hybridBattery(s: SimInput, r: FlowResult) {
   }
   if (s.soc >= 99.95) return { long: 'Full', short: 'Full' };
   if (s.soc <= r.floor + 0.05 && s.load > r.direct) {
-    return s.gridUp
-      ? { long: `Holding ${HYBRID.reserve}% brownout reserve`, short: `Holding ${HYBRID.reserve}% reserve` }
-      : { long: 'Empty (cut-off reached)', short: 'Empty' };
+    if (!s.gridUp) return { long: 'Empty (cut-off reached)', short: 'Empty' };
+    // A brownout can leave it below the reserve; it only refills from solar, not the grid.
+    return belowReserve(s)
+      ? { long: `Below the ${HYBRID.reserve}% reserve · refills from extra solar`, short: 'Below reserve' }
+      : { long: `Holding ${HYBRID.reserve}% brownout reserve`, short: `Holding ${HYBRID.reserve}% reserve` };
   }
   return { long: 'Standing by', short: 'Standing by' };
 }
 
 function hybridStory(s: SimInput, r: FlowResult) {
   const out: string[] = [];
-  if (!s.gridUp) out.push('Brownout — the grid is down.');
+  const shed = zero(s.demand - s.load);
+  if (!s.gridUp) out.push('Brownout — the grid is down, so your site runs on solar and battery only.');
+  if (shed > 0) {
+    out.push(
+      `Your ${size(s)} system can carry ${kw(s.load)} of the ${kw(s.demand)} you have on, so ${kw(shed)} of heavy equipment must stay off until the grid returns.`,
+    );
+  }
   if (s.load < 0.05) {
-    out.push('Nothing is running in the home.');
+    out.push('Nothing is running on site.');
   } else if (r.direct >= s.load - 0.05) {
-    out.push(`Solar alone covers your whole home (${kw(s.load)}).`);
+    out.push(`Solar alone covers your whole site (${kw(s.load)}).`);
   } else {
     const src: string[] = [];
     if (r.direct > 0) src.push(`${kw(r.direct)} from solar`);
     if (r.discharge > 0) src.push(`${kw(r.discharge)} from the battery`);
     if (r.imp > 0) src.push(`${kw(r.imp)} from the grid`);
     const only = r.unserved === 0 && src.length === 1;
-    if (only && r.discharge > 0) out.push(`The battery powers your whole home (${kw(s.load)}).`);
-    else if (only && r.imp > 0) out.push(`The grid powers your whole home (${kw(s.load)}).`);
-    else if (src.length) out.push(`Your home needs ${kw(s.load)}: ${list(src)}.`);
+    if (only && r.discharge > 0) out.push(`The battery powers your whole site (${kw(s.load)}).`);
+    else if (only && r.imp > 0) out.push(`The grid powers your whole site (${kw(s.load)}).`);
+    else if (src.length) out.push(`Your site needs ${kw(s.load)}: ${list(src)}.`);
     if (r.unserved > 0) {
       out.push(
-        r.discharge > 0
-          ? `${kw(r.unserved)} can't be covered — the battery is already at its ${HYBRID.kW} kW limit. Switch off heavy loads like aircon until the grid returns.`
-          : `The battery has hit its ${HYBRID.cutoff}% cut-off, so ${kw(r.unserved)} can't be covered until the sun comes up or the grid returns.`,
+        `The battery has hit its ${HYBRID.cutoff}% cut-off, so ${kw(r.unserved)} can't be covered until the sun comes up or the grid returns.`,
       );
     } else if (!s.gridUp) {
-      out.push('Your lights stay on.');
+      out.push('Your lights and equipment stay on.');
     } else if (r.imp > 0 && r.discharge === 0 && s.soc <= r.floor + 0.05) {
-      out.push(
-        r.direct > 0
-          ? `The battery is holding its ${HYBRID.reserve}% reserve for brownouts, so the grid fills the gap.`
-          : `The battery is holding its ${HYBRID.reserve}% reserve for brownouts.`,
-      );
-    } else if (r.imp > 0 && r.discharge >= HYBRID.kW - 0.05) {
-      out.push(`The battery is at its ${HYBRID.kW} kW limit, so the grid adds the rest.`);
+      const why = belowReserve(s)
+        ? `The battery is below its ${HYBRID.reserve}% brownout reserve and rests until extra solar refills it`
+        : `The battery is holding its ${HYBRID.reserve}% reserve for brownouts`;
+      out.push(r.direct > 0 ? `${why}, so the grid fills the gap.` : `${why}.`);
+    } else if (r.imp > 0 && r.direct + r.discharge >= s.pvKwp - 0.05) {
+      out.push(`That's more than your ${size(s)} system supplies, so the grid adds the rest.`);
     }
   }
   if (r.charge > 0 && r.exp > 0) {
@@ -238,7 +269,7 @@ function hybridStory(s: SimInput, r: FlowResult) {
     const why: string[] = [];
     if (!s.gridUp) why.push('the grid is down');
     else if (!s.netMetering) why.push('net metering is off');
-    why.push(s.soc >= 99.95 ? 'the battery is full' : `the battery is already charging at ${HYBRID.kW} kW`);
+    why.push(s.soc >= 99.95 ? 'the battery is full' : 'the battery is nearly full');
     out.push(`${kw(r.curtailed)} of solar goes unused — ${list(why)}.`);
   }
   return out.join(' ');
@@ -247,14 +278,20 @@ function hybridStory(s: SimInput, r: FlowResult) {
 function hybridView(s: SimInput, r: FlowResult, narrow: boolean): SimView {
   const bs = hybridBattery(s, r);
   const covered = s.load > 0.05 ? ((r.direct + r.discharge) / s.load) * 100 : 100;
+  const shed = zero(s.demand - s.load);
   return {
     kpis: [
       solarKpi(s, r),
       {
         id: 'home',
-        label: 'Home',
+        label: 'Site',
         value: kw(s.load),
-        sub: r.unserved > 0 ? `${kw(r.unserved)} not covered` : `${Math.round(covered)}% solar + battery`,
+        sub:
+          r.unserved > 0
+            ? `${kw(r.unserved)} not covered`
+            : shed > 0
+              ? `${kw(shed)} switched off`
+              : `${Math.round(covered)}% solar + battery`,
         tone: 'plain',
       },
       { id: 'battery', label: 'Battery', value: `${Math.round(s.soc)}%`, sub: narrow ? bs.short : bs.long, tone: 'battery' },
@@ -278,8 +315,8 @@ function hybridView(s: SimInput, r: FlowResult, narrow: boolean): SimView {
       },
       home: {
         value: kw(s.load),
-        sub: r.unserved > 0 ? `${kw(r.unserved)} short` : s.load < 0.05 ? 'Idle' : '',
-        subTone: r.unserved > 0 ? 'alert' : undefined,
+        sub: r.unserved > 0 ? `${kw(r.unserved)} short` : shed > 0 ? `${kw(shed)} switched off` : s.load < 0.05 ? 'Idle' : '',
+        subTone: r.unserved > 0 ? 'alert' : shed > 0 ? 'warn' : undefined,
         alert: r.unserved > 0,
         active: s.load >= 0.05 && r.unserved === 0,
       },
@@ -295,7 +332,7 @@ function hybridView(s: SimInput, r: FlowResult, narrow: boolean): SimView {
     ],
     story: hybridStory(s, r),
     alert: !s.gridUp,
-    summary: `Solar ${kw(s.solar)}, home ${kw(s.load)}, battery ${Math.round(s.soc)}% (${bs.long}), grid ${
+    summary: `Solar ${kw(s.solar)}, site ${kw(s.load)}, battery ${Math.round(s.soc)}% (${bs.long}), grid ${
       !s.gridUp ? 'down' : r.imp > 0 ? `importing ${kw(r.imp)}` : r.exp > 0 ? `exporting ${kw(r.exp)}` : 'idle'
     }.`,
   };
@@ -304,8 +341,10 @@ function hybridView(s: SimInput, r: FlowResult, narrow: boolean): SimView {
 const hybrid: SystemDef = {
   id: 'hybrid',
   title: 'Hybrid Solar Simulator',
-  battery: { sizes: [5, 10, 15, 20], kW: HYBRID.kW, tick: HYBRID.reserve },
-  initial: withLoad({ pvKwp: 0, solar: 0, load: 0, soc: 0, battKWh: 10, gridUp: true, netMetering: true }, 2),
+  sizes: SIZES,
+  inverterKind: 'hybrid inverter',
+  battery: { sizes: BATTERY_SIZES, tick: HYBRID.reserve },
+  initial: { pvKwp: 5, solar: 0, demand: 2, load: 2, soc: 0, battKWh: 10, gridUp: true, netMetering: true },
   // Every solar flow shares one lane so the solar wire stays a clean stream;
   // lanes only separate on the home wire, where all three sources meet.
   flows: [
@@ -365,38 +404,31 @@ const hybrid: SystemDef = {
 // ── On-grid (grid-tie) ─────────────────────────────────────────
 /**
  * Solar → home, surplus → grid export (or curtail without net metering),
- * deficit → grid. In a brownout the inverter must switch off (anti-islanding),
- * so neither solar nor grid reaches the home.
+ * deficit → grid. The grid is always there to cover the home, so the load can
+ * run past the system size. There's no brownout here: without a battery a
+ * grid-tie system has nothing to ride one through on.
  */
 function ongridDispatch(s: SimInput): FlowResult {
-  const none = { charge: 0, discharge: 0, floor: 0 };
-  if (!s.gridUp) {
-    return { ...none, direct: 0, exp: 0, curtailed: zero(s.solar), imp: 0, unserved: zero(s.load), tripped: s.solar >= 0.05 };
-  }
   const direct = Math.min(s.solar, s.load);
   const surplus = s.solar - direct;
   return {
-    ...none,
+    charge: 0,
+    discharge: 0,
+    floor: 0,
     direct: zero(direct),
     exp: zero(s.netMetering ? surplus : 0),
     curtailed: zero(s.netMetering ? 0 : surplus),
     imp: zero(s.load - direct),
     unserved: 0,
-    tripped: false,
   };
 }
 
 function ongridStory(s: SimInput, r: FlowResult) {
-  if (!s.gridUp) {
-    return r.tripped
-      ? `Brownout — the grid is down, so the grid-tie inverter switches off for safety (anti-islanding). The panels could make ${kw(s.solar)}, but none of it reaches your home, which goes dark. A hybrid system with a battery would keep the lights on.`
-      : 'Brownout — the grid is down and there is no sun, so your home has no power until the grid returns.';
-  }
   const out: string[] = [];
-  if (s.load < 0.05) out.push('Nothing is running in the home.');
-  else if (r.direct >= s.load - 0.05) out.push(`Solar alone covers your whole home (${kw(s.load)}).`);
-  else if (r.direct > 0) out.push(`Your home needs ${kw(s.load)}: ${kw(r.direct)} from solar and ${kw(r.imp)} from the grid.`);
-  else out.push(`${s.solar < 0.05 ? 'No sun right now, so the' : 'The'} grid powers your whole home (${kw(s.load)}).`);
+  if (s.load < 0.05) out.push('Nothing is running on site.');
+  else if (r.direct >= s.load - 0.05) out.push(`Solar alone covers your whole site (${kw(s.load)}).`);
+  else if (r.direct > 0) out.push(`Your site needs ${kw(s.load)}: ${kw(r.direct)} from solar and ${kw(r.imp)} from the grid.`);
+  else out.push(`${s.solar < 0.05 ? 'No sun right now, so the' : 'The'} grid powers your whole site (${kw(s.load)}).`);
   if (r.exp > 0) out.push(`The extra ${kw(r.exp)} flows out through the net meter for credit.`);
   if (r.curtailed > 0) out.push(`${kw(r.curtailed)} of solar goes unused — without net metering the inverter holds the panels back.`);
   return out.join(' ');
@@ -404,63 +436,59 @@ function ongridStory(s: SimInput, r: FlowResult) {
 
 function ongridView(s: SimInput, r: FlowResult): SimView {
   const fromSolar = s.load > 0.05 ? (r.direct / s.load) * 100 : 0;
-  const used = s.solar >= 0.05 && !r.tripped ? (r.direct / s.solar) * 100 : null;
+  const used = s.solar >= 0.05 ? (r.direct / s.solar) * 100 : null;
   return {
     kpis: [
-      solarKpi(s, r, r.tripped ? 'Inverter off (brownout)' : undefined),
+      solarKpi(s, r),
       {
         id: 'home',
-        label: 'Home',
+        label: 'Site',
         value: kw(s.load),
-        sub: r.unserved > 0 ? 'No power (brownout)' : s.load < 0.05 ? 'Idle' : `${Math.round(fromSolar)}% from solar`,
+        sub: s.load < 0.05 ? 'Idle' : `${Math.round(fromSolar)}% from solar`,
         tone: 'plain',
       },
       gridKpi(s, r),
       {
         id: 'self',
-        label: 'Solar used at home',
+        label: 'Solar used on site',
         value: used === null ? '—' : `${Math.round(used)}%`,
-        sub: r.tripped
-          ? 'Inverter off'
-          : s.solar < 0.05
+        sub:
+          s.solar < 0.05
             ? 'No sun'
             : r.exp > 0
               ? `${kw(r.exp)} exported`
               : r.curtailed > 0
                 ? `${kw(r.curtailed)} unused`
-                : 'All used at home',
+                : 'All used on site',
         tone: 'solar',
       },
-      savingKpi(s, r, 'Grid down · no power'),
+      savingKpi(s, r),
     ],
     nodes: {
       solar: {
         value: s.solar >= 0.05 ? `+${kw(s.solar)}` : kw(0),
-        sub: r.tripped ? 'Inverter off' : r.curtailed > 0 ? `${kw(r.curtailed)} unused` : s.solar < 0.05 ? 'No sun' : '',
+        sub: r.curtailed > 0 ? `${kw(r.curtailed)} unused` : s.solar < 0.05 ? 'No sun' : '',
         subTone: r.curtailed > 0 ? 'warn' : undefined,
-        off: s.solar < 0.05 || r.tripped,
-        active: s.solar >= 0.05 && !r.tripped,
+        off: s.solar < 0.05,
+        active: s.solar >= 0.05,
       },
       home: {
         value: kw(s.load),
-        sub: r.unserved > 0 ? 'No power' : s.load < 0.05 ? 'Idle' : '',
-        subTone: r.unserved > 0 ? 'alert' : undefined,
-        alert: r.unserved > 0,
-        active: s.load >= 0.05 && r.unserved === 0,
+        sub: s.load < 0.05 ? 'Idle' : '',
+        active: s.load >= 0.05,
       },
-      inverter: { off: !s.gridUp, active: s.gridUp && s.solar + r.imp > 0.05 },
+      inverter: { active: s.solar + r.imp > 0.05 },
       ...gridNodes(s, r),
     },
-    mixLabel: s.load < 0.05 ? 'Idle' : r.unserved > 0 ? 'No power' : `${Math.round(fromSolar)}% from solar`,
+    mixLabel: s.load < 0.05 ? 'Idle' : `${Math.round(fromSolar)}% from solar`,
     mix: [
       { id: 'solar', kw: r.direct },
       { id: 'grid', kw: r.imp },
-      { id: 'short', kw: r.unserved },
     ],
     story: ongridStory(s, r),
-    alert: !s.gridUp,
-    summary: `Solar ${kw(s.solar)}, home ${kw(s.load)}, grid ${
-      !s.gridUp ? 'down, inverter off' : r.imp > 0 ? `importing ${kw(r.imp)}` : r.exp > 0 ? `exporting ${kw(r.exp)}` : 'idle'
+    alert: false,
+    summary: `Solar ${kw(s.solar)}, site ${kw(s.load)}, grid ${
+      r.imp > 0 ? `importing ${kw(r.imp)}` : r.exp > 0 ? `exporting ${kw(r.exp)}` : 'idle'
     }.`,
   };
 }
@@ -468,7 +496,9 @@ function ongridView(s: SimInput, r: FlowResult): SimView {
 const ongrid: SystemDef = {
   id: 'ongrid',
   title: 'On-Grid Solar Simulator',
-  initial: withLoad({ pvKwp: 0, solar: 0, load: 0, soc: 0, battKWh: 0, gridUp: true, netMetering: true }, 2),
+  sizes: SIZES,
+  inverterKind: 'grid-tie inverter',
+  initial: { pvKwp: 5, solar: 0, demand: 2, load: 2, soc: 0, battKWh: 0, gridUp: true, netMetering: true },
   flows: [
     { id: 'solar-home', from: 'solar', to: 'home', key: 'direct', color: 'solar', lane: -4 },
     { id: 'solar-grid', from: 'solar', to: 'grid', key: 'exp', color: 'solar', lane: -4 },
@@ -513,7 +543,6 @@ const ongrid: SystemDef = {
       inverterName: 'INVERTER',
     },
   },
-  brownout: [13, 14.5],
   dispatch: ongridDispatch,
   view: ongridView,
 };

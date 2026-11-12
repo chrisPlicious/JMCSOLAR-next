@@ -10,7 +10,7 @@ import {
   type CSSProperties,
   type ReactNode,
 } from 'react';
-import { Moon, Pause, Play, RotateCcw, Sun } from 'lucide-react';
+import { Minus, Moon, Pause, Play, Plus, RotateCcw, Sun } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   buildRoutes,
@@ -18,14 +18,15 @@ import {
   DAY_SECONDS,
   DAY_START,
   kw,
+  loadCap,
   OPENING_HOUR,
+  panelsFor,
+  pickTime,
   pointAt,
   resetDay,
   RESET_HOUR,
   settle,
   startAt,
-  arrayForLoad,
-  withLoad,
   tickDay,
   type Flow,
   type FlowColor,
@@ -35,7 +36,14 @@ import {
   type Route,
   type Snapshot,
 } from '@/lib/power-flow/engine';
-import { SYSTEMS, type KpiView, type MixSegment, type NodeView, type SystemId } from '@/lib/power-flow/systems';
+import {
+  SYSTEMS,
+  type KpiView,
+  type MixSegment,
+  type NodeView,
+  type SizeRange,
+  type SystemId,
+} from '@/lib/power-flow/systems';
 
 // Diagram card width (px) → arrangement: the tall phone diagram, the compact one
 // used beside the controls, or the full-width one. Each keeps its text near 1:1.
@@ -53,7 +61,7 @@ const NAMES: Record<Tile, string> = {
   battery: 'BATTERY',
   grid: 'UTILITY GRID',
   meter: 'NET METER',
-  home: 'HOME',
+  home: 'SITE',
 };
 
 const TONE: Record<Tile, { stroke: string; halo: string; icon: string }> = {
@@ -79,11 +87,15 @@ const ICONS: Record<Exclude<Tile, 'meter'>, ReactNode> = {
       <path d="M10 2h4" />
     </>
   ),
+  // Premises, not a house: a solar system feeds homes, shops, offices and
+  // plants alike, so the tile stays a plain building with a door and windows.
   home: (
     <>
-      <path d="M3 11 12 3.5 21 11" />
-      <path d="M5.5 9.5V20h13V9.5" />
-      <path d="M10 20v-5h4v5" />
+      <path d="M4.5 20.5V8h15v12.5" />
+      <path d="M2.5 20.5h19" />
+      <path d="M9.75 20.5V14h4.5v6.5" />
+      <path d="M6.5 11.5h2.5" />
+      <path d="M15 11.5h2.5" />
     </>
   ),
   grid: <path d="M12 2 7 22M12 2l5 20M6 7h12M5 12h14M8.5 16l8 4M15.5 16l-8 4" />,
@@ -321,18 +333,33 @@ const MIX: Record<MixSegment, { label: string; bar: string; dot: string }> = {
   },
 };
 
+/**
+ * The load slider's top. A solar system isn't only a house: a shop, a office or
+ * a plant can draw far more than a home's aircons, so past a 10 kW array the
+ * slider opens up to the system's own size — the load the setup is built for.
+ */
+const loadTop = (pvKwp: number) => Math.max(10, Math.ceil(pvKwp));
+/**
+ * Finer steps on a small system, coarser once the slider spans hundreds of kW.
+ * Both divide the 0.5 kW the slider starts at, so the thumb and the figure
+ * beside the label never disagree.
+ */
+const loadStep = (top: number) => (top > 25 ? 0.5 : 0.1);
+
 const PANEL = 'px-4 py-5 md:px-8 md:pt-7 md:pb-8';
 const CHIP = 'cursor-pointer rounded-full border px-3.5 py-2 text-sm font-semibold transition-colors duration-150';
 
-// Range input: the track fills up to the value (--p) in the slider's colour (--c).
+// Range input: the track fills up to the value (--p) in the slider's colour (--c),
+// and turns red past a limit (--cap) the value can't go beyond.
 const RANGE = [
   'mt-1 h-7.5 w-full cursor-pointer appearance-none bg-transparent focus-visible:outline-none',
   '[&::-webkit-slider-runnable-track]:h-1.5 [&::-webkit-slider-runnable-track]:rounded-full',
-  '[&::-webkit-slider-runnable-track]:bg-[linear-gradient(to_right,var(--c)_var(--p),var(--color-navy-100)_var(--p))]',
+  '[&::-webkit-slider-runnable-track]:bg-[linear-gradient(to_right,var(--c)_var(--p),var(--color-navy-100)_var(--p)_var(--cap),var(--color-red-200)_var(--cap))]',
   '[&::-webkit-slider-thumb]:-mt-2 [&::-webkit-slider-thumb]:size-5.5 [&::-webkit-slider-thumb]:appearance-none',
   '[&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-3 [&::-webkit-slider-thumb]:border-(--c)',
   '[&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-soft',
-  '[&::-moz-range-track]:h-1.5 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-navy-100',
+  '[&::-moz-range-track]:h-1.5 [&::-moz-range-track]:rounded-full',
+  '[&::-moz-range-track]:bg-[linear-gradient(to_right,var(--color-navy-100)_var(--cap),var(--color-red-200)_var(--cap))]',
   '[&::-moz-range-progress]:h-1.5 [&::-moz-range-progress]:rounded-full [&::-moz-range-progress]:bg-(--c)',
   '[&::-moz-range-thumb]:size-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-3',
   '[&::-moz-range-thumb]:border-(--c) [&::-moz-range-thumb]:bg-white',
@@ -347,6 +374,7 @@ function Slider({
   value,
   min = 0,
   max,
+  limit = max,
   step,
   format,
   color,
@@ -358,12 +386,14 @@ function Slider({
   value: number;
   min?: number;
   max: number;
+  limit?: number; // the most onChange should accept right now; the track beyond it shows red
   step: number;
   format: (v: number) => string;
   color: string;
   hints: [string, string];
   onChange: (v: number) => void;
 }) {
+  const pct = (v: number) => `${((Math.min(v, max) - min) / (max - min)) * 100}%`;
   return (
     <div>
       <label htmlFor={id} className="flex items-baseline justify-between gap-3 text-sm font-semibold text-fg">
@@ -381,12 +411,147 @@ function Slider({
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
         className={`${RANGE} ${color}`}
-        style={{ '--p': `${((value - min) / (max - min)) * 100}%` } as CSSProperties}
+        style={{ '--p': pct(value), '--cap': pct(limit) } as CSSProperties}
       />
       <div className="flex justify-between text-xs text-fg-subtle">
         <span>{hints[0]}</span>
         <span>{hints[1]}</span>
       </div>
+    </div>
+  );
+}
+
+const STEPPER = [
+  'inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-navy-200',
+  'bg-white text-fg transition-colors duration-150 hover:border-navy-500',
+  'disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-navy-200',
+].join(' ');
+
+const NUMBER_FIELD = [
+  'w-full rounded-full border border-navy-200 bg-white py-2 pr-11 pl-4 text-sm font-semibold',
+  'font-mono tabular-nums text-fg transition-colors duration-150 hover:border-navy-500',
+  'focus-visible:border-navy-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
+  // The browser's own spinners would crowd the unit, and the ± buttons replace them.
+  '[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
+].join(' ');
+
+/** A size the visitor types, nudges by its step, or taps from a preset. */
+function SizeField({
+  id,
+  label,
+  unit,
+  range,
+  value,
+  onClass,
+  note,
+  onPick,
+}: {
+  id: string;
+  label: string;
+  unit: string;
+  range: SizeRange;
+  value: number;
+  onClass: string;
+  note: string;
+  onPick: (v: number) => void;
+}) {
+  // While the box has focus it holds the raw text, so a half-typed number ("1",
+  // "", "0.") isn't snapped away under the cursor. It settles on blur.
+  const [draft, setDraft] = useState<string | null>(null);
+  const snap = (v: number) => {
+    const stepped = Math.round(v / range.step) * range.step;
+    return Math.round(Math.min(range.max, Math.max(range.min, stepped)) * 100) / 100;
+  };
+
+  const typed = (raw: string) => {
+    setDraft(raw);
+    const n = Number(raw);
+    // Apply it live only once it's a real value in range; anything else waits for blur.
+    if (raw.trim() !== '' && Number.isFinite(n) && n >= range.min && n <= range.max) onPick(n);
+  };
+  const settleDraft = () => {
+    const n = Number(draft);
+    if (draft !== null && draft.trim() !== '' && Number.isFinite(n)) onPick(snap(n));
+    setDraft(null);
+  };
+  const nudge = (by: number) => {
+    setDraft(null);
+    onPick(snap(value + by));
+  };
+
+  const presetsId = `${id}-presets`;
+  return (
+    <div>
+      <label htmlFor={id} className="text-sm font-semibold text-fg">
+        {label}
+      </label>
+      <div className="mt-2 flex items-center gap-1.5">
+        <button
+          type="button"
+          onClick={() => nudge(-range.step)}
+          disabled={value <= range.min}
+          aria-label={`Decrease ${label.toLowerCase()}`}
+          className={STEPPER}
+        >
+          <Minus className="size-4" aria-hidden />
+        </button>
+        <div className="relative min-w-0 flex-1">
+          <input
+            id={id}
+            type="number"
+            inputMode="decimal"
+            min={range.min}
+            max={range.max}
+            step={range.step}
+            value={draft ?? String(value)}
+            onChange={(e) => typed(e.target.value)}
+            onBlur={settleDraft}
+            className={NUMBER_FIELD}
+          />
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-sm font-semibold text-fg-subtle"
+          >
+            {unit}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={() => nudge(range.step)}
+          disabled={value >= range.max}
+          aria-label={`Increase ${label.toLowerCase()}`}
+          className={STEPPER}
+        >
+          <Plus className="size-4" aria-hidden />
+        </button>
+      </div>
+      <div id={presetsId} className="sr-only">
+        {label} presets
+      </div>
+      <div role="group" aria-labelledby={presetsId} className="mt-1.5 grid auto-cols-fr grid-flow-col gap-1.5">
+        {range.presets.map((v) => {
+          const on = value === v;
+          return (
+            <button
+              key={v}
+              type="button"
+              aria-pressed={on}
+              onClick={() => {
+                setDraft(null);
+                onPick(v);
+              }}
+              className={cn(
+                CHIP,
+                'px-0 py-1.5 whitespace-nowrap',
+                on ? onClass : 'border-navy-200 bg-white text-fg hover:border-navy-500',
+              )}
+            >
+              {v} {unit}
+            </button>
+          );
+        })}
+      </div>
+      <p className="mt-1.5 text-xs text-fg-subtle">{note}</p>
     </div>
   );
 }
@@ -646,9 +811,18 @@ export default function PowerFlowSimulator({ system }: { system: SystemId }) {
 
   // ── Controls ── The setup, load and switches all apply live, even mid-play.
   const update = (fn: (prev: Snapshot) => Snapshot) => setSnap((prev) => settle(def, fn(prev)));
-  const setLoad = (loadKw: number) => update((p) => ({ ...p, input: withLoad(p.input, loadKw) }));
+  // In a brownout the slider stops at the system size (see loadCap); the demand
+  // set before it is kept, so the site draws it again once the grid returns.
+  const setLoad = (loadKw: number) =>
+    update((p) => ({ ...p, input: { ...p.input, demand: Math.min(loadKw, loadCap(p.input)) } }));
+  // Resizing the array moves the load slider's top with it, so the demand set
+  // for a big system comes down with the system rather than sitting off-scale.
+  const setSize = (kW: number) =>
+    update((p) => ({ ...p, input: { ...p.input, pvKwp: kW, demand: Math.min(p.input.demand, loadTop(kW)) } }));
   const setBattery = (kWh: number) => update((p) => ({ ...p, input: { ...p.input, battKWh: kWh } }));
-  const array = arrayForLoad(input.load);
+  const setHour = (h: number) => setSnap((p) => pickTime(def, p, h));
+  const shed = input.demand - input.load;
+  const top = loadTop(input.pvKwp);
 
   const titleId = `${uid}-title`;
   const tiles = (Object.keys(layout.nodes) as (Tile | 'inverter')[]).filter((d): d is Tile => d !== 'inverter');
@@ -732,7 +906,7 @@ export default function PowerFlowSimulator({ system }: { system: SystemId }) {
       <div className={cn(PANEL, '@container border-t border-line xl:border-t-0 xl:border-l')}>
         <div>
           <div className="mb-2 flex justify-between gap-3 text-sm text-fg-muted">
-            <span>Your home is powered by</span>
+            <span>Your site is powered by</span>
             <strong className="font-mono font-semibold text-fg">{view.mixLabel}</strong>
           </div>
           <div className="flex h-3 overflow-hidden rounded-full bg-navy-100" aria-hidden>
@@ -766,6 +940,19 @@ export default function PowerFlowSimulator({ system }: { system: SystemId }) {
         </p>
 
         <div className="mt-5 grid gap-4.5">
+          {/* The clock: picked here by default, or run by "Play a day" (the thumb follows it). */}
+          <Slider
+            id={`${uid}-time`}
+            label="Time of day"
+            value={snap.hour}
+            max={23.75}
+            step={0.25}
+            format={clockTime}
+            color="[--c:var(--color-solar-500)]"
+            hints={['00:00', '23:45']}
+            onChange={setHour}
+          />
+
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <button
               type="button"
@@ -789,71 +976,70 @@ export default function PowerFlowSimulator({ system }: { system: SystemId }) {
             </span>
           </div>
 
-          {/* Sized by this panel, not the screen: side by side only when it's roomy. */}
+          {/* The setup. Sized by this panel, not the screen: side by side only when it's roomy. */}
           <div className={cn('grid gap-4.5 @3xl:gap-7', def.battery && '@3xl:grid-cols-2')}>
-            <div>
-              <Slider
-                id={`${uid}-load`}
-                label="House load"
-                value={input.load}
-                min={0.5}
-                max={10}
-                step={0.1}
-                format={kw}
-                color="[--c:var(--color-navy-700)]"
-                hints={['0.5 kW', '10 kW · aircons on']}
-                onChange={setLoad}
-              />
-              {/* The array follows the load; shown so the harvest figures make sense. */}
-              <p className="mt-2.5 flex items-baseline justify-between gap-3 rounded-control bg-solar-50 px-3 py-2 text-sm text-fg-muted">
-                <span>Solar panels sized for this load</span>
-                <span className="font-mono font-semibold whitespace-nowrap text-solar-700 tabular-nums">
-                  {array.kwp.toFixed(1)} kWp
-                </span>
-              </p>
-              <p className="mt-1 text-xs text-fg-subtle">
-                {array.panelCount} × 550 W panels · {Math.round(input.load * 24)} kWh a day on 4 sun hours
-              </p>
-            </div>
+            <SizeField
+              id={`${uid}-size`}
+              label="Solar system size"
+              unit="kW"
+              range={def.sizes}
+              value={input.pvKwp}
+              onClass="border-solar-500 bg-solar-500 text-navy-950"
+              note={`${panelsFor(input.pvKwp)} × 550 W panels · ${input.pvKwp} kW ${def.inverterKind}`}
+              onPick={setSize}
+            />
             {def.battery && (
-              <div role="group" aria-labelledby={`${uid}-batt`}>
-                <p id={`${uid}-batt`} className="flex items-baseline justify-between gap-3 text-sm font-semibold text-fg">
-                  Battery size
-                  <span className="font-mono tabular-nums">{input.battKWh} kWh</span>
+              <SizeField
+                id={`${uid}-batt`}
+                label="Battery size"
+                unit="kWh"
+                range={def.battery.sizes}
+                value={input.battKWh}
+                onClass="border-green-600 bg-green-600 text-white"
+                note="Usable capacity"
+                onPick={setBattery}
+              />
+            )}
+          </div>
+
+          <div>
+            <Slider
+              id={`${uid}-load`}
+              label="Load on site"
+              value={input.load}
+              min={0.5}
+              max={top}
+              limit={loadCap(input)}
+              step={loadStep(top)}
+              format={kw}
+              color="[--c:var(--color-navy-700)]"
+              hints={['0.5 kW', top <= 10 ? '10 kW · aircons on' : `${top} kW · everything on`]}
+              onChange={setLoad}
+            />
+            {!input.gridUp ? (
+              <p className="mt-1.5 text-xs font-medium text-red-700">
+                Brownout: solar and battery only, so the load can&rsquo;t go past your {input.pvKwp} kW system
+                {shed > 0.05 ? ` (${kw(shed)} switched off)` : ''}.
+              </p>
+            ) : (
+              input.load > input.pvKwp && (
+                <p className="mt-1.5 text-xs text-fg-subtle">
+                  More than your {input.pvKwp} kW system: the grid covers the rest.
                 </p>
-                <div className="mt-2 grid grid-cols-4 gap-1.5">
-                  {def.battery.sizes.map((kWh) => {
-                    const on = input.battKWh === kWh;
-                    return (
-                      <button
-                        key={kWh}
-                        type="button"
-                        aria-pressed={on}
-                        onClick={() => setBattery(kWh)}
-                        className={cn(
-                          CHIP,
-                          'px-0 py-1.5 whitespace-nowrap',
-                          on ? 'border-green-600 bg-green-600 text-white' : 'border-navy-200 bg-white text-fg hover:border-navy-500',
-                        )}
-                      >
-                        {kWh} kWh
-                      </button>
-                    );
-                  })}
-                </div>
-                <p className="mt-1.5 text-xs text-fg-subtle">Usable capacity</p>
-              </div>
+              )
             )}
           </div>
 
           <div className="flex flex-wrap gap-x-7 gap-y-3">
-            <Switch
-              checked={!input.gridUp}
-              danger
-              label="Brownout"
-              state={input.gridUp ? 'Grid is on' : 'Grid is down'}
-              onClick={() => update((p) => ({ ...p, input: { ...p.input, gridUp: !p.input.gridUp } }))}
-            />
+            {def.brownout && (
+              <Switch
+                checked={!input.gridUp}
+                danger
+                label="Brownout"
+                state={input.gridUp ? 'Grid is on' : 'Solar and battery only'}
+                onClick={() => update((p) => ({ ...p, input: { ...p.input, gridUp: !p.input.gridUp } }))}
+              />
+            )}
             <Switch
               checked={input.netMetering}
               label="Net metering"

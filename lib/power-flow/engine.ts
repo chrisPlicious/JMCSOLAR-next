@@ -3,8 +3,6 @@
  * Pure: no DOM, so the dispatch rules and day profile are unit-tested.
  * Ported from the redesign/*-simulator.html prototypes.
  */
-import { sizeArray } from '@/lib/solar-calculator';
-
 export type Device = 'solar' | 'battery' | 'grid' | 'meter' | 'home' | 'inverter';
 /** Devices wired straight to the inverter; every flow runs along two of these. */
 export type Wire = 'solar' | 'battery' | 'grid' | 'home';
@@ -12,9 +10,10 @@ export type Point = [number, number];
 export type LabelSide = 'above' | 'below' | 'left';
 
 export interface SimInput {
-  pvKwp: number; // installed PV size, derived from the load (see withLoad)
+  pvKwp: number; // system size, picked by the visitor: the array's kWp and the inverter's kW rating
   solar: number; // kW harvested right now: derived from pvKwp and the clock
-  load: number; // kW the home draws, set by the visitor
+  demand: number; // kW of appliances switched on, set by the visitor
+  load: number; // kW the home draws right now: the demand, capped in a brownout (see loadCap)
   soc: number; // battery %, simulated; ignored by systems without one
   battKWh: number; // usable battery size, picked by the visitor
   gridUp: boolean;
@@ -31,7 +30,6 @@ export interface FlowResult {
   imp: number; // grid → home
   unserved: number; // load nothing can cover
   floor: number; // battery % the inverter won't draw below right now
-  tripped: boolean; // grid-tie inverter off for anti-islanding
 }
 
 export type FlowKey = 'direct' | 'charge' | 'exp' | 'discharge' | 'imp';
@@ -102,18 +100,22 @@ export const sunAt = (h: number) => (h <= 6 || h >= 18 ? 0 : Math.pow(Math.sin((
 /** kW an array of `kwp` harvests at hour `h`. */
 export const harvestAt = (kwp: number, h: number) => Math.round(kwp * PERFORMANCE_RATIO * sunAt(h) * 100) / 100;
 
-/**
- * The array the visitor's house load calls for, sized exactly as the savings
- * calculator sizes it, with the load taken as the home's all-day average.
- */
-export const arrayForLoad = (loadKw: number) => sizeArray(loadKw * 24);
+export const PANEL_KW = 0.55;
 
-/** New house load, with the solar array resized to match. */
-export const withLoad = (input: SimInput, loadKw: number): SimInput => ({
-  ...input,
-  load: loadKw,
-  pvKwp: arrayForLoad(loadKw).kwp,
-});
+/** 550 W panels a system of `kw` takes. */
+export const panelsFor = (kw: number) => Math.ceil(kw / PANEL_KW - 1e-9);
+
+/**
+ * Most the site can draw. With the grid up there's no cap: whatever solar and
+ * battery can't cover, the grid (LEYECO) supplies. In a brownout only solar and
+ * battery are left, so the site can't draw more than the system is rated for.
+ */
+export const loadCap = (s: Pick<SimInput, 'gridUp' | 'pvKwp'>) => (s.gridUp ? Infinity : s.pvKwp);
+
+/** The harvest and the home's draw at `hour`, from the setup, the demand and the grid. */
+function derive(s: SimInput, hour: number): SimInput {
+  return { ...s, solar: harvestAt(s.pvKwp, hour), load: Math.min(s.demand, loadCap(s)) };
+}
 
 export function clockTime(h: number) {
   const hh = String(Math.floor(h)).padStart(2, '0');
@@ -169,13 +171,13 @@ export function pointAt(route: Route, d: number, j: number): Point {
 // ── State transitions ──────────────────────────────────────────
 interface Dispatcher {
   battery?: unknown; // present when the system has a battery
-  brownout: [number, number]; // scheduled outage during "Play a day"
+  brownout?: [number, number]; // scheduled outage during "Play a day"; only systems that ride through one have it
   dispatch(s: SimInput, dtH?: number): FlowResult;
 }
 
-/** Recompute the harvest and flows after a change to the setup, load or switches. */
+/** Recompute the harvest, draw and flows after a change to the setup, load or switches. */
 export function settle(def: Dispatcher, snap: Snapshot): Snapshot {
-  const input = { ...snap.input, solar: harvestAt(snap.input.pvKwp, snap.hour) };
+  const input = derive(snap.input, snap.hour);
   return { ...snap, input, result: def.dispatch(input) };
 }
 
@@ -185,13 +187,18 @@ export function settle(def: Dispatcher, snap: Snapshot): Snapshot {
  * overshoot its limits within one step.
  *
  * The scheduled brownout only flips the grid as the clock enters or leaves its
- * window, so the visitor's own brownout switch still works mid-day.
+ * window, so the visitor's own brownout switch still works mid-day. When the
+ * grid returns, the home goes back to drawing the visitor's full demand.
  */
 export function advance(def: Dispatcher, snap: Snapshot, dtH: number): Snapshot {
-  const inWindow = (h: number) => h >= def.brownout[0] && h < def.brownout[1];
   const hour = (snap.hour + dtH) % 24;
-  const input: SimInput = { ...snap.input, solar: harvestAt(snap.input.pvKwp, hour) };
-  if (inWindow(snap.hour) !== inWindow(hour)) input.gridUp = !inWindow(hour);
+  let { gridUp } = snap.input;
+  const win = def.brownout;
+  if (win) {
+    const inWindow = (h: number) => h >= win[0] && h < win[1];
+    if (inWindow(snap.hour) !== inWindow(hour)) gridUp = !inWindow(hour);
+  }
+  const input = derive({ ...snap.input, gridUp }, hour);
   const result = def.dispatch(input, dtH);
   if (def.battery && input.battKWh > 0) {
     const delta = ((result.charge - result.discharge) * dtH * 100) / input.battKWh;
@@ -224,4 +231,15 @@ export function startAt(def: Dispatcher, snap: Snapshot, hour: number): Snapshot
   const steps = Math.round(hoursSinceDawn / STEP_H);
   for (let i = 0; i < steps; i++) s = advance(def, s, STEP_H);
   return settle(def, { ...s, hour });
+}
+
+/**
+ * The time picker: the state at `hour`, as if an ordinary day (grid up, no
+ * scheduled outage) had run from dawn, with the visitor's brownout switch
+ * applied on top. Picking a time pauses "Play a day".
+ */
+export function pickTime(def: Dispatcher, snap: Snapshot, hour: number): Snapshot {
+  const ordinary: Dispatcher = { battery: def.battery, dispatch: def.dispatch };
+  const day = startAt(ordinary, { ...snap, input: { ...snap.input, gridUp: true } }, hour);
+  return settle(def, { ...day, playing: false, input: { ...day.input, gridUp: snap.input.gridUp } });
 }
